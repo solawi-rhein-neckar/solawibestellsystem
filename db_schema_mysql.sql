@@ -1,0 +1,511 @@
+-- phpMyAdmin SQL Dump
+-- version 4.8.5
+-- https://www.phpmyadmin.net/
+--
+-- Host: localhost
+-- Erstellungszeit: 16. Mrz 2019 um 22:14
+-- Server-Version: 5.7.23-nmm1-log
+-- PHP-Version: 7.2.14-nmm1
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+SET AUTOCOMMIT = 0;
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Datenbank: `d02dbcf8`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `Benutzer`
+--
+
+CREATE TABLE `Benutzer` (
+  `ID` int(11) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `Passwort` varchar(255) NOT NULL,
+  `Cookie` varchar(255) NOT NULL,
+  `Role_ID` int(11) NOT NULL DEFAULT '1',
+  `Depot_ID` int(11) NOT NULL DEFAULT '1',
+  `Korb_ID` int(11) NOT NULL DEFAULT '1',
+  `Anteile` int(11) NOT NULL DEFAULT '1',
+  `PunkteStand` int(11) NOT NULL DEFAULT '0',
+  `PunkteWoche` decimal(6,2) NOT NULL DEFAULT '2019.01',
+  `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderBenutzer_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Stellvertreter-Struktur des Views `BenutzerBestellView`
+-- (Siehe unten für die tatsächliche Ansicht)
+--
+CREATE TABLE `BenutzerBestellView` (
+`Benutzer_ID` int(11)
+,`Benutzer` varchar(255)
+,`Depot_ID` int(11)
+,`Depot` varchar(255)
+,`Produkt_ID` int(11)
+,`Produkt` varchar(255)
+,`Beschreibung` varchar(2047)
+,`Einheit` varchar(7)
+,`Menge` decimal(8,2)
+,`Woche` decimal(6,2)
+,`Anzahl` decimal(32,0)
+,`AnzahlKorb` decimal(32,0)
+,`AnzahlZusatz` decimal(32,0)
+,`Urlaub` int(1)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `BenutzerUrlaub`
+--
+
+CREATE TABLE `BenutzerUrlaub` (
+  `ID` int(11) NOT NULL,
+  `Benutzer_ID` int(11) NOT NULL,
+  `Woche` decimal(6,2) NOT NULL,
+  `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderBenutzer_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Stellvertreter-Struktur des Views `BenutzerView`
+-- (Siehe unten für die tatsächliche Ansicht)
+--
+CREATE TABLE `BenutzerView` (
+`ID` int(11)
+,`Name` varchar(255)
+,`Passwort` varchar(255)
+,`Cookie` varchar(255)
+,`Role_ID` int(11)
+,`Depot_ID` int(11)
+,`Korb_ID` int(11)
+,`Anteile` int(11)
+,`PunkteStand` int(11)
+,`PunkteWoche` decimal(6,2)
+,`ErstellZeitpunkt` timestamp
+,`AenderZeitpunkt` timestamp
+,`AenderBenutzer_ID` int(11)
+,`Depot` varchar(255)
+,`Korb` varchar(255)
+,`Role` varchar(255)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `BenutzerZusatzBestellung`
+--
+
+CREATE TABLE `BenutzerZusatzBestellung` (
+  `ID` int(11) NOT NULL,
+  `Benutzer_ID` int(11) NOT NULL,
+  `Produkt_ID` int(11) NOT NULL,
+  `Woche` decimal(6,2) NOT NULL,
+  `Anzahl` int(11) NOT NULL DEFAULT '1',
+  `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderBenutzer_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `Depot`
+--
+
+CREATE TABLE `Depot` (
+  `ID` int(11) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `KurzName` varchar(7) NOT NULL,
+  `Beschreibung` varchar(2047) NOT NULL DEFAULT '',
+  `VerantwortlicherBenutzer_ID` int(11) DEFAULT NULL,
+  `StellvertreterBenutzer_ID` int(11) DEFAULT NULL,
+  `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderBenutzer_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `Korb`
+--
+
+CREATE TABLE `Korb` (
+  `ID` int(11) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `Beschreibung` varchar(2047) NOT NULL DEFAULT '',
+  `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderBenutzer_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `KorbInhalt`
+--
+
+CREATE TABLE `KorbInhalt` (
+  `ID` int(11) NOT NULL,
+  `Korb_ID` int(11) NOT NULL,
+  `Produkt_ID` int(11) NOT NULL,
+  `Anzahl` int(11) NOT NULL DEFAULT '1',
+  `MindestAnzahl` int(11) NOT NULL DEFAULT '0',
+  `MaximalAnzahl` int(11) NOT NULL DEFAULT '99',
+  `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderBenutzer_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Stellvertreter-Struktur des Views `KorbInhaltView`
+-- (Siehe unten für die tatsächliche Ansicht)
+--
+CREATE TABLE `KorbInhaltView` (
+`ID` int(11)
+,`Korb_ID` int(11)
+,`Produkt_ID` int(11)
+,`Anzahl` int(11)
+,`MindestAnzahl` int(11)
+,`MaximalAnzahl` int(11)
+,`ErstellZeitpunkt` timestamp
+,`AenderZeitpunkt` timestamp
+,`AenderBenutzer_ID` int(11)
+,`Woche` decimal(6,2)
+);
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `KorbInhaltWoche`
+--
+
+CREATE TABLE `KorbInhaltWoche` (
+  `ID` int(11) NOT NULL,
+  `KorbInhalt_ID` int(11) NOT NULL,
+  `Woche` decimal(6,2) NOT NULL,
+  `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderBenutzer_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `Produkt`
+--
+
+CREATE TABLE `Produkt` (
+  `ID` int(11) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `Beschreibung` varchar(2047) NOT NULL DEFAULT '',
+  `Einheit` varchar(7) NOT NULL DEFAULT 'Stueck',
+  `Menge` decimal(8,2) NOT NULL DEFAULT '1.00',
+  `Punkte` int(11) NOT NULL DEFAULT '1',
+  `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderBenutzer_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `Recht`
+--
+
+CREATE TABLE `Recht` (
+  `ID` int(11) NOT NULL,
+  `Role_ID` int(11) NOT NULL,
+  `Tabelle` varchar(255) DEFAULT NULL,
+  `Spalte` varchar(255) DEFAULT NULL,
+  `SpalteBenutzerID` varchar(255) DEFAULT NULL,
+  `LeseAlle` tinyint(1) NOT NULL DEFAULT '1',
+  `LeseEigene` tinyint(1) NOT NULL DEFAULT '1',
+  `SchreibeAlle` tinyint(1) NOT NULL DEFAULT '0',
+  `SchreibeEigene` tinyint(1) NOT NULL DEFAULT '1'
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Trigger `Recht`
+--
+DELIMITER $$
+CREATE TRIGGER `before_Recht_update` BEFORE UPDATE ON `Recht` FOR EACH ROW BEGIN
+    INSERT INTO Recht
+    SET Role_ID = '2',
+     Spalte = Test; 
+END
+$$
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `Role`
+--
+
+CREATE TABLE `Role` (
+  `ID` int(11) NOT NULL,
+  `Name` varchar(255) NOT NULL,
+  `LeseRechtDefault` tinyint(1) NOT NULL DEFAULT '1',
+  `SchreibRechtDefault` tinyint(1) NOT NULL DEFAULT '0'
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Daten für Tabelle `Role`
+--
+
+INSERT INTO `Role` (`ID`, `Name`, `LeseRechtDefault`, `SchreibRechtDefault`) VALUES
+(1, 'Mitglied', 1, 0),
+(2, 'Admin', 1, 1);
+
+-- --------------------------------------------------------
+
+--
+-- Struktur des Views `BenutzerBestellView`
+--
+DROP TABLE IF EXISTS `BenutzerBestellView`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellView`  AS  select `u`.`Benutzer_ID` AS `Benutzer_ID`,`Benutzer`.`Name` AS `Benutzer`,`Depot`.`ID` AS `Depot_ID`,`Depot`.`Name` AS `Depot`,`u`.`Produkt_ID` AS `Produkt_ID`,`Produkt`.`Name` AS `Produkt`,`Produkt`.`Beschreibung` AS `Beschreibung`,`Produkt`.`Einheit` AS `Einheit`,`Produkt`.`Menge` AS `Menge`,`u`.`Woche` AS `Woche`,(case when isnull(`BenutzerUrlaub`.`ID`) then sum(`u`.`Anzahl`) else 0 end) AS `Anzahl`,sum((case when (`u`.`Quelle` = 1) then `u`.`Anzahl` else 0 end)) AS `AnzahlKorb`,sum((case when (`u`.`Quelle` = 2) then `u`.`Anzahl` else 0 end)) AS `AnzahlZusatz`,(`BenutzerUrlaub`.`ID` is not null) AS `Urlaub` from ((((((select 1 AS `Quelle`,`Benutzer`.`ID` AS `Benutzer_ID`,`KorbInhalt`.`Produkt_ID` AS `Produkt_ID`,`KorbInhalt`.`Anzahl` AS `Anzahl`,`KorbInhaltWoche`.`Woche` AS `Woche` from ((`KorbInhalt` join `KorbInhaltWoche` on((`KorbInhaltWoche`.`KorbInhalt_ID` = `KorbInhalt`.`ID`))) join `Benutzer` on((`Benutzer`.`Korb_ID` = `KorbInhalt`.`Korb_ID`)))) union all (select 2 AS `Quelle`,`BenutzerZusatzBestellung`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerZusatzBestellung`.`Produkt_ID` AS `Produkt_ID`,`BenutzerZusatzBestellung`.`Anzahl` AS `Anzahl`,`BenutzerZusatzBestellung`.`Woche` AS `Woche` from `BenutzerZusatzBestellung`)) `u` join `Produkt` on((`u`.`Produkt_ID` = `Produkt`.`ID`))) join `Benutzer` on((`u`.`Benutzer_ID` = `Benutzer`.`ID`))) join `Depot` on((`Benutzer`.`Depot_ID` = `Depot`.`ID`))) left join `BenutzerUrlaub` on(((`BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`) and (`BenutzerUrlaub`.`Woche` = `u`.`Woche`)))) group by `u`.`Benutzer_ID`,`Benutzer`.`Name`,`Depot`.`ID`,`Depot`.`Name`,`u`.`Produkt_ID`,`Produkt`.`Name`,`Produkt`.`Beschreibung`,`Produkt`.`Einheit`,`Produkt`.`Menge`,`u`.`Woche`,`BenutzerUrlaub`.`ID` ;
+
+-- --------------------------------------------------------
+
+--
+-- Struktur des Views `BenutzerView`
+--
+DROP TABLE IF EXISTS `BenutzerView`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerView`  AS  select `Benutzer`.`ID` AS `ID`,`Benutzer`.`Name` AS `Name`,`Benutzer`.`Passwort` AS `Passwort`,`Benutzer`.`Cookie` AS `Cookie`,`Benutzer`.`Role_ID` AS `Role_ID`,`Benutzer`.`Depot_ID` AS `Depot_ID`,`Benutzer`.`Korb_ID` AS `Korb_ID`,`Benutzer`.`Anteile` AS `Anteile`,`Benutzer`.`PunkteStand` AS `PunkteStand`,`Benutzer`.`PunkteWoche` AS `PunkteWoche`,`Benutzer`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`Benutzer`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`Benutzer`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`Depot`.`Name` AS `Depot`,`Korb`.`Name` AS `Korb`,`Role`.`Name` AS `Role` from (((`Benutzer` join `Korb` on((`Korb`.`ID` = `Benutzer`.`Korb_ID`))) join `Depot` on((`Depot`.`ID` = `Benutzer`.`Depot_ID`))) join `Role` on((`Benutzer`.`Role_ID` = `Role`.`ID`))) ;
+
+-- --------------------------------------------------------
+
+--
+-- Struktur des Views `KorbInhaltView`
+--
+DROP TABLE IF EXISTS `KorbInhaltView`;
+
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `KorbInhaltView`  AS  select `KorbInhalt`.`ID` AS `ID`,`KorbInhalt`.`Korb_ID` AS `Korb_ID`,`KorbInhalt`.`Produkt_ID` AS `Produkt_ID`,`KorbInhalt`.`Anzahl` AS `Anzahl`,`KorbInhalt`.`MindestAnzahl` AS `MindestAnzahl`,`KorbInhalt`.`MaximalAnzahl` AS `MaximalAnzahl`,`KorbInhalt`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`KorbInhalt`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`KorbInhalt`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`KorbInhaltWoche`.`Woche` AS `Woche` from (`KorbInhalt` join `KorbInhaltWoche` on((`KorbInhaltWoche`.`KorbInhalt_ID` = `KorbInhalt`.`ID`))) ;
+
+--
+-- Indizes der exportierten Tabellen
+--
+
+--
+-- Indizes für die Tabelle `Benutzer`
+--
+ALTER TABLE `Benutzer`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `Role_ID` (`Role_ID`),
+  ADD KEY `Depot_ID` (`Depot_ID`),
+  ADD KEY `Korb_ID` (`Korb_ID`),
+  ADD KEY `BenutzerAender_Benutzer` (`AenderBenutzer_ID`);
+
+--
+-- Indizes für die Tabelle `BenutzerUrlaub`
+--
+ALTER TABLE `BenutzerUrlaub`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `BenutzerUrlaub_Benutzer` (`Benutzer_ID`),
+  ADD KEY `BenutzerUrlaubAender_Benutzer` (`AenderBenutzer_ID`);
+
+--
+-- Indizes für die Tabelle `BenutzerZusatzBestellung`
+--
+ALTER TABLE `BenutzerZusatzBestellung`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `Bestellung_Benutzer` (`Benutzer_ID`),
+  ADD KEY `Bestellung_Produkt` (`Produkt_ID`),
+  ADD KEY `Bestellung_AenderBenutzer` (`AenderBenutzer_ID`);
+
+--
+-- Indizes für die Tabelle `Depot`
+--
+ALTER TABLE `Depot`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `DepotVerantwortlicherBenutzer` (`VerantwortlicherBenutzer_ID`),
+  ADD KEY `DepotStellvertreterBenutzer` (`StellvertreterBenutzer_ID`),
+  ADD KEY `DepotAenderBenutzer` (`AenderBenutzer_ID`);
+
+--
+-- Indizes für die Tabelle `Korb`
+--
+ALTER TABLE `Korb`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `KorbAenderBenutzer` (`AenderBenutzer_ID`);
+
+--
+-- Indizes für die Tabelle `KorbInhalt`
+--
+ALTER TABLE `KorbInhalt`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `KorbInhalt_Korb` (`Korb_ID`),
+  ADD KEY `KorbInhalt_Produkt` (`Produkt_ID`),
+  ADD KEY `KorbInhalt_Benutzer` (`AenderBenutzer_ID`);
+
+--
+-- Indizes für die Tabelle `KorbInhaltWoche`
+--
+ALTER TABLE `KorbInhaltWoche`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `KorbInhaltWoche_KorbInhalt` (`KorbInhalt_ID`),
+  ADD KEY `KorbInhaltWoche_AenderBenutzer` (`AenderBenutzer_ID`);
+
+--
+-- Indizes für die Tabelle `Produkt`
+--
+ALTER TABLE `Produkt`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `ProduktAenderBenutzer` (`AenderBenutzer_ID`);
+
+--
+-- Indizes für die Tabelle `Recht`
+--
+ALTER TABLE `Recht`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `Role_ID` (`Role_ID`);
+
+--
+-- Indizes für die Tabelle `Role`
+--
+ALTER TABLE `Role`
+  ADD PRIMARY KEY (`ID`);
+
+--
+-- AUTO_INCREMENT für exportierte Tabellen
+--
+
+--
+-- AUTO_INCREMENT für Tabelle `Benutzer`
+--
+ALTER TABLE `Benutzer`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT für Tabelle `BenutzerUrlaub`
+--
+ALTER TABLE `BenutzerUrlaub`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT für Tabelle `BenutzerZusatzBestellung`
+--
+ALTER TABLE `BenutzerZusatzBestellung`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=26;
+
+--
+-- AUTO_INCREMENT für Tabelle `Depot`
+--
+ALTER TABLE `Depot`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT für Tabelle `Korb`
+--
+ALTER TABLE `Korb`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT für Tabelle `KorbInhalt`
+--
+ALTER TABLE `KorbInhalt`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT für Tabelle `KorbInhaltWoche`
+--
+ALTER TABLE `KorbInhaltWoche`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+
+--
+-- AUTO_INCREMENT für Tabelle `Produkt`
+--
+ALTER TABLE `Produkt`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT für Tabelle `Recht`
+--
+ALTER TABLE `Recht`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT für Tabelle `Role`
+--
+ALTER TABLE `Role`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- Constraints der exportierten Tabellen
+--
+
+--
+-- Constraints der Tabelle `Benutzer`
+--
+ALTER TABLE `Benutzer`
+  ADD CONSTRAINT `Benutzer_Depot` FOREIGN KEY (`Depot_ID`) REFERENCES `Depot` (`ID`),
+  ADD CONSTRAINT `Benutzer_Korb` FOREIGN KEY (`Korb_ID`) REFERENCES `Korb` (`ID`),
+  ADD CONSTRAINT `Benutzer_Role` FOREIGN KEY (`Role_ID`) REFERENCES `Role` (`ID`);
+
+--
+-- Constraints der Tabelle `BenutzerUrlaub`
+--
+ALTER TABLE `BenutzerUrlaub`
+  ADD CONSTRAINT `BenutzerUrlaub_Benutzer` FOREIGN KEY (`Benutzer_ID`) REFERENCES `Benutzer` (`ID`);
+
+--
+-- Constraints der Tabelle `BenutzerZusatzBestellung`
+--
+ALTER TABLE `BenutzerZusatzBestellung`
+  ADD CONSTRAINT `Bestellung_Benutzer` FOREIGN KEY (`Benutzer_ID`) REFERENCES `Benutzer` (`ID`),
+  ADD CONSTRAINT `Bestellung_Produkt` FOREIGN KEY (`Produkt_ID`) REFERENCES `Produkt` (`ID`);
+
+--
+-- Constraints der Tabelle `Depot`
+--
+ALTER TABLE `Depot`
+  ADD CONSTRAINT `DepotStellvertreterBenutzer` FOREIGN KEY (`StellvertreterBenutzer_ID`) REFERENCES `Benutzer` (`ID`),
+  ADD CONSTRAINT `DepotVerantwortlicherBenutzer` FOREIGN KEY (`VerantwortlicherBenutzer_ID`) REFERENCES `Benutzer` (`ID`);
+
+--
+-- Constraints der Tabelle `KorbInhalt`
+--
+ALTER TABLE `KorbInhalt`
+  ADD CONSTRAINT `KorbInhalt_Korb` FOREIGN KEY (`Korb_ID`) REFERENCES `Korb` (`ID`),
+  ADD CONSTRAINT `KorbInhalt_Produkt` FOREIGN KEY (`Produkt_ID`) REFERENCES `Produkt` (`ID`);
+
+--
+-- Constraints der Tabelle `KorbInhaltWoche`
+--
+ALTER TABLE `KorbInhaltWoche`
+  ADD CONSTRAINT `KorbInhaltWoche_KorbInhalt` FOREIGN KEY (`KorbInhalt_ID`) REFERENCES `KorbInhalt` (`ID`);
+
+--
+-- Constraints der Tabelle `Recht`
+--
+ALTER TABLE `Recht`
+  ADD CONSTRAINT `Recht_Role` FOREIGN KEY (`Role_ID`) REFERENCES `Role` (`ID`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
