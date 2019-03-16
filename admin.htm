@@ -1,0 +1,80 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<title></title>
+	<style>
+		table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
+	</style>
+	<script src="util.js"> </script>
+	<script src="table.js"> </script>
+</head>
+<body>
+
+<script>
+// sbs = global variable prefix for SolawiBestellSystem
+var sbsUser;
+var sbsWeek;
+
+//check login status
+getAjax('Benutzer/OWN', function(userResponse){
+	if (userResponse.length > 0) {
+		sbsUser = userResponse[0];
+		document.getElementById('logoutbtn').innerText='Logout ' + sbsUser.Name; 
+	} else { 
+		show('loginform');
+		hide('logoutbtn');
+	} 
+});
+</script>
+
+	
+<div id="blockui_post" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:250;background-color:rgba(0,0,0,0.3);display:none;">
+	SAVING DATA...
+</div>
+<div id="blockui_get" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:240;background-color:rgba(0,0,0,0.3);display:none;">
+	LOADING - PLEASE WAIT
+</div>
+<div id="blockui_edit" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;z-index:230;background-color:rgba(0,0,0,0.3);display:none;">
+	<div id="editor" style="display:inline-block;padding: 10px; margin: 10px; border:1px solid black;background-color:#FFF;">
+	</div>
+</div>
+
+	
+<div id="logoutform" style="position:fixed;right: 1px; top: 0; width: 15em; height: 5em; background: #EEE; border: 1px dotted #999;text-align:center;">
+	<button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');" >Logout</button>
+	<div id="messages" style="height:3.3em; overflow:hidden;font-size=85%;box-shadow: inset 0px -9px 9px -9px black;">
+	</div>
+</div>
+
+<div id="loginform" style="display:none">
+	LOGIN:
+	<form method='post' action='/cgi-bin/query.pl/login'>
+		Name: <input type='text' id='inpName' name='name' placeholder='name'/>
+		Password: <input type='password' id='inpPass' name='password'/>
+		<input type='submit' value='Login' onclick='event.preventDefault();postAjax("login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(){window.setTimeout(function(){document.location.reload();},333);});return false;'/>
+	</form>	
+</div>
+	
+	
+<div id="tableContainer">
+
+	<button onclick="getAjax('Benutzer', showTableEditor);">Benutzer</button>
+	<button onclick="getAjax('BenutzerUrlaub', showTableEditor);">BenutzerUrlaub</button>
+	<button onclick="getAjax('Depot', showTableEditor);">Depot</button>
+	<button onclick="getAjax('Korb', showTableEditor);">Korb</button>
+	<button onclick="getAjax('KorbInhalt', showTableEditor);">KorbInhalt</button>
+	<button onclick="getAjax('KorbInhaltWoche', showTableEditor);">KorbInhaltWoche</button>
+	<button onclick="getAjax('Produkt', showTableEditor);">Produkt</button>
+	<button onclick="getAjax('ZusatzBestellung', showTableEditor);">ZusatzBestellung</button>
+
+	<table id="tableEdit" cellspacing="0" > </table>
+	
+	<br/>
+	<br/>
+	
+	<table id="table" cellspacing="0" > </table>
+
+</div>
+	
+</body>
+</html>
