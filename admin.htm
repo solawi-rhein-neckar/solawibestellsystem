@@ -14,6 +14,7 @@
 // sbs = global variable prefix for SolawiBestellSystem
 var sbsUser;
 var sbsWeek;
+var sbsTableCache = {};
 
 //check login status
 getAjax('Benutzer/OWN', function(userResponse){

@@ -59,6 +59,12 @@ function showTable(response, path, editable) {
 				var div = document.createElement("DIV");
 				div.id = "span_" + path + "_" + i + "_" + j;
 				div.innerText = response[i][keys[j]] || '-';
+				var relation = keys[j].match(/^(.*)_ID$/);
+				if (relation && sbsTableCache[relation[1]]) {
+					var row = sbsTableCache[relation[1]][div.innerText];
+					div.dataValue = div.innerText;
+					div.innerText = row == null ? ' (' + div.innerText + ') ' : row.Name;
+				}
 				if (editable && keys[j] != 'ID' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && keys[j] != 'ErstellZeitpunkt') {
 					div.addEventListener('click', showEditor);
 					div.style.cursor = "pointer";
@@ -91,7 +97,24 @@ function createFuncAddNew(keys) {
 		var edit = resetEditor("Add new " + window.sbsEditTable);
 		for (var j = 0; j < keys.length; j++) {
 			if (keys[j] != 'ID' && keys[j] != 'ErstellZeitpunkt' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt') {
-				var inp = document.createElement("INPUT");
+				var inp;
+				
+				var relation = keys[j].match(/^(.*)_ID$/);
+				if (relation && sbsTableCache[relation[1]]) {
+					inp = document.createElement("SELECT");
+					for (var k=0; k<sbsTableCache[relation[1]].length; k++) {
+						var row = sbsTableCache[relation[1]][k];
+						if (row && row.ID) {
+							var opt = document.createElement("OPTION");
+							opt.value=row.ID;
+							opt.innerText=row.Name;
+							inp.appendChild(opt);
+						}
+					}
+				} else {
+					inp = document.createElement("INPUT");
+				}
+				
 				inp.className = 'editor inp_' + keys[j];
 				if (keys[j] == 'Benutzer_ID') {
 					inp.value = sbsUser.ID;
@@ -110,8 +133,24 @@ function createFuncAddNew(keys) {
 function showEditor(event) {
 	var edit = resetEditor("ID " + event.target.dataId + ": " + event.target.dataKey + " ");
 
-	var inp = document.createElement("INPUT");
-	inp.value = event.target.innerText;
+	var inp;
+
+	var relation = event.target.dataKey.match(/^(.*)_ID$/);
+	if (relation && sbsTableCache[relation[1]]) {
+		inp = document.createElement("SELECT");
+		for (var k=0; k<sbsTableCache[relation[1]].length; k++) {
+			var row = sbsTableCache[relation[1]][k];
+			if (row && row.ID) {
+				var opt = document.createElement("OPTION");
+				opt.value=row.ID;
+				opt.innerText=row.Name;
+				inp.appendChild(opt);
+			}
+		}
+	} else {
+		inp = document.createElement("INPUT");
+	}
+	inp.value = event.target.dataValue || event.target.innerText;
 	inp.className = 'editor inp_' + event.target.dataKey;
 	inp.dataId = event.target.dataId;
 	inp.dataKey = event.target.dataKey;
@@ -154,7 +193,7 @@ function saveEditorInputs(event2) {
 		for (var i = 0; i < editor.children.length; i++) {
 			var inpEle = editor.children[i];
 			var id;
-			if (inpEle.tagName == 'INPUT') {
+			if (inpEle.tagName == 'INPUT' || inpEle.tagName == 'SELECT') {
 				data[inpEle.dataKey] = inpEle.value;
 				id = id || inpEle.dataId;
 			}

@@ -32,6 +32,7 @@ var sbsUser;
 var sbsDate = new Date();
 var sbsWeek = sbsDate.getWeekYear() + "." +  (sbsDate.getDay() > sbsDay ? sbsDate.getWeek() + 1 : sbsDate.getWeek());
 var sbsSelectedWeek = sbsWeek;
+var sbsTableCache = {'Produkt' : []};
 
 //check login status
 getAjax('BenutzerView/MY', function(userResponse){
@@ -66,7 +67,7 @@ function changeWeek(count) {
 		
 	
 //getAjax('Korb', function(resp) { for(var i = 0; i < resp.length; i++){sbsKorb[resp[i]['ID']] = resp[i]; } });
-//getAjax('Produkt', function(resp) { for(var i = 0; i < resp.length; i++){sbsProdukt[resp[i]['ID']] = resp[i]; } });
+getAjax('Produkt', function(resp) { for(var i = 0; i < resp.length; i++){sbsTableCache['Produkt'][resp[i]['ID']] = resp[i]; } });
 
 </script>
 	
