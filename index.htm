@@ -30,7 +30,7 @@ background-repeat: no-repeat;
 var sbsDay = 4; /* day of week index for the collection day (Abholtag) 4 = thursday */
 var sbsUser;
 var sbsDate = new Date();
-var sbsWeek = sbsDate.getWeekYear() + "." +  (sbsDate.getDay() > sbsDay ? sbsDate.getWeek() + 1 : sbsDate.getWeek());
+var sbsWeek = sbsDate.getWeekYear() + "." +  (sbsDate.getDay() == 0 || sbsDate.getDay() > sbsDay ? sbsDate.getWeek() + 1 : sbsDate.getWeek());
 var sbsSelectedWeek = sbsWeek;
 var sbsTableCache = {'Produkt' : []};
 
@@ -99,7 +99,7 @@ function changeWeek(count) {
 	
 <div id="greeting">
 	
-	Willkommen im Solawi Bestellsystem! Die n‰chste Lieferung/Abholung ist in Kalenderwoche
+	Willkommen im Solawi Bestellsystem! Die n√§chste Lieferung/Abholung ist in Kalenderwoche
 	<span id="calendarWeek" style="font-weight:bold;">00</span>
 	<br/>
 	<br/>
@@ -135,9 +135,9 @@ function changeWeek(count) {
 
 FRAGEN and depotleiter:
 
-- regelm‰ﬂige serienbestellungen ¸blich? Beispiele? Jede Woche / Jeden Monat?
+- regelm√§√üige serienbestellungen √ºblich? Beispiele? Jede Woche / Jeden Monat?
 
-- Abo-Typ-Wechsel mˆglich? 
+- Abo-Typ-Wechsel m√∂glich? 
 
 
 -->
