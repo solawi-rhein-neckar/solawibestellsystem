@@ -9,6 +9,8 @@ function showTable(response, path, editable) {
 		window.sbsEditTable = path.match(/[^\/]*/)[0];
 	} else {
 		window.sbsViewTablePath = path;
+		window.sbsViewTable = path.match(/[^\/]*/)[0];
+
 	}
 	var keys = null;
 	if (response.length == 0 && editable) {

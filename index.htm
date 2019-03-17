@@ -18,6 +18,7 @@ background: url(http://www.solawi-rhein-neckar.org/public/wp-content/uploads/201
 background-repeat: no-repeat;
 
 		}
+		#navi { position: absolute;}
 		
 	</style>
 	<script src="util.js"> </script>
@@ -46,9 +47,9 @@ getAjax('BenutzerView/MY', function(userResponse){
 		
 		setContent('korb', sbsUser.Korb);
 		
-		getAjax('BenutzerBestellView/Woche/'+sbsSelectedWeek, showTable);
+		getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+sbsSelectedWeek, showTable);
 		
-		getAjax('BenutzerZusatzBestellung/Woche/'+sbsSelectedWeek, showTableEditor);
+		getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+sbsSelectedWeek, showTableEditor);
 		
 	} else { 
 		show('loginform');
@@ -62,8 +63,8 @@ fillCache('Produkt');
 function changeWeek(count) {
 	sbsSelectedWeek = addWeek(sbsSelectedWeek, count);
 	setContent('selectedWeek', sbsSelectedWeek);
-	getAjax('BenutzerBestellView/Woche/'+sbsSelectedWeek, showTable);
-	getAjax('BenutzerZusatzBestellung/Woche/'+sbsSelectedWeek, showTableEditor);
+	getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+sbsSelectedWeek, showTable);
+	getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+sbsSelectedWeek, showTableEditor);
 }
 	
 </script>
@@ -97,9 +98,12 @@ function changeWeek(count) {
 </div>
 
 	
+<div id="navi">
+	<a href="admin.htm">zu den Berichten + Admin-Bereich</a>
+</div>
 <div id="greeting">
 	
-	Willkommen im Solawi Bestellsystem! Die n√§chste Lieferung/Abholung ist in Kalenderwoche
+	Willkommen im Solawi Bestellsystem! Die n‰chste Lieferung/Abholung ist in Kalenderwoche
 	<span id="calendarWeek" style="font-weight:bold;">00</span>
 	<br/>
 	<br/>
@@ -135,9 +139,9 @@ function changeWeek(count) {
 
 FRAGEN and depotleiter:
 
-- regelm√§√üige serienbestellungen √ºblich? Beispiele? Jede Woche / Jeden Monat?
+- regelm‰ﬂige serienbestellungen ¸blich? Beispiele? Jede Woche / Jeden Monat?
 
-- Abo-Typ-Wechsel m√∂glich? 
+- Abo-Typ-Wechsel mˆglich? 
 
 
 -->

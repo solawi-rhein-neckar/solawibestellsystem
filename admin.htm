@@ -13,7 +13,10 @@
 <script>
 // sbs = global variable prefix for SolawiBestellSystem
 var sbsUser;
-var sbsWeek;
+var sbsDay = 4;
+var sbsDate = new Date();
+var sbsWeek = sbsDate.getWeekYear() + "." +  (sbsDate.getDay() == 0 || sbsDate.getDay() > sbsDay ? sbsDate.getWeek() + 1 : sbsDate.getWeek());
+var sbsSelectedWeek = sbsWeek;
 var sbsTableCache = {'Korb':[],'Role':[],'Depot':[],'Produkt':[]};
 
 //check login status
@@ -21,6 +24,10 @@ getAjax('Benutzer/OWN', function(userResponse){
 	if (userResponse.length > 0) {
 		sbsUser = userResponse[0];
 		document.getElementById('logoutbtn').innerText='Logout ' + sbsUser.Name; 
+		setContent('selectedWeek', sbsSelectedWeek);
+		if (sbsUser.Role_ID != 2) {
+			setContent('warning', 'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
+		}
 	} else { 
 		show('loginform');
 		hide('logoutbtn');
@@ -32,6 +39,16 @@ fillCache('Role');
 fillCache('Depot');
 fillCache('Produkt');
 fillCache('Benutzer');
+	
+function changeWeek(count) {
+	sbsSelectedWeek = addWeek(sbsSelectedWeek, count);
+	setContent('selectedWeek', sbsSelectedWeek);
+	if (window.sbsViewTable && window.sbsViewTablePath) {
+		if (window.sbsViewTablePath.match(/.*Woche.*/)) {
+			getAjax(window.sbsViewTable+'/Woche/'+sbsSelectedWeek, showTable);
+		}
+	}
+}	
 
 </script>
 
@@ -62,25 +79,32 @@ fillCache('Benutzer');
 		<input type='submit' value='Login' onclick='event.preventDefault();postAjax("login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(){window.setTimeout(function(){document.location.reload();},333);});return false;'/>
 	</form>	
 </div>
-	
+
+<div id="warning" style="color:red"></div>
 	
 <div id="tableContainer">
-		<div style="width: 90%">
-		Show: 
-		<button onclick="clearContent('tableEdit');getAjax('KorbInhaltView', showTable);">KorbInhaltView</button>
-		<button onclick="clearContent('tableEdit');getAjax('BenutzerBestellView', showTable);">BenutzerBestellView</button>
-		&#160; | &#160;
-		Edit:
-		<span style="display:inline-block;max-width: 60%;vertical-align: top;">
-			<button onclick="clearContent('table');getAjax('Benutzer', showTableEditor);">Benutzer</button>
-			<button onclick="clearContent('table');getAjax('BenutzerKorbAbo', showTableEditor);">BenutzerKorbAbo</button>
-			<button onclick="clearContent('table');getAjax('BenutzerUrlaub', showTableEditor);">BenutzerUrlaub</button>
-			<button onclick="clearContent('table');getAjax('Depot', showTableEditor);">Depot</button>
-			<button onclick="clearContent('table');getAjax('Korb', showTableEditor);">Korb</button>
-			<button onclick="clearContent('table');getAjax('KorbInhalt', showTableEditor);">KorbInhalt</button>
-			<button onclick="clearContent('table');getAjax('KorbInhaltWoche', showTableEditor);">KorbInhaltWoche</button>
-			<button onclick="clearContent('table');getAjax('Produkt', showTableEditor);">Produkt</button>
-			<button onclick="clearContent('table');getAjax('BenutzerZusatzBestellung', showTableEditor);">BenutzerZusatzBestellung</button>
+	<div style="width: 90%">
+		<span style="display:inline-block;max-width: 36%;vertical-align: top;">
+			<b>Berichte </b> Woche: <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>		<button onclick="changeWeek(+1)">&gt;&gt;</button>
+			<br/>
+			
+			<button onclick="clearContent('tableEdit');getAjax('KorbInhaltView/Woche/'+sbsSelectedWeek, showTable);">KorbInhalt mit Woche</button>
+			<button onclick="clearContent('tableEdit');getAjax('BenutzerBestellView/Woche/'+sbsSelectedWeek, showTable);">BenutzerBestellUebersicht</button>
+			<button onclick="clearContent('tableEdit');getAjax('DepotBestellView/Woche/'+sbsSelectedWeek, showTable);">DepotBestellUebersicht</button>
+			<button onclick="clearContent('tableEdit');getAjax('GesamtBestellView/Woche/'+sbsSelectedWeek, showTable);">GesamtBestellUebersicht</button>
+		</span>
+		<span style="display:inline-block;max-width: 50%;vertical-align: top;">
+			<b>Bearbeiten </b>  <a style="float:right;padding-right: 20px;" href="index.htm">zurück zu Startseite</a>
+			<br/>
+			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('Benutzer', showTableEditor);">Benutzer</button>
+			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('BenutzerKorbAbo', showTableEditor);">BenutzerKorbAbo</button>
+			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('BenutzerUrlaub', showTableEditor);">BenutzerUrlaub</button>
+			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('Depot', showTableEditor);">Depot</button>
+			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('Korb', showTableEditor);">Korb</button>
+			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('KorbInhalt', showTableEditor);">KorbInhalt</button>
+			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('KorbInhaltWoche', showTableEditor);">KorbInhaltWoche</button>
+			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('Produkt', showTableEditor);">Produkt</button>
+			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('BenutzerZusatzBestellung', showTableEditor);">BenutzerZusatzBestellung</button>
 		</span>
 	</div>
 
