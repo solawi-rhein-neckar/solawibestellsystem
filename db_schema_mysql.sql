@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Erstellungszeit: 16. Mrz 2019 um 22:14
+-- Erstellungszeit: 17. Mrz 2019 um 01:01
 -- Server-Version: 5.7.23-nmm1-log
 -- PHP-Version: 7.2.14-nmm1
 
@@ -35,7 +35,6 @@ CREATE TABLE `Benutzer` (
   `Cookie` varchar(255) NOT NULL,
   `Role_ID` int(11) NOT NULL DEFAULT '1',
   `Depot_ID` int(11) NOT NULL DEFAULT '1',
-  `Korb_ID` int(11) NOT NULL DEFAULT '1',
   `Anteile` int(11) NOT NULL DEFAULT '1',
   `PunkteStand` int(11) NOT NULL DEFAULT '0',
   `PunkteWoche` decimal(6,2) NOT NULL DEFAULT '2019.01',
@@ -70,6 +69,25 @@ CREATE TABLE `BenutzerBestellView` (
 -- --------------------------------------------------------
 
 --
+-- Tabellenstruktur für Tabelle `BenutzerKorbAbo`
+--
+
+CREATE TABLE `BenutzerKorbAbo` (
+  `ID` int(11) NOT NULL,
+  `Benutzer_ID` int(11) NOT NULL,
+  `Korb_ID` int(11) NOT NULL,
+  `StartWoche` decimal(6,2) NOT NULL DEFAULT '2019.01',
+  `EndWoche` decimal(6,2) DEFAULT NULL,
+  `Anzahl` int(11) NOT NULL DEFAULT '1',
+  `Sorte` varchar(31) DEFAULT NULL,
+  `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderBenutzer_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- --------------------------------------------------------
+
+--
 -- Tabellenstruktur für Tabelle `BenutzerUrlaub`
 --
 
@@ -95,7 +113,6 @@ CREATE TABLE `BenutzerView` (
 ,`Cookie` varchar(255)
 ,`Role_ID` int(11)
 ,`Depot_ID` int(11)
-,`Korb_ID` int(11)
 ,`Anteile` int(11)
 ,`PunkteStand` int(11)
 ,`PunkteWoche` decimal(6,2)
@@ -103,7 +120,7 @@ CREATE TABLE `BenutzerView` (
 ,`AenderZeitpunkt` timestamp
 ,`AenderBenutzer_ID` int(11)
 ,`Depot` varchar(255)
-,`Korb` varchar(255)
+,`Korb` text
 ,`Role` varchar(255)
 );
 
@@ -123,7 +140,6 @@ CREATE TABLE `BenutzerZusatzBestellung` (
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderBenutzer_ID` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
-
 
 -- --------------------------------------------------------
 
@@ -286,7 +302,7 @@ INSERT INTO `Role` (`ID`, `Name`, `LeseRechtDefault`, `SchreibRechtDefault`) VAL
 --
 DROP TABLE IF EXISTS `BenutzerBestellView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellView`  AS  select `u`.`Benutzer_ID` AS `Benutzer_ID`,`Benutzer`.`Name` AS `Benutzer`,`Depot`.`ID` AS `Depot_ID`,`Depot`.`Name` AS `Depot`,`u`.`Produkt_ID` AS `Produkt_ID`,`Produkt`.`Name` AS `Produkt`,`Produkt`.`Beschreibung` AS `Beschreibung`,`Produkt`.`Einheit` AS `Einheit`,`Produkt`.`Menge` AS `Menge`,`u`.`Woche` AS `Woche`,(case when isnull(`BenutzerUrlaub`.`ID`) then sum(`u`.`Anzahl`) else 0 end) AS `Anzahl`,sum((case when (`u`.`Quelle` = 1) then `u`.`Anzahl` else 0 end)) AS `AnzahlKorb`,sum((case when (`u`.`Quelle` = 2) then `u`.`Anzahl` else 0 end)) AS `AnzahlZusatz`,(`BenutzerUrlaub`.`ID` is not null) AS `Urlaub` from ((((((select 1 AS `Quelle`,`Benutzer`.`ID` AS `Benutzer_ID`,`KorbInhalt`.`Produkt_ID` AS `Produkt_ID`,`KorbInhalt`.`Anzahl` AS `Anzahl`,`KorbInhaltWoche`.`Woche` AS `Woche` from ((`KorbInhalt` join `KorbInhaltWoche` on((`KorbInhaltWoche`.`KorbInhalt_ID` = `KorbInhalt`.`ID`))) join `Benutzer` on((`Benutzer`.`Korb_ID` = `KorbInhalt`.`Korb_ID`)))) union all (select 2 AS `Quelle`,`BenutzerZusatzBestellung`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerZusatzBestellung`.`Produkt_ID` AS `Produkt_ID`,`BenutzerZusatzBestellung`.`Anzahl` AS `Anzahl`,`BenutzerZusatzBestellung`.`Woche` AS `Woche` from `BenutzerZusatzBestellung`)) `u` join `Produkt` on((`u`.`Produkt_ID` = `Produkt`.`ID`))) join `Benutzer` on((`u`.`Benutzer_ID` = `Benutzer`.`ID`))) join `Depot` on((`Benutzer`.`Depot_ID` = `Depot`.`ID`))) left join `BenutzerUrlaub` on(((`BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`) and (`BenutzerUrlaub`.`Woche` = `u`.`Woche`)))) group by `u`.`Benutzer_ID`,`Benutzer`.`Name`,`Depot`.`ID`,`Depot`.`Name`,`u`.`Produkt_ID`,`Produkt`.`Name`,`Produkt`.`Beschreibung`,`Produkt`.`Einheit`,`Produkt`.`Menge`,`u`.`Woche`,`BenutzerUrlaub`.`ID` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellView`  AS  select `u`.`Benutzer_ID` AS `Benutzer_ID`,`Benutzer`.`Name` AS `Benutzer`,`Depot`.`ID` AS `Depot_ID`,`Depot`.`Name` AS `Depot`,`u`.`Produkt_ID` AS `Produkt_ID`,`Produkt`.`Name` AS `Produkt`,`Produkt`.`Beschreibung` AS `Beschreibung`,`Produkt`.`Einheit` AS `Einheit`,`Produkt`.`Menge` AS `Menge`,`u`.`Woche` AS `Woche`,(case when isnull(`BenutzerUrlaub`.`ID`) then sum(`u`.`Anzahl`) else 0 end) AS `Anzahl`,sum((case when (`u`.`Quelle` = 1) then `u`.`Anzahl` else 0 end)) AS `AnzahlKorb`,sum((case when (`u`.`Quelle` = 2) then `u`.`Anzahl` else 0 end)) AS `AnzahlZusatz`,(`BenutzerUrlaub`.`ID` is not null) AS `Urlaub` from ((((((select 1 AS `Quelle`,`BenutzerKorbAbo`.`Benutzer_ID` AS `Benutzer_ID`,`KorbInhalt`.`Produkt_ID` AS `Produkt_ID`,`KorbInhalt`.`Anzahl` AS `Anzahl`,`KorbInhaltWoche`.`Woche` AS `Woche` from ((`KorbInhalt` join `KorbInhaltWoche` on((`KorbInhaltWoche`.`KorbInhalt_ID` = `KorbInhalt`.`ID`))) join `BenutzerKorbAbo` on(((`BenutzerKorbAbo`.`Korb_ID` = `KorbInhalt`.`Korb_ID`) and (isnull(`BenutzerKorbAbo`.`StartWoche`) or (`KorbInhaltWoche`.`Woche` > `BenutzerKorbAbo`.`StartWoche`)) and (isnull(`BenutzerKorbAbo`.`EndWoche`) or (`KorbInhaltWoche`.`Woche` < `BenutzerKorbAbo`.`EndWoche`)))))) union all (select 2 AS `Quelle`,`BenutzerZusatzBestellung`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerZusatzBestellung`.`Produkt_ID` AS `Produkt_ID`,`BenutzerZusatzBestellung`.`Anzahl` AS `Anzahl`,`BenutzerZusatzBestellung`.`Woche` AS `Woche` from `BenutzerZusatzBestellung`)) `u` join `Produkt` on((`u`.`Produkt_ID` = `Produkt`.`ID`))) join `Benutzer` on((`u`.`Benutzer_ID` = `Benutzer`.`ID`))) join `Depot` on((`Benutzer`.`Depot_ID` = `Depot`.`ID`))) left join `BenutzerUrlaub` on(((`BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`) and (`BenutzerUrlaub`.`Woche` = `u`.`Woche`)))) group by `u`.`Benutzer_ID`,`Benutzer`.`Name`,`Depot`.`ID`,`Depot`.`Name`,`u`.`Produkt_ID`,`Produkt`.`Name`,`Produkt`.`Beschreibung`,`Produkt`.`Einheit`,`Produkt`.`Menge`,`u`.`Woche`,`BenutzerUrlaub`.`ID` ;
 
 -- --------------------------------------------------------
 
@@ -295,7 +311,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `BenutzerView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerView`  AS  select `Benutzer`.`ID` AS `ID`,`Benutzer`.`Name` AS `Name`,`Benutzer`.`Passwort` AS `Passwort`,`Benutzer`.`Cookie` AS `Cookie`,`Benutzer`.`Role_ID` AS `Role_ID`,`Benutzer`.`Depot_ID` AS `Depot_ID`,`Benutzer`.`Korb_ID` AS `Korb_ID`,`Benutzer`.`Anteile` AS `Anteile`,`Benutzer`.`PunkteStand` AS `PunkteStand`,`Benutzer`.`PunkteWoche` AS `PunkteWoche`,`Benutzer`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`Benutzer`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`Benutzer`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`Depot`.`Name` AS `Depot`,`Korb`.`Name` AS `Korb`,`Role`.`Name` AS `Role` from (((`Benutzer` join `Korb` on((`Korb`.`ID` = `Benutzer`.`Korb_ID`))) join `Depot` on((`Depot`.`ID` = `Benutzer`.`Depot_ID`))) join `Role` on((`Benutzer`.`Role_ID` = `Role`.`ID`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerView`  AS  select `Benutzer`.`ID` AS `ID`,`Benutzer`.`Name` AS `Name`,`Benutzer`.`Passwort` AS `Passwort`,`Benutzer`.`Cookie` AS `Cookie`,`Benutzer`.`Role_ID` AS `Role_ID`,`Benutzer`.`Depot_ID` AS `Depot_ID`,`Benutzer`.`Anteile` AS `Anteile`,`Benutzer`.`PunkteStand` AS `PunkteStand`,`Benutzer`.`PunkteWoche` AS `PunkteWoche`,`Benutzer`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`Benutzer`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`Benutzer`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`Depot`.`Name` AS `Depot`,group_concat(concat(convert((case when (`BenutzerKorbAbo`.`Anzahl` <> 1) then concat(`BenutzerKorbAbo`.`Anzahl`,'x ') else '' end) using latin1),`Korb`.`Name`,convert((case when isnull(`BenutzerKorbAbo`.`Sorte`) then '' else concat(' ',`BenutzerKorbAbo`.`Sorte`) end) using latin1)) order by `Korb`.`ID` ASC separator ', ') AS `Korb`,`Role`.`Name` AS `Role` from ((((`Benutzer` left join `Role` on((`Benutzer`.`Role_ID` = `Role`.`ID`))) left join `Depot` on((`Depot`.`ID` = `Benutzer`.`Depot_ID`))) left join `BenutzerKorbAbo` on((`BenutzerKorbAbo`.`Benutzer_ID` = `Benutzer`.`ID`))) left join `Korb` on((`Korb`.`ID` = `BenutzerKorbAbo`.`Korb_ID`))) where ((isnull(`BenutzerKorbAbo`.`StartWoche`) or (`BenutzerKorbAbo`.`StartWoche` < ((year(curdate()) + '.') + yearweek(curdate(),0)))) and (isnull(`BenutzerKorbAbo`.`EndWoche`) or (`BenutzerKorbAbo`.`EndWoche` > ((year(curdate()) + '.') + yearweek(curdate(),0))))) group by `Benutzer`.`ID` ;
 
 -- --------------------------------------------------------
 
@@ -317,8 +333,15 @@ ALTER TABLE `Benutzer`
   ADD PRIMARY KEY (`ID`),
   ADD KEY `Role_ID` (`Role_ID`),
   ADD KEY `Depot_ID` (`Depot_ID`),
-  ADD KEY `Korb_ID` (`Korb_ID`),
   ADD KEY `BenutzerAender_Benutzer` (`AenderBenutzer_ID`);
+
+--
+-- Indizes für die Tabelle `BenutzerKorbAbo`
+--
+ALTER TABLE `BenutzerKorbAbo`
+  ADD PRIMARY KEY (`ID`),
+  ADD KEY `BenutzerKorbAboKorb` (`Korb_ID`),
+  ADD KEY `BenutzerKorbAboBenutzer` (`Benutzer_ID`);
 
 --
 -- Indizes für die Tabelle `BenutzerUrlaub`
@@ -401,6 +424,12 @@ ALTER TABLE `Benutzer`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
+-- AUTO_INCREMENT für Tabelle `BenutzerKorbAbo`
+--
+ALTER TABLE `BenutzerKorbAbo`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+
+--
 -- AUTO_INCREMENT für Tabelle `BenutzerUrlaub`
 --
 ALTER TABLE `BenutzerUrlaub`
@@ -422,7 +451,7 @@ ALTER TABLE `Depot`
 -- AUTO_INCREMENT für Tabelle `Korb`
 --
 ALTER TABLE `Korb`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT für Tabelle `KorbInhalt`
@@ -463,8 +492,14 @@ ALTER TABLE `Role`
 --
 ALTER TABLE `Benutzer`
   ADD CONSTRAINT `Benutzer_Depot` FOREIGN KEY (`Depot_ID`) REFERENCES `Depot` (`ID`),
-  ADD CONSTRAINT `Benutzer_Korb` FOREIGN KEY (`Korb_ID`) REFERENCES `Korb` (`ID`),
   ADD CONSTRAINT `Benutzer_Role` FOREIGN KEY (`Role_ID`) REFERENCES `Role` (`ID`);
+
+--
+-- Constraints der Tabelle `BenutzerKorbAbo`
+--
+ALTER TABLE `BenutzerKorbAbo`
+  ADD CONSTRAINT `BenutzerKorbAboBenutzer` FOREIGN KEY (`Benutzer_ID`) REFERENCES `Benutzer` (`ID`),
+  ADD CONSTRAINT `BenutzerKorbAboKorb` FOREIGN KEY (`Korb_ID`) REFERENCES `Korb` (`ID`);
 
 --
 -- Constraints der Tabelle `BenutzerUrlaub`
