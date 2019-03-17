@@ -48,7 +48,7 @@ use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!
 my $q = CGI::Simple->new;
 
 # get database handle
-my $dbh = DBI->connect("DBI:mysql:d02dbcf8", "d02dbcf8", "",  { RaiseError => 1, AutoCommit => 0 });
+my $dbh = DBI->connect("DBI:mysql:d02dbcf8", "d02dbcf8", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => 1 });
 
 # user wants to login?
 if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
