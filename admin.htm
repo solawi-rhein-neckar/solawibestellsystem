@@ -1,9 +1,13 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
+	 <meta charset="UTF-8"> 
 <title></title>
 	<style>
 		table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
+		.BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID { display:none; }
+		
+		.col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID { font-size: 75%; color:#999; }
 	</style>
 	<script src="util.js"> </script>
 	<script src="table.js"> </script>
@@ -60,7 +64,9 @@ function changeWeek(count) {
 	LOADING - PLEASE WAIT
 </div>
 <div id="blockui_edit" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;z-index:230;background-color:rgba(0,0,0,0.3);display:none;">
-	<div id="editor" style="display:inline-block;padding: 10px; margin: 10px; border:1px solid black;background-color:#FFF;">
+	<div style="display:inline-block;padding: 5px; margin: 10px; border:1px solid black;background-color:#FFF;">
+		<div id="editError" style="color:red;font-weight:bold;"></div>
+		<div id="editor" style="padding: 5px;"></div>
 	</div>
 </div>
 
@@ -88,31 +94,34 @@ function changeWeek(count) {
 			<b>Berichte </b> Woche: <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>		<button onclick="changeWeek(+1)">&gt;&gt;</button>
 			<br/>
 			
-			<button onclick="clearContent('tableEdit');getAjax('KorbInhaltView/Woche/'+sbsSelectedWeek, showTable);">KorbInhalt mit Woche</button>
-			<button onclick="clearContent('tableEdit');getAjax('BenutzerBestellView/Woche/'+sbsSelectedWeek, showTable);">BenutzerBestellUebersicht</button>
-			<button onclick="clearContent('tableEdit');getAjax('DepotBestellView/Woche/'+sbsSelectedWeek, showTable);">DepotBestellUebersicht</button>
-			<button onclick="clearContent('tableEdit');getAjax('GesamtBestellView/Woche/'+sbsSelectedWeek, showTable);">GesamtBestellUebersicht</button>
+			<button onclick="clearContent('tableEdit');clearContent('tableEditPath');getAjax('BenutzerView', showTable);">BenutzerAbo</button>
+			<button onclick="clearContent('tableEdit');clearContent('tableEditPath');getAjax('KorbInhaltView/Woche/'+sbsSelectedWeek, showTable);">KorbInhalt</button>
+			<button onclick="clearContent('tableEdit');clearContent('tableEditPath');getAjax('BenutzerBestellView/Woche/'+sbsSelectedWeek, showTable);">BenutzerBestellSicht</button>
+			<button onclick="clearContent('tableEdit');clearContent('tableEditPath');getAjax('DepotBestellView/Woche/'+sbsSelectedWeek, showTable);">DepotBestellÜbersicht</button>
+			<button onclick="clearContent('tableEdit');clearContent('tableEditPath');getAjax('GesamtBestellView/Woche/'+sbsSelectedWeek, showTable);">GesamtBestellÜbersicht</button>
 		</span>
 		<span style="display:inline-block;max-width: 50%;vertical-align: top;">
-			<b>Bearbeiten </b>  <a style="float:right;padding-right: 20px;" href="index.htm">zur�ck zu Startseite</a>
+			<b>Bearbeiten </b>  <a style="float:right;padding-right: 20px;" href="index.htm">zurück zu Startseite</a>
 			<br/>
-			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('Benutzer', showTableEditor);">Benutzer</button>
-			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('BenutzerKorbAbo', showTableEditor);">BenutzerKorbAbo</button>
-			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('BenutzerUrlaub', showTableEditor);">BenutzerUrlaub</button>
-			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('Depot', showTableEditor);">Depot</button>
-			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('Korb', showTableEditor);">Korb</button>
-			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('KorbInhalt', showTableEditor);">KorbInhalt</button>
-			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('KorbInhaltWoche', showTableEditor);">KorbInhaltWoche</button>
-			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('Produkt', showTableEditor);">Produkt</button>
-			<button onclick="clearContent('table');window.sbsViewTable='';getAjax('BenutzerZusatzBestellung', showTableEditor);">BenutzerZusatzBestellung</button>
+			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('Benutzer', showTableEditor);">Benutzer</button>
+			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('BenutzerKorbAbo', showTableEditor);">BenutzerKorbAbo</button>
+			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('BenutzerUrlaub', showTableEditor);">BenutzerUrlaub</button>
+			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('Depot', showTableEditor);">Depot</button>
+			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('Korb', showTableEditor);">Korb</button>
+			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('KorbInhalt', showTableEditor);">KorbInhalt</button>
+			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('KorbInhaltWoche', showTableEditor);">KorbInhaltWoche</button>
+			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('Produkt', showTableEditor);">Produkt</button>
+			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('BenutzerZusatzBestellung', showTableEditor);">BenutzerZusatzBestellung</button>
 		</span>
 	</div>
 
 	<br/>
 	
 	<table id="tableEdit" cellspacing="0" > </table>
+	<div id="tableEditPath"> </div>
 	
 	<table id="table" cellspacing="0" > </table>
+	<div id="tablePath"> </div>
 
 </div>
 	

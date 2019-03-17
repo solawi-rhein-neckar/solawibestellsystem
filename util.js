@@ -20,7 +20,7 @@ function postAjax(path, data, success, method) {
 		}
 	};
 	xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-	xhr.setRequestHeader('Content-Type', 'application/json');
+	xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
 	if (data) {
 		show('blockui_post');
 		xhr.send(JSON.stringify(data));
@@ -52,12 +52,15 @@ function setContent(id, text) {
 function clearContent(id) {
 	if (id == 'table') {
 		window.sbsViewTablePath = '';
+		window.sbsViewTable = '';
 	} else if (id == 'tableEdit') {
 		window.sbsEditTablePath = '';
 		window.sbsEditTable = '';
 	}
 	var ele = document.getElementById(id);
-	ele.innerHTML = '';
+	if (ele) {
+		ele.innerHTML = '';
+	}
 }
 
 // This script is released to the public domain and may be used, modified and
