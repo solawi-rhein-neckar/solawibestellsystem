@@ -14,7 +14,7 @@
 // sbs = global variable prefix for SolawiBestellSystem
 var sbsUser;
 var sbsWeek;
-var sbsTableCache = {};
+var sbsTableCache = {'Korb':[],'Role':[],'Depot':[],'Produkt':[]};
 
 //check login status
 getAjax('Benutzer/OWN', function(userResponse){
@@ -26,6 +26,13 @@ getAjax('Benutzer/OWN', function(userResponse){
 		hide('logoutbtn');
 	} 
 });
+	
+fillCache('Korb');
+fillCache('Role');
+fillCache('Depot');
+fillCache('Produkt');
+fillCache('Benutzer');
+
 </script>
 
 	
@@ -58,20 +65,28 @@ getAjax('Benutzer/OWN', function(userResponse){
 	
 	
 <div id="tableContainer">
+		<div style="width: 90%">
+		Show: 
+		<button onclick="clearContent('tableEdit');getAjax('KorbInhaltView', showTable);">KorbInhaltView</button>
+		<button onclick="clearContent('tableEdit');getAjax('BenutzerBestellView', showTable);">BenutzerBestellView</button>
+		&#160; | &#160;
+		Edit:
+		<span style="display:inline-block;max-width: 60%;vertical-align: top;">
+			<button onclick="clearContent('table');getAjax('Benutzer', showTableEditor);">Benutzer</button>
+			<button onclick="clearContent('table');getAjax('BenutzerKorbAbo', showTableEditor);">BenutzerKorbAbo</button>
+			<button onclick="clearContent('table');getAjax('BenutzerUrlaub', showTableEditor);">BenutzerUrlaub</button>
+			<button onclick="clearContent('table');getAjax('Depot', showTableEditor);">Depot</button>
+			<button onclick="clearContent('table');getAjax('Korb', showTableEditor);">Korb</button>
+			<button onclick="clearContent('table');getAjax('KorbInhalt', showTableEditor);">KorbInhalt</button>
+			<button onclick="clearContent('table');getAjax('KorbInhaltWoche', showTableEditor);">KorbInhaltWoche</button>
+			<button onclick="clearContent('table');getAjax('Produkt', showTableEditor);">Produkt</button>
+			<button onclick="clearContent('table');getAjax('BenutzerZusatzBestellung', showTableEditor);">BenutzerZusatzBestellung</button>
+		</span>
+	</div>
 
-	<button onclick="getAjax('Benutzer', showTableEditor);">Benutzer</button>
-	<button onclick="getAjax('BenutzerUrlaub', showTableEditor);">BenutzerUrlaub</button>
-	<button onclick="getAjax('Depot', showTableEditor);">Depot</button>
-	<button onclick="getAjax('Korb', showTableEditor);">Korb</button>
-	<button onclick="getAjax('KorbInhalt', showTableEditor);">KorbInhalt</button>
-	<button onclick="getAjax('KorbInhaltWoche', showTableEditor);">KorbInhaltWoche</button>
-	<button onclick="getAjax('Produkt', showTableEditor);">Produkt</button>
-	<button onclick="getAjax('ZusatzBestellung', showTableEditor);">ZusatzBestellung</button>
-
-	<table id="tableEdit" cellspacing="0" > </table>
+	<br/>
 	
-	<br/>
-	<br/>
+	<table id="tableEdit" cellspacing="0" > </table>
 	
 	<table id="table" cellspacing="0" > </table>
 

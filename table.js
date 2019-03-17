@@ -202,3 +202,12 @@ function saveEditorInputs(event2) {
 		hide('blockui_edit');
 	}
 }
+
+function fillCache(tableName) {
+	getAjax(tableName, function(resp) { 
+		sbsTableCache[tableName] = []; 
+		for(var i = 0; i < resp.length; i++) {
+			sbsTableCache[tableName][resp[i]['ID']] = resp[i]; 
+		}
+	});
+}

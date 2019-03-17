@@ -49,7 +49,16 @@ function setContent(id, text) {
 	var ele = document.getElementById(id);
 	if (ele) ele.innerText=text;
 }
-
+function clearContent(id) {
+	if (id == 'table') {
+		window.sbsViewTablePath = '';
+	} else if (id == 'tableEdit') {
+		window.sbsEditTablePath = '';
+		window.sbsEditTable = '';
+	}
+	var ele = document.getElementById(id);
+	ele.innerHTML = '';
+}
 
 // This script is released to the public domain and may be used, modified and
 // distributed without restrictions. Attribution not necessary but appreciated.

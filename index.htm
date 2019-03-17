@@ -57,18 +57,15 @@ getAjax('BenutzerView/MY', function(userResponse){
 	} 
 });
 
+fillCache('Produkt');
+
 function changeWeek(count) {
 	sbsSelectedWeek = addWeek(sbsSelectedWeek, count);
 	setContent('selectedWeek', sbsSelectedWeek);
 	getAjax('BenutzerBestellView/Woche/'+sbsSelectedWeek, showTable);
 	getAjax('BenutzerZusatzBestellung/Woche/'+sbsSelectedWeek, showTableEditor);
 }
-
-		
 	
-//getAjax('Korb', function(resp) { for(var i = 0; i < resp.length; i++){sbsKorb[resp[i]['ID']] = resp[i]; } });
-getAjax('Produkt', function(resp) { for(var i = 0; i < resp.length; i++){sbsTableCache['Produkt'][resp[i]['ID']] = resp[i]; } });
-
 </script>
 	
 	
@@ -133,6 +130,17 @@ getAjax('Produkt', function(resp) { for(var i = 0; i < resp.length; i++){sbsTabl
 	<br/>
 	<table id="tableEdit" cellspacing="0" > </table>
 </div>
+	
+	<!-- 
+
+FRAGEN and depotleiter:
+
+- regelmäßige serienbestellungen üblich? Beispiele? Jede Woche / Jeden Monat?
+
+- Abo-Typ-Wechsel möglich? 
+
+
+-->
 	
 </body>
 </html>
