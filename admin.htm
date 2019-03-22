@@ -1,129 +1,188 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-	 <meta charset="UTF-8"> 
+     <meta charset="UTF-8">
 <title></title>
-	<style>
-		table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
-		.BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID { display:none; }
-		
-		.col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID { font-size: 75%; color:#999; }
-	</style>
-	<script src="util.js"> </script>
-	<script src="table.js"> </script>
+    <style>
+        table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
+        .BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID { display:none; }
+
+        .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID { font-size: 75%; color:#999; }
+
+        .weekYear {
+            display: inline-block;
+            font-family: courier new;
+            line-height: 26px;
+            font-size: 13px;
+            word-break: break-all;
+            word-wrap: break-word;
+            width: 758px;
+            border-top: 1px solid black;
+            border-bottom: 1px solid black;
+            border-right: 1px solid black;
+        }
+        .weekWeek {
+            padding: 5px 0px;
+            border-left: 1px solid black;
+            border-bottom: 1px solid black;
+            cursor:pointer;
+        }
+        .weektable {
+            font-size: 11.8px;
+            text-align: center;
+        }
+        .weektable td {
+            cursor:pointer;
+        }
+        .weektable td.inactive:hover, .weektable td span:hover, .weekWeek:hover, .weektable a:hover {
+            background-color:orange;
+        }
+        .weektable td.active {
+            background-color:yellow;
+        }
+        .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
+            background-color:aqua;
+        }
+
+    </style>
+    <script src="util.js"> </script>
+    <script src="table.js"> </script>
+    <script src="weekSelect.js"> </script>
+
 </head>
 <body>
 
 <script>
-// sbs = global variable prefix for SolawiBestellSystem
-var sbsUser;
-var sbsDay = 4;
-var sbsDate = new Date();
-var sbsWeek = sbsDate.getWeekYear() + "." +  (sbsDate.getDay() == 0 || sbsDate.getDay() > sbsDay ? sbsDate.getWeek() + 1 : sbsDate.getWeek());
-var sbsSelectedWeek = sbsWeek;
-var sbsTableCache = {'Korb':[],'Role':[],'Depot':[],'Produkt':[]};
+var SBS = SolawiBestellSystem();
 
 //check login status
 getAjax('Benutzer/OWN', function(userResponse){
-	if (userResponse.length > 0) {
-		sbsUser = userResponse[0];
-		document.getElementById('logoutbtn').innerText='Logout ' + sbsUser.Name; 
-		setContent('selectedWeek', sbsSelectedWeek);
-		if (sbsUser.Role_ID != 2) {
-			setContent('warning', 'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
-		}
-	} else { 
-		show('loginform');
-		hide('logoutbtn');
-	} 
+    if (userResponse.length > 0) {
+        SBS.user = userResponse[0];
+        document.getElementById('logoutbtn').innerText='Logout ' + SBS.user.Name;
+        setContent('selectedWeek', SBS.selectedWeek);
+        if (SBS.user.Role_ID != 2) {
+            setContent('warning', 'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
+        }
+    } else {
+        show('loginform');
+        hide('logoutbtn');
+    }
 });
-	
-fillCache('Korb');
-fillCache('Role');
-fillCache('Depot');
-fillCache('Produkt');
-fillCache('Benutzer');
-	
+
+SBS.fillCache('Korb');
+SBS.fillCache('Role');
+SBS.fillCache('Depot');
+SBS.fillCache('Produkt');
+SBS.fillCache('Benutzer');
+
 function changeWeek(count) {
-	sbsSelectedWeek = addWeek(sbsSelectedWeek, count);
-	setContent('selectedWeek', sbsSelectedWeek);
-	if (window.sbsViewTable && window.sbsViewTablePath) {
-		if (window.sbsViewTablePath.match(/.*Woche.*/)) {
-			getAjax(window.sbsViewTable+'/Woche/'+sbsSelectedWeek, showTable);
-		}
-	}
-}	
+    SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
+    setContent('selectedWeek', SBS.selectedWeek);
+    if (SBS.getViewTable() && SBS.getViewTablePath()) {
+        if (SBS.getViewTablePath().match(/.*Woche.*/)) {
+            getAjax(SBS.getViewTable()+'/Woche/'+SBS.selectedWeek, SBS.showTable);
+        }
+    }
+}
 
 </script>
 
-	
+
 <div id="blockui_post" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:250;background-color:rgba(0,0,0,0.3);display:none;">
-	SAVING DATA...
+    SAVING DATA...
 </div>
 <div id="blockui_get" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:240;background-color:rgba(0,0,0,0.3);display:none;">
-	LOADING - PLEASE WAIT
+    LOADING - PLEASE WAIT
 </div>
 <div id="blockui_edit" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;z-index:230;background-color:rgba(0,0,0,0.3);display:none;">
-	<div style="display:inline-block;padding: 5px; margin: 10px; border:1px solid black;background-color:#FFF;">
-		<div id="editError" style="color:red;font-weight:bold;"></div>
-		<div id="editor" style="padding: 5px;"></div>
-	</div>
+        <div style="display:inline-block;padding: 5px; margin: 10px; border:1px solid black;background-color:#FFF;">
+        <div id="editError" style="color:red;font-weight:bold;"></div>
+        <div id="editor" style="padding: 5px;"></div>
+    </div>
 </div>
 
-	
+
 <div id="logoutform" style="position:fixed;right: 1px; top: 0; width: 15em; height: 5em; background: #EEE; border: 1px dotted #999;text-align:center;">
-	<button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');" >Logout</button>
-	<div id="messages" style="height:3.3em; overflow:hidden;font-size=85%;box-shadow: inset 0px -9px 9px -9px black;">
-	</div>
+    <button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');" >Logout</button>
+    <div id="messages" style="height:3.3em; overflow:hidden;font-size=85%;box-shadow: inset 0px -9px 9px -9px black;">
+    </div>
 </div>
 
 <div id="loginform" style="display:none">
-	LOGIN:
-	<form method='post' action='/cgi-bin/query.pl/login'>
-		Name: <input type='text' id='inpName' name='name' placeholder='name'/>
-		Password: <input type='password' id='inpPass' name='password'/>
-		<input type='submit' value='Login' onclick='event.preventDefault();postAjax("login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(){window.setTimeout(function(){document.location.reload();},333);});return false;'/>
-	</form>	
+    LOGIN:
+    <form method='post' action='/cgi-bin/query.pl/login'>
+        Name: <input type='text' id='inpName' name='name' placeholder='name'/>
+        Password: <input type='password' id='inpPass' name='password'/>
+        <input type='submit' value='Login' onclick='event.preventDefault();postAjax("login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(){window.setTimeout(function(){document.location.reload();},333);});return false;'/>
+    </form>
 </div>
 
 <div id="warning" style="color:red"></div>
-	
-<div id="tableContainer">
-	<div style="width: 90%">
-		<span style="display:inline-block;max-width: 36%;vertical-align: top;">
-			<b>Berichte </b> Woche: <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>		<button onclick="changeWeek(+1)">&gt;&gt;</button>
-			<br/>
-			
-			<button onclick="clearContent('tableEdit');clearContent('tableEditPath');getAjax('BenutzerView', showTable);">BenutzerAbo</button>
-			<button onclick="clearContent('tableEdit');clearContent('tableEditPath');getAjax('KorbInhaltView/Woche/'+sbsSelectedWeek, showTable);">KorbInhalt</button>
-			<button onclick="clearContent('tableEdit');clearContent('tableEditPath');getAjax('BenutzerBestellView/Woche/'+sbsSelectedWeek, showTable);">BenutzerBestellSicht</button>
-			<button onclick="clearContent('tableEdit');clearContent('tableEditPath');getAjax('DepotBestellView/Woche/'+sbsSelectedWeek, showTable);">DepotBestellÜbersicht</button>
-			<button onclick="clearContent('tableEdit');clearContent('tableEditPath');getAjax('GesamtBestellView/Woche/'+sbsSelectedWeek, showTable);">GesamtBestellÜbersicht</button>
-		</span>
-		<span style="display:inline-block;max-width: 50%;vertical-align: top;">
-			<b>Bearbeiten </b>  <a style="float:right;padding-right: 20px;" href="index.htm">zurück zu Startseite</a>
-			<br/>
-			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('Benutzer', showTableEditor);">Benutzer</button>
-			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('BenutzerKorbAbo', showTableEditor);">BenutzerKorbAbo</button>
-			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('BenutzerUrlaub', showTableEditor);">BenutzerUrlaub</button>
-			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('Depot', showTableEditor);">Depot</button>
-			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('Korb', showTableEditor);">Korb</button>
-			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('KorbInhalt', showTableEditor);">KorbInhalt</button>
-			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('KorbInhaltWoche', showTableEditor);">KorbInhaltWoche</button>
-			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('Produkt', showTableEditor);">Produkt</button>
-			<button onclick="clearContent('table');clearContent('tablePath');window.sbsViewTable='';getAjax('BenutzerZusatzBestellung', showTableEditor);">BenutzerZusatzBestellung</button>
-		</span>
-	</div>
 
-	<br/>
-	
-	<table id="tableEdit" cellspacing="0" > </table>
-	<div id="tableEditPath"> </div>
-	
-	<table id="table" cellspacing="0" > </table>
-	<div id="tablePath"> </div>
+<div id="tableContainer">
+    <div style="width: 90%">
+        <span style="display:inline-block;max-width: 36%;vertical-align: top;">
+            <b>Berichte </b> Woche: <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>
+            <br/>
+
+            <button onclick="SBS.reset();getAjax('BenutzerView', SBS.showTable);">BenutzerAbo</button>
+            <button onclick="SBS.reset();getAjax('KorbInhaltView/Woche/'+SBS.selectedWeek, SBS.showTable);">KorbInhalt</button>
+            <button onclick="SBS.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBS.showTable);">BenutzerBestellSicht</button>
+            <button onclick="SBS.reset();getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBS.showTable);">DepotBestellÜbersicht</button>
+            <button onclick="SBS.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBS.showTable);">GesamtBestellÜbersicht</button>
+        </span>
+        <span style="display:inline-block;max-width: 50%;vertical-align: top;">
+            <b>Bearbeiten </b>  <a style="float:right;padding-right: 20px;" href="index.htm">zurück zu Startseite</a>
+            <br/>
+            <button onclick="SBS.reset();getAjax('Benutzer', SBS.showTableEditor);">Benutzer</button>
+            <button onclick="SBS.reset();getAjax('BenutzerKorbAbo', SBS.showTableEditor);">BenutzerKorbAbo</button>
+            <button onclick="SBS.reset();getAjax('BenutzerUrlaub', SBS.showTableEditor);">BenutzerUrlaub</button>
+            <button onclick="SBS.reset();getAjax('Depot', SBS.showTableEditor);">Depot</button>
+            <button onclick="SBS.reset();getAjax('Korb', SBS.showTableEditor);">Korb</button>
+            <button onclick="SBS.reset();getAjax('KorbInhalt', SBS.showTableEditor);">KorbInhalt</button>
+            <button onclick="SBS.reset();getAjax('KorbInhaltWoche', SBS.showTableEditor);">KorbInhaltWoche</button>
+            <button onclick="SBS.reset();getAjax('Produkt', SBS.showTableEditor);">Produkt</button>
+            <button onclick="SBS.reset();getAjax('BenutzerZusatzBestellung', SBS.showTableEditor);">BenutzerZusatzBestellung</button>
+        </span>
+    </div>
+
+    <br/>
+
+    <table id="tableEdit" cellspacing="0" > </table>
+    <div id="tableEditPath"> </div>
+
+    <table id="table" cellspacing="0" > </table>
+    <div id="tablePath"> </div>
+
+
+    <br/>
+    <br/><!--
+    <button onclick="SBS.year--;clearContent('week');setContent('weekYear', SBS.year);createWeekSelect('week', SBS.year);">&lt;&lt;</button>
+    <span id="weekYear">2019</span>
+    <button onclick="SBS.year++;clearContent('week');setContent('weekYear', SBS.year);createWeekSelect('week', SBS.year);">&gt;&gt;</button>
+    <div id="week"></div>
+    <script>//SBS.year=2019;createWeekSelectLarge('week', SBS.year);
+
+    var weekSelect = Object.create(WeekSelect);
+    weekSelect.addTo(document.getElementById('week'));
+
+    </script>
+
+    <br/>
+    <br/>
+    table id="weektable" cellspacing="0" style="font-size: 11.8px;text-align:center;">
+        <tr style="height:1em;"><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+
+        <tr><td title="31.12.-06.01.">01</td><td>02</td><td>03</td><td>04</td><td>05</td><td>06</td><td>07</td><td>08</td><td>09</td><td>10</td><td>11</td><td>12</td></tr>
+        <tr><td>13</td><td>14</td><td>15</td><td>16</td><td>17</td><td>18</td><td>19</td><td>20</td><td>21</td><td>22</td><td>23</td><td>24</td></tr>
+        <tr><td>25</td><td>26</td><td>27</td><td>28</td><td>29</td><td>30</td><td>31</td><td>32</td><td>33</td><td>34</td><td>35</td><td>36</td></tr>
+        <tr><td>37</td><td>38</td><td>39</td><td>40</td><td>41</td><td>42</td><td>43</td><td>44</td><td>45</td><td>46</td><td>47</td><td>48</td></tr>
+        <tr><td>49</td><td>50</td><td>51</td><td>52</td><td>&lt;&lt;</td><td colspan="2"><b>2019</b></td><td>&gt;&gt;</td> <td>Q1</td><td>Q2</td><td>Q3</td><td>Q4</td></tr>
+    </table-->
+
 
 </div>
-	
+
 </body>
 </html>

@@ -1,16 +1,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-	 <meta charset="UTF-8"> 
+     <meta charset="UTF-8">
 <title></title>
-	<style>
-		table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
-		.col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID, .inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID {display: none;}
-		#table .col_Anzahl, .col_Produkt { font-weight: bold; }
-		.col_ID > div {display: none;}
-		.inp_Woche, .inp_Benutzer_ID {color:#CCC; pointer-events:none; }
-		
-		#greeting {
+    <style>
+        table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
+        .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID, .inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID {display: none;}
+        #table .col_Anzahl, .col_Produkt { font-weight: bold; }
+        .col_ID > div {display: none;}
+        .inp_Woche, .inp_Benutzer_ID {color:#CCC; pointer-events:none; }
+
+        #greeting {
 font-size: 125%;
 padding-top: 100px;
 background: url(http://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png);
@@ -18,140 +18,137 @@ background: url(http://www.solawi-rhein-neckar.org/public/wp-content/uploads/201
     background-repeat: repeat;
 background-repeat: no-repeat;
 
-		}
-		#navi { position: absolute;}
-		
-	</style>
-	<script src="util.js"> </script>
-	<script src="table.js"> </script>
+        }
+        #navi { position: absolute;}
+
+    </style>
+    <script src="util.js"> </script>
+    <script src="table.js"> </script>
 </head>
 <body>
-	
+
 <script>
-// sbs = global variable prefix for SolawiBestellSystem
-var sbsDay = 4; /* day of week index for the collection day (Abholtag) 4 = thursday */
-var sbsUser;
-var sbsDate = new Date();
-var sbsWeek = sbsDate.getWeekYear() + "." +  (sbsDate.getDay() == 0 || sbsDate.getDay() > sbsDay ? sbsDate.getWeek() + 1 : sbsDate.getWeek());
-var sbsSelectedWeek = sbsWeek;
-var sbsTableCache = {'Produkt' : []};
-var sbsDisableUnavailableProducts = 1;
+var SBS = SolawiBestellSystem();
+SBS.disableUnavailableProducts = 1;
 
 //check login status
 getAjax('BenutzerView/MY', function(userResponse){
-	if (userResponse.length > 0) {
-		sbsUser = userResponse[0];
-		setContent('logoutbtn', 'Logout ' + sbsUser.Name); 
-		
-		setContent('calendarWeek', sbsWeek + ( sbsDate.getDay() != sbsDay ? ' (in ' + ((7 + sbsDay - sbsDate.getDay()) % 7) + ' Tagen)' : ' (heute)' ));
-		
-		setContent('selectedWeek', sbsSelectedWeek);
-		
-		setContent('korb', sbsUser.Korb);
-		
-		getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+sbsSelectedWeek, showTable);
-		
-		getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+sbsSelectedWeek, showTableEditor);
-		
-	} else { 
-		show('loginform');
-		hide('logoutbtn');
-		hide('greeting');
-	} 
+    if (userResponse.length > 0) {
+        SBS.user = userResponse[0];
+        setContent('logoutbtn', 'Logout ' + SBS.user.Name);
+
+        setContent('calendarWeek', SBS.week + ( SBS.date.getDay() != SBS.day ? ' (in ' + ((7 + SBS.day - SBS.date.getDay()) % 7) + ' Tagen)' : ' (heute)' ));
+
+        setContent('selectedWeek', SBS.selectedWeek);
+
+        setContent('korb', SBS.user.Korb);
+
+        getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBS.showTable);
+
+        getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBS.showTableEditor);
+
+    } else {
+        show('loginform');
+        hide('logoutbtn');
+        hide('greeting');
+    }
 });
 
-fillCache('Produkt');
+SBS.fillCache('Produkt');
 
 function changeWeek(count) {
-	sbsSelectedWeek = addWeek(sbsSelectedWeek, count);
-	setContent('selectedWeek', sbsSelectedWeek);
-	getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+sbsSelectedWeek, showTable);
-	getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+sbsSelectedWeek, showTableEditor);
+    SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
+    setContent('selectedWeek', SBS.selectedWeek);
+    getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBS.showTable);
+    getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBS.showTableEditor);
 }
 
 </script>
-	
-	
+
+
 <div id="blockui_post" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:250;background-color:rgba(0,0,0,0.3);display:none;">
-	SAVING DATA...
+    SAVING DATA...
 </div>
 <div id="blockui_get" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:240;background-color:rgba(0,0,0,0.3);display:none;">
-	LOADING - PLEASE WAIT
+    LOADING - PLEASE WAIT
 </div>
 <div id="blockui_edit" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;z-index:230;background-color:rgba(0,0,0,0.3);display:none;">
-	<div style="display:inline-block;padding: 5px; margin: 10px; border:1px solid black;background-color:#FFF;">
-		<div id="editError" style="color:red;font-weight:bold;"></div>
-		<div id="editor" style="padding: 5px;"></div>
-	</div>
+    <div style="position:absolute;left:0;right:0;top:30%;">
+        <div style="display:inline-block;padding: 6px;border:1px solid black;background-color:#FFF;">
+            <div style="font-weight:bold;padding-bottom:5px;">Zusatzbestellung hinzufügen:</div>
+            <div id="editError" style="color:red;font-weight:bold;"></div>
+            <div id="editor" style="padding: 5px;"></div>
+        </div>
+    </div>
 </div>
 
-	
+
 <div id="logoutform" style="position:fixed;right: 1px; top: 0; width: 15em; height: 5em; background: #EEE; border: 1px dotted #999;text-align:center;">
-	<button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');" >Logout</button>
-	<div id="messages" style="height:3.3em; overflow:hidden;font-size=85%;box-shadow: inset 0px -9px 9px -9px black;">
-	</div>
+    <button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');" >Logout</button>
+    <div id="messages" style="height:3.3em; overflow:hidden;font-size=85%;box-shadow: inset 0px -9px 9px -9px black;">
+    </div>
 </div>
 
 <div id="loginform" style="display:none">
-	LOGIN:
-	<form method='post' action='/cgi-bin/query.pl/login'>
-		Name: <input type='text' id='inpName' name='name' placeholder='name'/>
-		Password: <input type='password' id='inpPass' name='password'/>
-		<input type='submit' value='Login' onclick='event.preventDefault();postAjax("login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(){window.setTimeout(function(){document.location.reload();},333);});return false;'/>
-	</form>	
+    LOGIN:
+    <form method='post' action='/cgi-bin/query.pl/login'>
+        Name: <input type='text' id='inpName' name='name' placeholder='name'/>
+        Password: <input type='password' id='inpPass' name='password'/>
+        <input type='submit' value='Login' onclick='event.preventDefault();postAjax("login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(){window.setTimeout(function(){document.location.reload();},333);});return false;'/>
+    </form>
 </div>
 
-	
+
 <div id="navi">
-	<a href="admin.htm">zu den Berichten + Admin-Bereich</a>
+    <a href="admin.htm">zu den Berichten + Admin-Bereich</a>
 </div>
 <div id="greeting">
-	
-	Willkommen im Solawi Bestellsystem! Die nächste Lieferung/Abholung ist in Kalenderwoche
-	<span id="calendarWeek" style="font-weight:bold;">00</span>
-	<br/>
-	<br/>
-	Du erhälst jede Woche: <span id="korb" style="font-weight:bold;">Vegetarisch_mit_Milch</span>
-	<br/>
-	<br/>
-	Dein Anteil in Kalenderwoche <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>		<button onclick="changeWeek(+1)">&gt;&gt;</button>:
+
+    Willkommen im Solawi Bestellsystem! Die nächste Lieferung/Abholung ist in Kalenderwoche
+    <span id="calendarWeek" style="font-weight:bold;">00</span>
+    <br/>
+    <br/>
+    Du erhälst jede Woche: <span id="korb" style="font-weight:bold;">Vegetarisch_mit_Milch</span>
+    <br/>
+    <br/>
+    Dein Anteil in Kalenderwoche <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>:
 
 </div>
 
 <br/>
-	
+
 <div id="tableContainer">
 <!--
-	<button onclick="getAjax('Benutzer', showTable);">Benutzer</button>
-	<button onclick="getAjax('BenutzerUrlaub', showTable);">BenutzerUrlaub</button>
-	<button onclick="getAjax('Depot', showTable);">Depot</button>
-	<button onclick="getAjax('Korb', showTable);">Korb</button>
-	<button onclick="getAjax('KorbInhalt', showTable);">KorbInhalt</button>
-	<button onclick="getAjax('KorbInhaltWoche', showTable);">KorbInhaltWoche</button>
-	<button onclick="getAjax('Produkt', showTable);">Produkt</button>
-	<button onclick="getAjax('ZusatzBestellung', showTable);">ZusatzBestellung</button>-->
-	
-	<table id="table" cellspacing="0" > </table>
-	<br/>
-	<br/>
-	Zusatzbestellung bearbeiten (Die zusätzlich bestellte Menge wird in der oberen Tabelle berücksichtigt):
-	<br/>
-	<br/>
-	<table id="tableEdit" cellspacing="0" > </table>
-	<br/>
-	Hinweis: negative Anzahl bestellen, um etwas abzubestellen. Die insgesamt bestellte Anzahl ist in der oberen Tabelle fett gedruckt.
+    <button onclick="getAjax('Benutzer', showTable);">Benutzer</button>
+    <button onclick="getAjax('BenutzerUrlaub', showTable);">BenutzerUrlaub</button>
+    <button onclick="getAjax('Depot', showTable);">Depot</button>
+    <button onclick="getAjax('Korb', showTable);">Korb</button>
+    <button onclick="getAjax('KorbInhalt', showTable);">KorbInhalt</button>
+    <button onclick="getAjax('KorbInhaltWoche', showTable);">KorbInhaltWoche</button>
+    <button onclick="getAjax('Produkt', showTable);">Produkt</button>
+    <button onclick="getAjax('ZusatzBestellung', showTable);">ZusatzBestellung</button>-->
+
+    <table id="table" cellspacing="0" > </table>
+    <br/>
+    <br/>
+    Zusatzbestellung bearbeiten (Die zusätzlich bestellte Menge wird in der oberen Tabelle berücksichtigt):
+    <br/>
+    <br/>
+    <table id="tableEdit" cellspacing="0" > </table>
+    <br/>
+    Hinweis: negative Anzahl bestellen, um etwas abzubestellen. Die insgesamt bestellte Anzahl ist in der oberen Tabelle fett gedruckt.
 </div>
-	
-	<!-- 
+
+    <!--
 
 FRAGEN and depotleiter:
 
 - regelmäßige serienbestellungen üblich? Beispiele? Jede Woche / Jeden Monat?
 
-- Abo-Typ-Wechsel möglich? 
+- Abo-Typ-Wechsel möglich?
 
 
 -->
-	
+
 </body>
 </html>
