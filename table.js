@@ -1,22 +1,15 @@
 /*
     Defined as (closure-)function, because we don't want to put all our private variables into the global namespace.
-    Its expected that you have exactly ONE instance of the SolawiBestellSystem. We do not use 'this' anywhere.
-    Assign your single instance ONCE like this (you can use whatever name you like instead SBS):
+    The new operator is not required! (We do not use 'this' anywhere in the code).
 
-    var SBS = SolawiBestellSystem();  // no need to use 'new' or Object.create!
+    Its expected to create max. 1 instance!
+
+    var SBS = SolawiBestellSytem();  // no need to use 'new' or Object.create!
 */
 function SolawiBestellSystem() {
-
-    /* public methods, this hash will be returned by this function, see last line: */
-    const pub = {
+   const pub = {
         fillCache: fillCache,
-        showTableEditor: showTableEditor,
-        showTable: showTable,
-        getEditTable: function(){return editTable},
-        getEditTablePath: function(){return editTablePath},
-        getViewTable: function(){return viewTable},
-        getViewTablePath: function(){return viewTablePath},
-        reset: function(){clearContent('table');clearContent('tablePath');clearContent('tableEdit');clearContent('tableEditPath');editTable='';editTablePath='';viewTable='';viewTablePath='';}
+        saveOrdersIntoProductCache: saveOrdersIntoProductCache
     };
     /* public fields */
     pub.date = new Date();
@@ -26,14 +19,83 @@ function SolawiBestellSystem() {
     pub.disableUnavailableProducts = 0;
     pub.user = null;
 
-    /* private vars */
-    var editTable;
-    var editTablePath;
-    var viewTable;
-    var viewTablePath;
-
     /* private constants */
     const tableCache = {'Korb':[],'Role':[],'Depot':[],'Produkt':[]};
+    pub.tableCache = tableCache;
+
+    /* public */
+    function fillCache(tableName) {
+        getAjax(tableName, function(resp) {
+            tableCache[tableName] = [];
+            // convert response (array) into hash (by ID)
+            for(var i = 0; i < resp.length; i++) {
+                tableCache[tableName][resp[i]['ID']] = resp[i];
+            }
+        });
+    }
+
+    function saveOrdersIntoProductCache(response) {
+        //save ZusatzBestellCount into ProductCache, so it can be reused for Validation!
+        if (tableCache['Produkt']) {
+            // first reset for all products. Because response will not contain orders for products that are NOT ordered
+            for (var i = 0; i < tableCache['Produkt'].length; i++) {
+                if (tableCache['Produkt'][i]) {
+                    tableCache['Produkt'][i]['AnzahlZusatzBestellung'] = 0;
+                    tableCache['Produkt'][i]['AnzahlBestellung'] = 0;
+                }
+            }
+        }
+        for (var i = 0; i<response.length; i++) {
+            var row = response[i];
+            if (tableCache['Produkt'] && row.Produkt_ID && tableCache['Produkt'][row.Produkt_ID]) {
+                tableCache['Produkt'][row.Produkt_ID]['AnzahlZusatzBestellung'] = row.AnzahlZusatz;
+                tableCache['Produkt'][row.Produkt_ID]['AnzahlBestellung'] = row.Anzahl;
+            }
+        }
+    }
+
+    return pub;
+}
+
+/*
+    Defined as (closure-)function, because we don't want to put all our private variables into the global namespace.
+    The new operator is not required! (We do not use 'this' anywhere in the code).
+
+    Its expected to create max. 1 or 2 instances - in this case use:
+
+    var SBTedit= SolawiTable(SBS, 'tableHtmlId', 'tablePathHtmlId', true);  // no need to use 'new' or Object.create!
+
+    If you have dependent table that should also be reloaded whenever the editable table changes:
+
+    var SBTview = SolawiTable(SBS, 'viewRableHtmlId', 'viewTablePathHtmlId', false);
+    var reloadEdit = SBTedit.reload;
+    SBTedit.reload = function() {SBTview.reload(); reloadEdit();}
+
+    You have to provide the global SolawiBestellSytem (SBS) as first parameter!
+
+    No need to recreate the instance at anytime, to display another table just call SBT.showTable once again with another response.
+    You will only need multiple instances to display multiple tables at the same time.
+*/
+function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
+
+    /* public methods, this hash will be returned by this function, see last line: */
+    const pub = {
+        showTable: showTable,
+        getTableName: function(){return tableName},
+        getTablePath: function(){return tablePath},
+        reload: function(){getAjax(tablePath, showTable)},
+        reset: function(){clearContent(elemIdTable);clearContent(elemIdLabel);tableName='';tablePath='';}
+    };
+
+    /* private vars */
+    var sbs = pSbs;
+    var elemIdTable = pElemIdTable;
+    var elemIdLabel = pElemIdLabel;
+    var editable = pEditable;
+    var tableName;
+    var tablePath;
+
+    /* private constants */
     const columnOrder = ['ID'
         ,'KurzName'
         ,'Name'
@@ -43,6 +105,8 @@ function SolawiBestellSystem() {
         ,'Benutzer'
         ,'Depot_ID'
         ,'Depot'
+        ,'Korb'
+        ,'Korb_ID'
         ,'Produkt_ID'
         ,'Produkt'
         ,'Menge'
@@ -58,8 +122,7 @@ function SolawiBestellSystem() {
         ,'Anteile'
         ,'StartWoche'
         ,'EndWoche'
-        ,'Korb'
-        ,'Korb_ID'
+
         ,'Punkte'
         ,'PunkteStand'
         ,'PunkteWoche'
@@ -100,54 +163,17 @@ function SolawiBestellSystem() {
     const columnWeight = {};
 
     /* public */
-    function fillCache(tableName) {
-        getAjax(tableName, function(resp) {
-            tableCache[tableName] = [];
-            for(var i = 0; i < resp.length; i++) {
-                tableCache[tableName][resp[i]['ID']] = resp[i];
-            }
-        });
-    }
-
-    /* public */
-    function showTableEditor(response, path) {
-        showTable(response, path, true);
-    }
-
-    /* public */
-    function showTable(response, path, editable) {
-        if (path.match(/^BenutzerBestellView.*$/) && pub.disableUnavailableProducts) {
-            //save ZusatzBestellCount into ProductCache, so it can be reused for Validation!
-            if (tableCache['Produkt']) {
-                for (var i = 0; i < tableCache['Produkt'].length; i++) {
-                    if (tableCache['Produkt'][i]) {
-                        tableCache['Produkt'][i]['AnzahlZusatzBestellung'] = 0;
-                        tableCache['Produkt'][i]['AnzahlBestellung'] = 0;
-                    }
-                }
-            }
-            for (var i = 0; i<response.length; i++) {
-                var row = response[i];
-                if (tableCache['Produkt'] && row.Produkt_ID && tableCache['Produkt'][row.Produkt_ID]) {
-                    tableCache['Produkt'][row.Produkt_ID]['AnzahlZusatzBestellung'] = row.AnzahlZusatz;
-                    tableCache['Produkt'][row.Produkt_ID]['AnzahlBestellung'] = row.Anzahl;
-                }
-            }
+    function showTable(response, path) {
+        if (path.match(/^BenutzerBestellView.*$/) && sbs.disableUnavailableProducts) {
+            sbs.saveOrdersIntoProductCache(response);
         }
 
-        var table = document.getElementById(editable ? 'tableEdit' : 'table');
+        var table = document.getElementById(elemIdTable);
         table.innerHTML = '';
-        if (editable) {
-            editTablePath = path;
-            editTable = path.match(/[^\/]*/)[0];
-            setContent('tableEditPath', editTablePath);
-            table.className = editTable;
-        } else {
-            viewTablePath = path;
-            viewTable = path.match(/[^\/]*/)[0];
-            setContent('tablePath', viewTablePath);
-            table.className = viewTable;
-        }
+        tablePath = path;
+        tableName = path.match(/[^\/]*/)[0];
+        setContent(elemIdLabel, tablePath);
+        table.className = tableName;
         var keys = null;
         if (response.length == 0 && editable) {
             var tr = document.createElement("TR");
@@ -157,8 +183,8 @@ function SolawiBestellSystem() {
             var btn = document.createElement('BUTTON');
             td.appendChild(btn);
 
-            btn.addEventListener('click', createFuncAddNew(editTable == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Woche'] : editTable == 'KorbInhaltWoche' ? ['KorbInhalt_ID'] : editTable == 'KorbInhalt' ? ['Korb_ID', 'Produkt_ID'] : ['Name']));
-            btn.innerText = editTable == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
+            btn.addEventListener('click', createFuncAddNew(tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Woche'] : tableName == 'KorbInhaltWoche' ? ['KorbInhalt_ID'] : tableName == 'KorbInhalt' ? ['Korb_ID', 'Produkt_ID'] : ['Name']));
+            btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
         }
         for (var i = 0; i < response.length; i++) {
             if(!keys) {
@@ -173,13 +199,13 @@ function SolawiBestellSystem() {
                     if (j == 0 && editable) {
                         var btn = document.createElement('BUTTON');
                         btn.addEventListener('click', createFuncAddNew(keys));
-                        btn.innerText = editTable == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
+                        btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
                         td.appendChild(btn);
                     } else {
                         td.innerText = keys[j];
                     }
                 }
-                if (editTable == 'KorbInhalt') {
+                if (tableName == 'KorbInhalt') {
                     var wtd = document.createElement("TD");
                     wtd.className='col_KorbInhaltWoche';
                     wtd.innerText='Wochen';
@@ -205,12 +231,12 @@ function SolawiBestellSystem() {
                     div.id = "span_" + path + "_" + i + "_" + j;
                     div.innerText = response[i][keys[j]] === undefined || response[i][keys[j]] === null ? '-' : response[i][keys[j]];
                     var relation = keys[j].match(/^(.*)_ID$/);
-                    if (relation && tableCache[relation[1]]) {
-                        var row = tableCache[relation[1]][div.innerText];
+                    if (relation && sbs.tableCache[relation[1]]) {
+                        var row = sbs.tableCache[relation[1]][div.innerText];
                         div.dataValue = div.innerText;
                         div.innerText = row == null ? ' (' + div.innerText + ') ' : row.Name;
                     }
-                    if ((! pub.disableUnavailableProducts) && editable && keys[j] != 'ID' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && keys[j] != 'ErstellZeitpunkt') {
+                    if ((! sbs.disableUnavailableProducts) && editable && keys[j] != 'ID' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && keys[j] != 'ErstellZeitpunkt') {
                         div.addEventListener('click', showEditor);
                         div.style.cursor = "pointer";
                         div.title = "click to edit!";
@@ -220,14 +246,14 @@ function SolawiBestellSystem() {
 
                     td.appendChild(div);
                 }
-                if (editTable == 'KorbInhalt') {
+                if (tableName == 'KorbInhalt') {
                     var td = document.createElement("TD");
                     td.className='col_KorbInhaltWoche';
                     tr.appendChild(td);
                     var weekSelect = Object.create(WeekSelect);
-                    weekSelect.year = Number(pub.selectedWeek.match(/[0-9]+/)[0]);
+                    weekSelect.year = Number(sbs.selectedWeek.match(/[0-9]+/)[0]);
                     weekSelect.tableName = 'KorbInhaltWoche/KorbInhalt_ID/' + response[i]["ID"],
-                    weekSelect.postData = {KorbInhalt_ID: response[i]["ID"], Woche: pub.selectedWeek},
+                    weekSelect.postData = {KorbInhalt_ID: response[i]["ID"], Woche: sbs.selectedWeek},
                     weekSelect.addTo(td);
                 }
                 if (editable) {
@@ -236,8 +262,8 @@ function SolawiBestellSystem() {
                     delBtn.innerText='entf.';
                     delBtn.dataId = response[i]["ID"];
                     delBtn.addEventListener('click', function(event) {
-                        if (confirm(editTable + "/" + event.target.dataId + ' wirklich löschen?')) {
-                            deleteAjax(editTable + "/" + event.target.dataId, function(){getAjax(editTablePath, showTableEditor);if (viewTablePath)getAjax(viewTablePath, showTable);});
+                        if (confirm(tableName + "/" + event.target.dataId + ' wirklich löschen?')) {
+                            deleteAjax(tableName + "/" + event.target.dataId, function(){pub.reload();});
                         }
                     });
                     delTd.appendChild(delBtn);
@@ -249,16 +275,16 @@ function SolawiBestellSystem() {
 
     function createFuncAddNew(keys) {
         return function() {
-            var edit = resetEditor("Add new " + editTable);
+            var edit = resetEditor("Add new " + tableName);
             for (var j = 0; j < keys.length; j++) {
                 if (keys[j] != 'ID' && keys[j] != 'ErstellZeitpunkt' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt') {
 
                     var inp = createInput(keys[j]);
 
                     if (keys[j] == 'Benutzer_ID') {
-                        inp.value = pub.user.ID;
-                    } else if (keys[j] == 'Woche' && pub.selectedWeek) {
-                        inp.value = pub.selectedWeek;
+                        inp.value = sbs.user.ID;
+                    } else if (keys[j] == 'Woche' && sbs.selectedWeek) {
+                        inp.value = sbs.selectedWeek;
                     }
                     edit.appendChild(inp);
                 }
@@ -270,15 +296,15 @@ function SolawiBestellSystem() {
     function createInput(key) {
         var inp;
         var relation = key.match(/^(.*)_ID$/);
-        if (relation && tableCache[relation[1]]) {
+        if (relation && sbs.tableCache[relation[1]]) {
             inp = document.createElement("SELECT");
-            for (var k=0; k<tableCache[relation[1]].length; k++) {
-                var row = tableCache[relation[1]][k];
+            for (var k=0; k<sbs.tableCache[relation[1]].length; k++) {
+                var row = sbs.tableCache[relation[1]][k];
                 if (row && row.ID) {
                     var opt = document.createElement("OPTION");
                     opt.value=row.ID;
                     opt.innerText=row.Name;
-                    if (pub.disableUnavailableProducts && (row.AnzahlZusatzBestellungMax < 0 || (row.AnzahlZusatzBestellung > 0 && row.AnzahlZusatzBestellungMax <= row.AnzahlZusatzBestellung) || (row.AnzahlZusatzBestellungMax == 0 && row.AnzahlBestellung <= 0) )) {
+                    if (sbs.disableUnavailableProducts && (row.AnzahlZusatzBestellungMax < 0 || (row.AnzahlZusatzBestellung > 0 && row.AnzahlZusatzBestellungMax <= row.AnzahlZusatzBestellung) || (row.AnzahlZusatzBestellungMax == 0 && row.AnzahlBestellung <= 0) )) {
 
                         opt.disabled='disabled';
                         if (row.AnzahlZusatzBestellungMax <= 0) {
@@ -359,13 +385,13 @@ function SolawiBestellSystem() {
                 }
             }
 
-            if (pub.disableUnavailableProducts && data['Produkt_ID'] && tableCache['Produkt']) {
+            if (sbs.disableUnavailableProducts && data['Produkt_ID'] && sbs.tableCache['Produkt']) {
                 if ((! data['Anzahl']) || data['Anzahl'] == 0) {
                     setContent('editError', 'Anzahl muss eingegeben werden!');
                     event2.target.disabled='';
                     return;
                 }
-                var row = tableCache['Produkt'][data['Produkt_ID']]
+                var row = sbs.tableCache['Produkt'][data['Produkt_ID']]
                 if (row) {
                     var min = row.AnzahlBestellung * -1;
                     var max = row.AnzahlZusatzBestellungMax - row.AnzahlZusatzBestellung;
@@ -378,7 +404,7 @@ function SolawiBestellSystem() {
             }
 
 
-            postAjax(editTable + (id ? '/'+id : ''), data, function(){getAjax(editTablePath, showTableEditor);if (viewTablePath)getAjax(viewTablePath, showTable);});
+            postAjax(tableName + (id ? '/'+id : ''), data, function(){pub.reload();});
             hide('blockui_edit');
         }
     }

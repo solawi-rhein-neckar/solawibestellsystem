@@ -30,6 +30,10 @@ background-repeat: no-repeat;
 <script>
 var SBS = SolawiBestellSystem();
 SBS.disableUnavailableProducts = 1;
+var SBTedit= SolawiTable(SBS, 'tableEdit', 'tableEditPath', true);
+var SBTview = SolawiTable(SBS, 'table', 'tablePath', false);
+var reloadEdit = SBTedit.reload;
+SBTedit.reload = function() {SBTview.reload(); reloadEdit();}
 
 //check login status
 getAjax('BenutzerView/MY', function(userResponse){
@@ -43,9 +47,9 @@ getAjax('BenutzerView/MY', function(userResponse){
 
         setContent('korb', SBS.user.Korb);
 
-        getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBS.showTable);
+        getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
 
-        getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBS.showTableEditor);
+        getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
 
     } else {
         show('loginform');
@@ -59,8 +63,8 @@ SBS.fillCache('Produkt');
 function changeWeek(count) {
     SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
     setContent('selectedWeek', SBS.selectedWeek);
-    getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBS.showTable);
-    getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBS.showTableEditor);
+    getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
+    getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
 }
 
 </script>

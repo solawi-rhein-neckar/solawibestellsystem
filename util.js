@@ -1,4 +1,46 @@
 /*
+Test objects without NEW --> works fine, only 'this' is not available (points to window)
+
+var Obj = function() {
+    var pub = {
+        val: 1,
+        print: print,
+        set: setPriv
+    }
+
+    var priv = 2;
+
+    function print() {
+        console.log('Obj.priv = ' + priv + ', val = ' + pub.val);
+    }
+
+    function setPriv(val) {
+        priv = val;
+    }
+
+    return pub;
+}
+
+var a = Obj();
+var b = Obj();
+a.val = 3;
+a.set(4);
+a.print();
+b.print();
+b.val = 5;
+b.set(6);
+
+var c = Obj();
+a.print();
+b.print();
+c.print();
+console.log(a);
+console.log(b);
+console.log(c);
+*/
+/*
+Objects with Object.create AND (to avoid that the javascript enging has to  re-create the private functions again and again for each instance): closure
+
 var template = (function() {
     const pub = {
         myVar: 1,
@@ -42,6 +84,8 @@ console.log(inst1);
 console.log(inst2);
 */
 /*
+Objects with new
+
 var struct = {
     name: 'foo',
     id: 2,
@@ -113,7 +157,7 @@ window.activeAjaxRequestCount = 0;
 
 function postAjax(path, data, success, method) {
     var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-    xhr.open(method || (data ? 'POST' : 'GET'), 'http://www.solawi.fairtrademap.de/cgi-bin/resql.pl/' + path);
+    xhr.open(method || (data ? 'POST' : 'GET'), 'http://solawi.fairtrademap.de/cgi-bin/resql.pl/' + path);
     xhr.onreadystatechange = function() {
         window.activeAjaxRequestCount--;
         if (window.activeAjaxRequestCount <= 0) {

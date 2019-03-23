@@ -54,6 +54,8 @@
 
 <script>
 var SBS = SolawiBestellSystem();
+var SBTedit= SolawiTable(SBS, 'table', 'tablePath', true);
+var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false);
 
 //check login status
 getAjax('Benutzer/OWN', function(userResponse){
@@ -79,9 +81,9 @@ SBS.fillCache('Benutzer');
 function changeWeek(count) {
     SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
     setContent('selectedWeek', SBS.selectedWeek);
-    if (SBS.getViewTable() && SBS.getViewTablePath()) {
-        if (SBS.getViewTablePath().match(/.*Woche.*/)) {
-            getAjax(SBS.getViewTable()+'/Woche/'+SBS.selectedWeek, SBS.showTable);
+    if (SBTview.getTableName() && SBTview.getTablePath()) {
+        if (SBTview.getTablePath().match(/.*Woche.*/)) {
+            getAjax(SBTview.getTableName()+'/Woche/'+SBS.selectedWeek, SBTview.showTable);
         }
     }
 }
@@ -126,24 +128,24 @@ function changeWeek(count) {
             <b>Berichte </b> Woche: <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>
             <br/>
 
-            <button onclick="SBS.reset();getAjax('BenutzerView', SBS.showTable);">BenutzerAbo</button>
-            <button onclick="SBS.reset();getAjax('KorbInhaltView/Woche/'+SBS.selectedWeek, SBS.showTable);">KorbInhalt</button>
-            <button onclick="SBS.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBS.showTable);">BenutzerBestellSicht</button>
-            <button onclick="SBS.reset();getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBS.showTable);">DepotBestellÜbersicht</button>
-            <button onclick="SBS.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBS.showTable);">GesamtBestellÜbersicht</button>
+            <button onclick="SBTedit.reset();getAjax('BenutzerView', SBTview.showTable);">BenutzerAbo</button>
+            <button onclick="SBTedit.reset();getAjax('KorbInhaltView/Woche/'+SBS.selectedWeek, SBTview.showTable);">KorbInhalt</button>
+            <button onclick="SBTedit.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellSicht</button>
+            <button onclick="SBTedit.reset();getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">DepotBestellÜbersicht</button>
+            <button onclick="SBTedit.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">GesamtBestellÜbersicht</button>
         </span>
         <span style="display:inline-block;max-width: 50%;vertical-align: top;">
             <b>Bearbeiten </b>  <a style="float:right;padding-right: 20px;" href="index.htm">zurück zu Startseite</a>
             <br/>
-            <button onclick="SBS.reset();getAjax('Benutzer', SBS.showTableEditor);">Benutzer</button>
-            <button onclick="SBS.reset();getAjax('BenutzerKorbAbo', SBS.showTableEditor);">BenutzerKorbAbo</button>
-            <button onclick="SBS.reset();getAjax('BenutzerUrlaub', SBS.showTableEditor);">BenutzerUrlaub</button>
-            <button onclick="SBS.reset();getAjax('Depot', SBS.showTableEditor);">Depot</button>
-            <button onclick="SBS.reset();getAjax('Korb', SBS.showTableEditor);">Korb</button>
-            <button onclick="SBS.reset();getAjax('KorbInhalt', SBS.showTableEditor);">KorbInhalt</button>
-            <button onclick="SBS.reset();getAjax('KorbInhaltWoche', SBS.showTableEditor);">KorbInhaltWoche</button>
-            <button onclick="SBS.reset();getAjax('Produkt', SBS.showTableEditor);">Produkt</button>
-            <button onclick="SBS.reset();getAjax('BenutzerZusatzBestellung', SBS.showTableEditor);">BenutzerZusatzBestellung</button>
+            <button onclick="SBTview.reset();getAjax('Depot', SBTedit.showTable);">Depot</button>
+            <button onclick="SBTview.reset();getAjax('Korb', SBTedit.showTable);">Korb</button>
+            <button onclick="SBTview.reset();getAjax('KorbInhalt', SBTedit.showTable);">KorbInhalt</button>
+            <!--button onclick="SBS.reset();getAjax('KorbInhaltWoche', SBTedit.showTable);">KorbInhaltWoche</button-->
+            <button onclick="SBTview.reset();getAjax('Produkt', SBTedit.showTable);">Produkt</button>
+            <button onclick="SBTview.reset();getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
+            <button onclick="SBTview.reset();getAjax('BenutzerKorbAbo', SBTedit.showTable);">BenutzerKorbAbo</button>
+            <button onclick="SBTview.reset();getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">BenutzerZusatzBestellung</button>
+            <button onclick="SBTview.reset();getAjax('BenutzerUrlaub', SBTedit.showTable);">BenutzerUrlaub</button>
         </span>
     </div>
 
