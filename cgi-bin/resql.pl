@@ -283,9 +283,11 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				if ( $user->{Role_ID} != 2 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
 					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ?";
 					@values = ($id, $id2, $user->{ID});
-				} else {
+				} elsif ( $user->{Role_ID} == 2 ) {
 					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ?";
 					@values = ($id, $id2);
+				} else {
+					print encode_json({result => 0, reason => "no delete right for role " . $user->{Role_ID} . " on table $table"});
 				}
 			} else {
 				print  encode_json({result => 0, reason => "unknown path " . $q->path_info});
