@@ -5,6 +5,8 @@ use warnings;
 #
 # This is a minimal bridge between a javascript REST Client and a MySQL Database
 #
+# https://github.com/solawi-rhein-neckar/solawibestellsystem/wiki/REST-API-Dokumentation
+#
 # Features:
 #
 # Login: Expects table with name "Benutzer" and columns "ID", "Name", "Passwort", "Cookie" and Role_ID
