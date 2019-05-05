@@ -183,7 +183,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
             var btn = document.createElement('BUTTON');
             td.appendChild(btn);
 
-            btn.addEventListener('click', createFuncAddNew(tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Woche'] : tableName == 'KorbInhaltWoche' ? ['KorbInhalt_ID'] : tableName == 'KorbInhalt' ? ['Korb_ID', 'Produkt_ID'] : ['Name']));
+            btn.addEventListener('click', createFuncAddNew(tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Woche'] : tableName == 'KorbInhaltWoche' ? ['KorbInhalt_ID'] : tableName == 'KorbInhalt' ? ['Korb_ID', 'Produkt_ID'] : tableName == 'BenutzerKorbAbo' ? ['Benutzer_ID', 'Korb_ID', 'Anzahl', 'Sorte', 'StartWoche', 'EndWoche'] : ['Name']));
             btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
         }
         for (var i = 0; i < response.length; i++) {
@@ -229,7 +229,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
 
                     var div = document.createElement("DIV");
                     div.id = "span_" + path + "_" + i + "_" + j;
-                    div.innerText = response[i][keys[j]] === undefined || response[i][keys[j]] === null ? '-' : response[i][keys[j]];
+                    div.innerText = response[i][keys[j]] === undefined || response[i][keys[j]] === null || response[i][keys[j]] === '' ? '-' : response[i][keys[j]];
                     var relation = keys[j].match(/^(.*)_ID$/);
                     if (relation && sbs.tableCache[relation[1]]) {
                         var row = sbs.tableCache[relation[1]][div.innerText];
