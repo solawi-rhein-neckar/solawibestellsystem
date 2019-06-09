@@ -3,8 +3,8 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Erstellungszeit: 18. Mrz 2019 um 00:07
--- Server-Version: 5.7.23-nmm1-log
+-- Erstellungszeit: 09. Jun 2019 um 11:46
+-- Server-Version: 5.7.25-nmm2-log
 -- PHP-Version: 7.2.14-nmm1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
@@ -21,6 +21,8 @@ SET time_zone = "+00:00";
 --
 -- Datenbank: `d02dbcf8`
 --
+CREATE DATABASE IF NOT EXISTS `d02dbcf8` DEFAULT CHARACTER SET utf8 COLLATE utf8_german2_ci;
+USE `d02dbcf8`;
 
 -- --------------------------------------------------------
 
@@ -366,6 +368,18 @@ CREATE TABLE `Recht` (
   `SchreibeEigene` tinyint(1) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
+--
+-- Trigger `Recht`
+--
+DELIMITER $$
+CREATE TRIGGER `before_Recht_update` BEFORE UPDATE ON `Recht` FOR EACH ROW BEGIN
+    INSERT INTO Recht
+    SET Role_ID = '2',
+     Spalte = Test; 
+END
+$$
+DELIMITER ;
+
 -- --------------------------------------------------------
 
 --
@@ -378,14 +392,6 @@ CREATE TABLE `Role` (
   `LeseRechtDefault` tinyint(1) NOT NULL DEFAULT '1',
   `SchreibRechtDefault` tinyint(1) NOT NULL DEFAULT '0'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
-
---
--- Daten für Tabelle `Role`
---
-
-INSERT INTO `Role` (`ID`, `Name`, `LeseRechtDefault`, `SchreibRechtDefault`) VALUES
-(1, 'Mitglied', 1, 0),
-(2, 'Admin', 1, 1);
 
 -- --------------------------------------------------------
 
@@ -468,6 +474,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 ALTER TABLE `Benutzer`
   ADD PRIMARY KEY (`ID`),
+  ADD UNIQUE KEY `Name_Unique` (`Name`),
   ADD KEY `Role_ID` (`Role_ID`),
   ADD KEY `Depot_ID` (`Depot_ID`),
   ADD KEY `BenutzerAender_Benutzer` (`AenderBenutzer_ID`);
@@ -527,7 +534,7 @@ ALTER TABLE `KorbInhalt`
 --
 ALTER TABLE `KorbInhaltWoche`
   ADD PRIMARY KEY (`ID`),
-  ADD KEY `KorbInhaltWoche_KorbInhalt` (`KorbInhalt_ID`),
+  ADD UNIQUE KEY `korbwocheuniqu` (`KorbInhalt_ID`,`Woche`),
   ADD KEY `KorbInhaltWoche_AenderBenutzer` (`AenderBenutzer_ID`);
 
 --
@@ -558,55 +565,55 @@ ALTER TABLE `Role`
 -- AUTO_INCREMENT für Tabelle `Benutzer`
 --
 ALTER TABLE `Benutzer`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT für Tabelle `BenutzerKorbAbo`
 --
 ALTER TABLE `BenutzerKorbAbo`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT für Tabelle `BenutzerUrlaub`
 --
 ALTER TABLE `BenutzerUrlaub`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT für Tabelle `BenutzerZusatzBestellung`
 --
 ALTER TABLE `BenutzerZusatzBestellung`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=54;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT für Tabelle `Depot`
 --
 ALTER TABLE `Depot`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT für Tabelle `Korb`
 --
 ALTER TABLE `Korb`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT für Tabelle `KorbInhalt`
 --
 ALTER TABLE `KorbInhalt`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT für Tabelle `KorbInhaltWoche`
 --
 ALTER TABLE `KorbInhaltWoche`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=15;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT für Tabelle `Produkt`
 --
 ALTER TABLE `Produkt`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- AUTO_INCREMENT für Tabelle `Recht`
@@ -618,7 +625,7 @@ ALTER TABLE `Recht`
 -- AUTO_INCREMENT für Tabelle `Role`
 --
 ALTER TABLE `Role`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints der exportierten Tabellen
