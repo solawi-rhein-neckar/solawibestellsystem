@@ -1,10 +1,10 @@
 /*
 Please create instances of this prototype with
 
-    var weekSelect = Object.create(WeekSelect, {year: 2019, table: 'KorbInhaltWoche'});
+    var weekSelect = Object.create(WeekSelect, {year: 2019, table: 'ModulInhaltWoche'});
     weekSelect.year = 2020;
-    weekSelect.tableName = 'KorbInhaltWoche/KorbInhalt_ID/1',
-    weekSelect.postData = {KorbInhalt_ID: 1, Woche: ''},
+    weekSelect.tableName = 'ModulInhaltWoche/ModulInhalt_ID/1',
+    weekSelect.postData = {ModulInhalt_ID: 1, Woche: ''},
 
 as last, supply the parent element:
 
@@ -14,8 +14,8 @@ The weekSelect will at itself as a child to this element, make api calls and dis
 */
 var WeekSelect = {
     year: 2019,
-    tableName: 'KorbInhaltWoche/KorbInhalt_ID/1',
-    postData: {KorbInhalt_ID: 1, Woche: '2019.01'},
+    tableName: 'ModulInhaltWoche/ModulInhalt_ID/1',
+    postData: {ModulInhalt_ID: 1, Woche: '2019.01'},
 
     addTo: function(pElem) {
         this.elem = pElem;

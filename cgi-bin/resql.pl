@@ -11,7 +11,7 @@ use warnings;
 #
 # Login: Expects table with name "Benutzer" and columns "ID", "Name", "Passwort", "Cookie" and Role_ID
 # -- POST resql.pl/login
-#   body {name: 'Admin', password: 'Qwerty123'}  # sic! table-column german, json englisch, because Table-Column-Names will be visible in Frontend, json will not
+#   body {name: 'Admin', password: 'Qwerty123'}  # sic! table-column german, json english, because Table-Column-Names will be visible in Frontend, json will not
 #
 # --> will set a random sessionid cookie and write its value into Benutzer.Cookie column
 #
@@ -188,7 +188,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				my $reason;
 				while (($key, $value) = each (%$body)) {
 					if ( (((! ($table =~ /^Benutzer$/)) || $user->{Role_ID} == 2) && $key =~ /^[a-zA-Z0-9_]+$/)
-						 || $key =~ /^(Name|Passwort|Email|Korb_ID|)$/ ) {
+						 || $key =~ /^(Name|Passwort|Email|Modul_ID|)$/ ) {
 						if ( (!($key =~ /^Passwort$/)) || length($value) > 3) {
 							push(@keys, "`$key` = ?");
 							push(@values, $value);
@@ -197,6 +197,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 						}
 					}
 				}
+				push(@keys, "`AenderBenutzer_ID` = ?");
+				push(@values, $user->{ID});
+				push(@keys, "`AenderZeitpunkt` = NOW()");
 				my $keys = join(",", @keys);
 				push(@values, $id);
 				my $sql;
@@ -238,6 +241,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 							push(@placeholders, "?");
 						}
 					}
+					push(@keys, "`AenderBenutzer_ID`");
+					push(@values, $user->{ID});
+					push(@placeholders, "?");
 
 					my $keys = join(",", @keys);
 					my $placeholders = join(",", @placeholders);
@@ -260,7 +266,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			}
 
 		} elsif ( $q->request_method() =~ /^DELETE$/ ) {
+			my $preSql;
 			my $sql;
+			my @preValues;
 			my @values;
 			if ( $q->path_info =~ /^\/([a-zA-Z]+)\/([a-zA-Z0-9]+)$/ ) {
 				my $table = $1;
@@ -268,9 +276,13 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 
 				if ( $user->{Role_ID} != 2 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
 					@values = ($id, $user->{ID});
+					@preValues = ($user->{ID}, $id, $user->{ID});
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `ID` = ? AND `Benutzer_ID` = ?";
 					$sql = "DELETE FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ?";
 				} elsif ( $user->{Role_ID} == 2 ) {
 					@values = ($id);
+					@preValues = ($user->{ID}, $id);
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `ID` = ?";
 					$sql = "DELETE FROM `$table` WHERE `ID` = ?";
 				} else {
 					print encode_json({result => 0, reason => "no delete right for role " . $user->{Role_ID} . " on table $table"});
@@ -283,9 +295,13 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				my $id2 = $5;
 
 				if ( $user->{Role_ID} != 2 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ?";
+					@preValues = ($user->{ID}, $id, $id2, $user->{ID});
 					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ?";
 					@values = ($id, $id2, $user->{ID});
 				} elsif ( $user->{Role_ID} == 2 ) {
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ?";
+					@preValues = ($user->{ID}, $id, $id2);
 					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ?";
 					@values = ($id, $id2);
 				} else {
@@ -296,6 +312,8 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			}
 			if ($sql) {
 				eval {
+					my $preSth = $dbh->prepare($preSql);
+					$preSth->execute(@preValues);
 					my $sth = $dbh->prepare($sql);
 					$sth->execute(@values);
 					$dbh->commit();
@@ -310,7 +328,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 		}
 
 	} else {
-		print encode_json({result => 0, reason => "not authenticated, pleases login."});
+		print encode_json({result => 0, reason => "not authenticated, please login."});
 	}
 
 } else {

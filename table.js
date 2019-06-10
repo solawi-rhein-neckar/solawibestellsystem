@@ -20,7 +20,7 @@ function SolawiBestellSystem() {
     pub.user = null;
 
     /* private constants */
-    const tableCache = {'Korb':[],'Role':[],'Depot':[],'Produkt':[]};
+    const tableCache = {'Modul':[],'Role':[],'Depot':[],'Produkt':[]};
     pub.tableCache = tableCache;
 
     /* public */
@@ -99,20 +99,20 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
     const columnOrder = ['ID'
         ,'KurzName'
         ,'Name'
-        ,'KorbInhalt_ID'
+        ,'ModulInhalt_ID'
         ,'Woche'
         ,'Benutzer_ID'
         ,'Benutzer'
         ,'Depot_ID'
         ,'Depot'
-        ,'Korb'
-        ,'Korb_ID'
+        ,'Modul'
+        ,'Modul_ID'
         ,'Produkt_ID'
         ,'Produkt'
         ,'Menge'
         ,'Einheit'
         ,'Anzahl'
-        ,'AnzahlKorb'
+        ,'AnzahlModul'
         ,'AnzahlZusatz'
         ,'Urlaub'
         ,'MindestAnzahl'
@@ -150,7 +150,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
     const numberColumnNames = {
         'Menge':1
         ,'Anzahl':1
-        ,'AnzahlKorb':1
+        ,'AnzahlModul':1
         ,'AnzahlZusatz':1
         ,'AnzahlZusatzBestellungMax':1
         ,'MindestAnzahl':1
@@ -183,7 +183,12 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
             var btn = document.createElement('BUTTON');
             td.appendChild(btn);
 
-            btn.addEventListener('click', createFuncAddNew(tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Woche'] : tableName == 'KorbInhaltWoche' ? ['KorbInhalt_ID'] : tableName == 'KorbInhalt' ? ['Korb_ID', 'Produkt_ID'] : tableName == 'BenutzerKorbAbo' ? ['Benutzer_ID', 'Korb_ID', 'Anzahl', 'Sorte', 'StartWoche', 'EndWoche'] : ['Name']));
+            btn.addEventListener('click', createFuncAddNew(	tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Woche'] 
+            											 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID'] 
+            												: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID'] 
+            											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Sorte', 'StartWoche', 'EndWoche'] 
+            												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche'] 
+            											 	: ['Name']));
             btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
         }
         for (var i = 0; i < response.length; i++) {
@@ -205,9 +210,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
                         td.innerText = keys[j];
                     }
                 }
-                if (tableName == 'KorbInhalt') {
+                if (tableName == 'ModulInhalt') {
                     var wtd = document.createElement("TD");
-                    wtd.className='col_KorbInhaltWoche';
+                    wtd.className='col_ModulInhaltWoche';
                     wtd.innerText='Wochen';
                     tr.appendChild(wtd);
 
@@ -246,14 +251,14 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
 
                     td.appendChild(div);
                 }
-                if (tableName == 'KorbInhalt') {
+                if (tableName == 'ModulInhalt') {
                     var td = document.createElement("TD");
-                    td.className='col_KorbInhaltWoche';
+                    td.className='col_ModulInhaltWoche';
                     tr.appendChild(td);
                     var weekSelect = Object.create(WeekSelect);
                     weekSelect.year = Number(sbs.selectedWeek.match(/[0-9]+/)[0]);
-                    weekSelect.tableName = 'KorbInhaltWoche/KorbInhalt_ID/' + response[i]["ID"],
-                    weekSelect.postData = {KorbInhalt_ID: response[i]["ID"], Woche: sbs.selectedWeek},
+                    weekSelect.tableName = 'ModulInhaltWoche/ModulInhalt_ID/' + response[i]["ID"],
+                    weekSelect.postData = {ModulInhalt_ID: response[i]["ID"], Woche: sbs.selectedWeek},
                     weekSelect.addTo(td);
                 }
                 if (editable) {
@@ -348,6 +353,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
     function resetEditor(label) {
         var edit = document.getElementById('editor');
         var label = document.createElement("SPAN");
+        edit.className = 'edit' + tableName;
         label.innerText = label;
         edit.appendChild(label);
         while (edit.firstChild) edit.removeChild(edit.firstChild);

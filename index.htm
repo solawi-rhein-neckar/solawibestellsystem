@@ -9,7 +9,7 @@
         #table .col_Anzahl, .col_Produkt { font-weight: bold; }
         .col_ID > div {display: none;}
         .inp_Woche, .inp_Benutzer_ID {color:#CCC; pointer-events:none; }
-
+		.editBenutzerUrlaub .inp_Woche {pointer-events: auto !important; color:auto !important; display: inline-block !important;}
         #greeting {
 font-size: 125%;
 padding-top: 100px;
@@ -32,6 +32,7 @@ var SBS = SolawiBestellSystem();
 SBS.disableUnavailableProducts = 1;
 var SBTedit= SolawiTable(SBS, 'tableEdit', 'tableEditPath', true);
 var SBTview = SolawiTable(SBS, 'table', 'tablePath', false);
+var SBTurlaub = SolawiTable(SBS, 'tableUrlaub', 'tableUrlaubPath', true);
 var reloadEdit = SBTedit.reload;
 SBTedit.reload = function() {SBTview.reload(); reloadEdit();}
 
@@ -41,15 +42,17 @@ getAjax('BenutzerView/MY', function(userResponse){
         SBS.user = userResponse[0];
         setContent('logoutbtn', 'Logout ' + SBS.user.Name);
 
-        setContent('calendarWeek', SBS.week + ( SBS.date.getDay() != SBS.day ? ' (in ' + ((7 + SBS.day - SBS.date.getDay()) % 7) + ' Tagen)' : ' (heute)' ));
+        setHtmlContent('calendarWeek', SBS.week + '<span style="font-weight:normal"> (' +  weekToDate(SBS.week, 4).toLocaleDateString() + ( SBS.date.getDay() != SBS.day ? ', in </span>' + ((7 + SBS.day - SBS.date.getDay()) % 7) + '<span style="font-weight:normal"> Tagen)</span>' : ', </span>heute<span style="font-weight:normal">)</span>' ));
 
-        setContent('selectedWeek', SBS.selectedWeek);
+        setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
 
-        setContent('korb', SBS.user.Korb);
+        setContent('Modul', SBS.user.Modul);
 
         getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
 
         getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
+
+        getAjax('BenutzerUrlaub', SBTurlaub.showTable);
 
     } else {
         show('loginform');
@@ -62,7 +65,7 @@ SBS.fillCache('Produkt');
 
 function changeWeek(count) {
     SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
-    setContent('selectedWeek', SBS.selectedWeek);
+    setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
     getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
     getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
 }
@@ -108,14 +111,14 @@ function changeWeek(count) {
 </div>
 <div id="greeting">
 
-    Willkommen im Solawi Bestellsystem! Die nächste Lieferung/Abholung ist in Kalenderwoche
+    Die nächste Lieferung/Abholung ist in Kalenderwoche
     <span id="calendarWeek" style="font-weight:bold;">00</span>
     <br/>
     <br/>
-    Du erhälst jede Woche: <span id="korb" style="font-weight:bold;">Vegetarisch_mit_Milch</span>
+    Deine Module: <span id="Modul" style="font-weight:bold;">Vegetarisch_mit_Milch</span>
     <br/>
     <br/>
-    Dein Anteil in Kalenderwoche <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>:
+    Deine Gesamt-Lieferung in Kalenderwoche <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>:
 
 </div>
 
@@ -126,21 +129,28 @@ function changeWeek(count) {
     <button onclick="getAjax('Benutzer', showTable);">Benutzer</button>
     <button onclick="getAjax('BenutzerUrlaub', showTable);">BenutzerUrlaub</button>
     <button onclick="getAjax('Depot', showTable);">Depot</button>
-    <button onclick="getAjax('Korb', showTable);">Korb</button>
-    <button onclick="getAjax('KorbInhalt', showTable);">KorbInhalt</button>
-    <button onclick="getAjax('KorbInhaltWoche', showTable);">KorbInhaltWoche</button>
+    <button onclick="getAjax('Modul', showTable);">Modul</button>
+    <button onclick="getAjax('ModulInhalt', showTable);">ModulInhalt</button>
+    <button onclick="getAjax('ModulInhaltWoche', showTable);">ModulInhaltWoche</button>
     <button onclick="getAjax('Produkt', showTable);">Produkt</button>
     <button onclick="getAjax('ZusatzBestellung', showTable);">ZusatzBestellung</button>-->
 
     <table id="table" cellspacing="0" > </table>
     <br/>
     <br/>
-    Zusatzbestellung bearbeiten (Die zusätzlich bestellte Menge wird in der oberen Tabelle berücksichtigt):
+    Deine Zusatzbestellungen (in Gesamt-Lieferung oben bereits enthalten) bearbeiten: 
     <br/>
     <br/>
     <table id="tableEdit" cellspacing="0" > </table>
     <br/>
-    Hinweis: negative Anzahl bestellen, um etwas abzubestellen. Die insgesamt bestellte Anzahl ist in der oberen Tabelle fett gedruckt.
+    Hinweis: negative Anzahl bestellen, um etwas abzubestellen. Die insgesamt bestellte Anzahl ist in der Liefer-Tabelle fett gedruckt.
+    <br/>
+    <br/>
+    Deine geplanten Urlaube (keine Lieferung!):
+    <br/>
+    <br/>
+    <table id="tableUrlaub" cellspacing="0" > </table>
+    <br/>
 </div>
 
     <!--
