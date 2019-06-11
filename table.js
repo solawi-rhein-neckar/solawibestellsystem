@@ -76,7 +76,7 @@ function SolawiBestellSystem() {
     No need to recreate the instance at anytime, to display another table just call SBT.showTable once again with another response.
     You will only need multiple instances to display multiple tables at the same time.
 */
-function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
+function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavailableProducts) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
@@ -94,6 +94,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
     var editable = pEditable;
     var tableName;
     var tablePath;
+    var disableUnavailableProducts = pDisableUnavailableProducts
 
     /* private constants */
     const columnOrder = ['ID'
@@ -164,7 +165,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
 
     /* public */
     function showTable(response, path) {
-        if (path.match(/^BenutzerBestellView.*$/) && sbs.disableUnavailableProducts) {
+        if (path.match(/^BenutzerBestellView.*$/) && disableUnavailableProducts) {
             sbs.saveOrdersIntoProductCache(response);
         }
 
@@ -241,7 +242,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
                         div.dataValue = div.innerText;
                         div.innerText = row == null ? ' (' + div.innerText + ') ' : row.Name;
                     }
-                    if ((! sbs.disableUnavailableProducts) && editable && keys[j] != 'ID' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && keys[j] != 'ErstellZeitpunkt') {
+                    if ( ((! disableUnavailableProducts) || keys[j] == 'Sorte' || keys[j] == 'EndWoche') && editable && keys[j] != 'ID' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && keys[j] != 'ErstellZeitpunkt') {
                         div.addEventListener('click', showEditor);
                         div.style.cursor = "pointer";
                         div.title = "click to edit!";
@@ -309,7 +310,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
                     var opt = document.createElement("OPTION");
                     opt.value=row.ID;
                     opt.innerText=row.Name;
-                    if (sbs.disableUnavailableProducts && (row.AnzahlZusatzBestellungMax < 0 || (row.AnzahlZusatzBestellung > 0 && row.AnzahlZusatzBestellungMax <= row.AnzahlZusatzBestellung) || (row.AnzahlZusatzBestellungMax == 0 && row.AnzahlBestellung <= 0) )) {
+                    if (disableUnavailableProducts && (row.AnzahlZusatzBestellungMax < 0 || (row.AnzahlZusatzBestellung > 0 && row.AnzahlZusatzBestellungMax <= row.AnzahlZusatzBestellung) || (row.AnzahlZusatzBestellungMax == 0 && row.AnzahlBestellung <= 0) )) {
 
                         opt.disabled='disabled';
                         if (row.AnzahlZusatzBestellungMax <= 0) {
@@ -391,7 +392,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable) {
                 }
             }
 
-            if (sbs.disableUnavailableProducts && data['Produkt_ID'] && sbs.tableCache['Produkt']) {
+            if (disableUnavailableProducts && data['Produkt_ID'] && sbs.tableCache['Produkt']) {
                 if ((! data['Anzahl']) || data['Anzahl'] == 0) {
                     setContent('editError', 'Anzahl muss eingegeben werden!');
                     event2.target.disabled='';

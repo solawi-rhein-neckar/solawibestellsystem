@@ -52,7 +52,7 @@ use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!
 my $q = CGI::Simple->new;
 
 # get database handle
-my $dbh = DBI->connect("DBI:mysql:d02dbcf8", "d02dbcf8", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => 1 });
+my $dbh = DBI->connect("DBI:mysql:d02dbcf8", "d02dbcf8", "MbXE4cun7E6FkuGo",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => 1 });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
 	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
@@ -127,9 +127,15 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				if ( $user->{Role_ID} != 2 && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `ID` = ?");
 					$sth->execute($id, $user->{ID});
+				} elsif ( $user->{Role_ID} != 2 && $table =~ /^BenutzerModulAbo$/ && $column =~ /^Woche$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `StartWoche` <= ? AND `EndWoche` >= ? AND `Benutzer_ID` = ?");
+					$sth->execute($id, $id, $user->{ID});
 				} elsif ( $user->{Role_ID} != 2 && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $user->{ID});
+				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column =~ /^Woche$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `StartWoche` <= ? AND `EndWoche` >= ?");
+					$sth->execute($id, $id);
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ?");
 					$sth->execute($id);
@@ -145,9 +151,15 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				if ( $user->{Role_ID} != 2 && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `ID` = ?");
 					$sth->execute($id, $id2, $user->{ID});
+				} elsif ( $user->{Role_ID} != 2 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `StartWoche` <= ? AND `EndWoche` >= ? AND `Benutzer_ID` = ?");
+					$sth->execute($id, $id2, $id2, $user->{ID});
 				} elsif ( $user->{Role_ID} != 2 && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $id2, $user->{ID});
+				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `StartWoche` <= ? AND `EndWoche` >= ?");
+					$sth->execute($id, $id2, $id2);
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ?");
 					$sth->execute($id, $id2);
@@ -215,10 +227,14 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `ID` = ?";
 					push(@values, $user->{ID});
 				} elsif ( @keys.length > 0 && $user->{Role_ID} == 1 && $table =~ /^BenutzerModulAbo$/ ) {
-					$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `Benutzer_ID` = ? AND `StartWoche` >= ? AND `EndWoche` >= ?";
 					push(@values, $user->{ID});
 					push(@values, $cur_week);
-					push(@values, $cur_week);
+					if (@keys.length == 3 && $keys[0] =~ /^`(EndWoche|Sorte)` = .$/ && $keys[1] =~ /^`AenderBenutzer_ID` = .$/ && $keys[2] =~ /^`AenderZeitpunkt` = NOW..$/) {
+						$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `Benutzer_ID` = ? AND `EndWoche` >= ?";
+					} else {
+						$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `Benutzer_ID` = ? AND `StartWoche` >= ? AND `EndWoche` >= ?";
+						push(@values, $cur_week);
+					}
 				} elsif ( @keys.length > 0 && $user->{Role_ID} == 1 && $table =~ /.*Benutzer.*/ ) {
 					$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
 					push(@values, $user->{ID});

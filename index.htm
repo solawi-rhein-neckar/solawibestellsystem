@@ -9,7 +9,6 @@
         #table .col_Anzahl, .col_Produkt { font-weight: bold; }
         .col_ID > div {display: none;}
         .inp_Woche, .inp_Benutzer_ID {color:#CCC; pointer-events:none; }
-		.editBenutzerUrlaub .inp_Woche {pointer-events: auto !important; color:auto !important; display: inline-block !important;}
         #greeting {
 font-size: 125%;
 padding-top: 100px;
@@ -47,10 +46,9 @@ background-repeat: no-repeat;
 
 <script>
 var SBS = SolawiBestellSystem();
-SBS.disableUnavailableProducts = 1;
-var SBTedit= SolawiTable(SBS, 'tableEdit', 'tableEditPath', true);
-var SBTview = SolawiTable(SBS, 'table', 'tablePath', false);
-var SBTurlaub = SolawiTable(SBS, 'tableUrlaub', 'tableUrlaubPath', true);
+var SBTedit= SolawiTable(SBS, 'tableEdit', 'tableEditPath', true, true);
+var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, true);
+var SBTmodule = SolawiTable(SBS, 'tableModule', 'tableModulePath', true, true);
 var reloadEdit = SBTedit.reload;
 SBTedit.reload = function() {SBTview.reload(); reloadEdit();}
 
@@ -69,6 +67,8 @@ getAjax('BenutzerView/MY', function(userResponse){
         getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
 
         getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
+        
+        getAjax('BenutzerModulAbo/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTmodule.showTable);
 
         //getAjax('BenutzerUrlaub', SBTurlaub.showTable);
          var weekSelect = Object.create(WeekSelect);
@@ -86,12 +86,14 @@ getAjax('BenutzerView/MY', function(userResponse){
 });
 
 SBS.fillCache('Produkt');
+SBS.fillCache('Modul');
 
 function changeWeek(count) {
     SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
     setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
     getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
     getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
+    getAjax('BenutzerModulAbo/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTmodule.showTable);
 }
 
 </script>
@@ -139,7 +141,8 @@ function changeWeek(count) {
     <span id="calendarWeek" style="font-weight:bold;">00</span>
     <br/>
     <br/>
-    Deine Module: <span id="Modul" style="font-weight:bold;">Vegetarisch_mit_Milch</span>
+    Deine Module (nächste Lieferung): <span id="Modul" style="font-weight:bold;">Vegetarisch_mit_Milch</span>
+    <br/>
     <br/>
     <br/>
     Deine Gesamt-Lieferung in Kalenderwoche <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>:
@@ -171,8 +174,13 @@ function changeWeek(count) {
     <br/>
     <br/>
     <br/>
-    Hinweis: Bestellungen und Urlaub können nur für die ZUKUNFT geändert werden.
+    Hinweis: Bestellungen, Module und Urlaub können nur für die ZUKUNFT geändert werden.
     <br/>Änderungen für <strong>vergangene Kalenderwochen ignoriert</strong> das System (derzeit leider noch stillschweigend)!
+    <br/>
+    <br/>
+    <br/>
+    Deine <strong>Module</strong> für die oben gewählte Kalenderwoche bearbeiten:
+    <table id="tableModule" cellspacing="0" > </table>
     <br/>
     <br/>
     <br/>
@@ -182,6 +190,8 @@ function changeWeek(count) {
     <div style="font-size:85%;color:#666;">(Nach Urlaubs-Änderung für aktuell oben angezeigte Woche:<br/> -> Bitte die Seite manuell neu aufrufen, oder die Woche wechseln, um die Anzeige zu aktualisieren.)</div>
     <br/>
     <br/>
+    <br/>
+    
 </div>
 
     <!--

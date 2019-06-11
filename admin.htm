@@ -36,8 +36,8 @@
 
 <script>
 var SBS = SolawiBestellSystem();
-var SBTedit= SolawiTable(SBS, 'table', 'tablePath', true);
-var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false);
+var SBTedit= SolawiTable(SBS, 'table', 'tablePath', true, false);
+var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
 
 //check login status
 getAjax('Benutzer/OWN', function(userResponse){
@@ -106,17 +106,18 @@ function changeWeek(count) {
 
 <div id="tableContainer">
     <div style="width: 90%">
-        <span style="display:inline-block;max-width: 36%;vertical-align: top;">
+        <span style="display:inline-block;max-width: 42%;vertical-align: top;">
             <b>Berichte </b> Woche: <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>
             <br/>
 
-            <button onclick="SBTedit.reset();getAjax('BenutzerView', SBTview.showTable);">BenutzerAbo</button>
+            <button onclick="SBTedit.reset();getAjax('BenutzerView', SBTview.showTable);">AbosNächsteLieferung</button>
+            <button onclick="SBTedit.reset();getAjax('BenutzerModulAbo/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerModulAbo</button>
             <button onclick="SBTedit.reset();getAjax('ModulInhaltView/Woche/'+SBS.selectedWeek, SBTview.showTable);">ModulInhalt</button>
-            <button onclick="SBTedit.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellSicht</button>
-            <button onclick="SBTedit.reset();getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">DepotBestellÜbersicht</button>
-            <button onclick="SBTedit.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">GesamtBestellÜbersicht</button>
+            <button onclick="SBTedit.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellung</button>
+            <button onclick="SBTedit.reset();getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">DepotBestellungen</button>
+            <button onclick="SBTedit.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">GesamtBestellungen</button>
         </span>
-        <span style="display:inline-block;max-width: 50%;vertical-align: top;">
+        <span style="display:inline-block;max-width: 42%;vertical-align: top;">
             <b>Bearbeiten </b>  <a style="float:right;padding-right: 20px;" href="index.htm">zurück zu Startseite</a>
             <br/>
             <button onclick="SBTview.reset();getAjax('Depot', SBTedit.showTable);">Depot</button>
