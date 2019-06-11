@@ -17,7 +17,7 @@ my $q = CGI::Simple->new;
 my $dbh = DBI->connect("DBI:mysql:d02dbcf8", "d02dbcf8", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => 1 });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
-	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
 }
 
 
@@ -45,7 +45,7 @@ if ( $q->request_method() =~ /^POST$/ ) {
 	my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
 
 	# print http header with cookies
-	print $q->header( {cookie => [$cookie], "content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"} );
+	print $q->header( {cookie => [$cookie], "content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"} );
 	print encode_json({result => $response->status_line, first => $first, last => $last, user => $user,
 		#text => $response->content,
 	location => $response->header('Location') || '-', time => time()});

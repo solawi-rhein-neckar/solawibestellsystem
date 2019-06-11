@@ -43,6 +43,8 @@ use CGI::Simple; # https://metacpan.org/pod/CGI::Simple  -  http header output a
 use CGI::Simple::Cookie;
 use DBI;         # https://metacpan.org/pod/DBI          -  connect to sql database
 use JSON;        # https://metacpan.org/pod/JSON         -  convert objects to json and vice versa
+use Time::Local;
+use POSIX qw(strftime);
 
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!!: displays (non-syntax) errors and warning in html
 
@@ -53,7 +55,7 @@ my $q = CGI::Simple->new;
 my $dbh = DBI->connect("DBI:mysql:d02dbcf8", "d02dbcf8", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => 1 });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
-	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
 }
 
 
@@ -67,13 +69,13 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
 
 	# print http header with cookies
-	print $q->header( {cookie => [$cookie], "content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"} );
+	print $q->header( {cookie => [$cookie], "content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"} );
 	print encode_json({result => $stl->rows()});
 	$dbh->commit();
 
 } elsif ( $q->path_info =~  /^[a-zA-Z0-9\/._ -]*$/) {
 	# print http header
-	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
 
 	# user does not want to login -> check if logged in (sessionid cookie)
 	my %cookies = CGI::Simple::Cookie->fetch;
@@ -173,7 +175,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			}
 
 		} elsif ( $q->request_method() =~ /^POST$/ ) {
-
+			my $cur_week = POSIX::strftime("%G.%V", gmtime time);
 			my $body = decode_json($q->param( 'POSTDATA' ));
 			my $sth;
 
@@ -187,13 +189,17 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				my $value;
 				my $reason;
 				while (($key, $value) = each (%$body)) {
-					if ( (((! ($table =~ /^Benutzer$/)) || $user->{Role_ID} == 2) && $key =~ /^[a-zA-Z0-9_]+$/)
-						 || $key =~ /^(Name|Passwort|Email|Modul_ID|)$/ ) {
-						if ( (!($key =~ /^Passwort$/)) || length($value) > 3) {
+					if ( $key =~ /^[a-zA-Z0-9_]+$/ && (! ($key =~ /^(ErstellZeitpunkt|AenderZeitpunkt|AenderBenutzer_ID)$/ )) ) {
+
+						if ( $user->{Role_ID} == 1 && ($key =~ /^Woche$/ || $key =~ /^StartWoche$/ || $key =~ /^EndWoche$/) && $value < $cur_week ) {
+							$reason = "Woche muss in Zukunft liegen (>= $cur_week )!";
+						} elsif ( ($key =~ /^Passwort$/) && length($value) < 4) {
+							$reason = "password min length 4 chars";
+						} elsif ( $user->{Role_ID} == 1 && $table =~ /^Benutzer$/ &&  (! ($key =~ /^(Name|Passwort|Email|Depot_ID|)$/)) ) {
+							$reason = "Benutzer darf nur eigenes Passwort und Depot aendern!";
+						} else {
 							push(@keys, "`$key` = ?");
 							push(@values, $value);
-						} else {
-							$reason = "password min length 4 chars";
 						}
 					}
 				}
@@ -203,12 +209,20 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				my $keys = join(",", @keys);
 				push(@values, $id);
 				my $sql;
-				if ( @keys.length > 0 && $user->{Role_ID} == 1 && $table =~ /^Benutzer$/ ) {
+				if ($reason) {
+					print encode_json({result => 0, reason => $reason || ("no update right for role " . $user->{Role_ID} . " on table $table")});
+				} elsif ( @keys.length > 0 && $user->{Role_ID} == 1 && $table =~ /^Benutzer$/ ) {
 					$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `ID` = ?";
 					push(@values, $user->{ID});
-				} elsif ( @keys.length > 0 && $user->{Role_ID} == 1 && $table =~ /.*Benutzer.*/ ) {
-					$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `Benutzer_ID` = ?";
+				} elsif ( @keys.length > 0 && $user->{Role_ID} == 1 && $table =~ /^BenutzerModulAbo$/ ) {
+					$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `Benutzer_ID` = ? AND `StartWoche` >= ? AND `EndWoche` >= ?";
 					push(@values, $user->{ID});
+					push(@values, $cur_week);
+					push(@values, $cur_week);
+				} elsif ( @keys.length > 0 && $user->{Role_ID} == 1 && $table =~ /.*Benutzer.*/ ) {
+					$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
+					push(@values, $user->{ID});
+					push(@values, $cur_week);
 				} elsif ( $user->{Role_ID} == 2 ) {
 					$sql = "UPDATE `$table` SET $keys WHERE `ID` = ?";
 				} else {
@@ -234,28 +248,37 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					my @values = ();
 					my $key;
 					my $value;
+					my $reason;
 					while (($key, $value) = each (%$body)) {
-						if ( $key =~ /^[a-zA-Z0-9_]+$/ ) {
-							push(@keys, "`$key`");
-							push(@values, $value);
-							push(@placeholders, "?");
+						if ( $key =~ /^[a-zA-Z0-9_]+$/ && (! ($key =~ /^(ErstellZeitpunkt|AenderZeitpunkt|AenderBenutzer_ID)$/ )) ) {
+							if ( $user->{Role_ID} == 1 && ($key =~ /^Woche$/ || $key =~ /^StartWoche$/ || $key =~ /^EndWoche$/) && $value < $cur_week ) {
+								$reason = "Woche muss in Zukunft liegen (>= $cur_week )!";
+							} else {
+								push(@keys, "`$key`");
+								push(@values, $value);
+								push(@placeholders, "?");
+							}
 						}
 					}
 					push(@keys, "`AenderBenutzer_ID`");
 					push(@values, $user->{ID});
 					push(@placeholders, "?");
 
-					my $keys = join(",", @keys);
-					my $placeholders = join(",", @placeholders);
-					my $sql= "INSERT INTO `$table` ( $keys ) VALUES ( $placeholders )";
-					eval {
-						$sth = $dbh->prepare($sql);
-						$sth->execute(@values);
-						$dbh->commit();
-						print encode_json({result => 1, type => "insert", query => $sql, params => [@values]});
-					};
-					if ($@) {
-						print encode_json({result => 0, type => "update", reason => $@, query => $sql, params => [@values]});
+					if ($reason) {
+						print encode_json({result => 0, reason => $reason || ("no insert right for role " . $user->{Role_ID} . " on table $table")});
+					} else {
+						my $keys = join(",", @keys);
+						my $placeholders = join(",", @placeholders);
+						my $sql= "INSERT INTO `$table` ( $keys ) VALUES ( $placeholders )";
+						eval {
+							$sth = $dbh->prepare($sql);
+							$sth->execute(@values);
+							$dbh->commit();
+							print encode_json({result => 1, type => "insert", query => $sql, params => [@values]});
+						};
+						if ($@) {
+							print encode_json({result => 0, type => "insert", reason => $@, query => $sql, params => [@values]});
+						}
 					}
 
 				} else {
@@ -266,6 +289,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			}
 
 		} elsif ( $q->request_method() =~ /^DELETE$/ ) {
+			my $cur_week = POSIX::strftime("%G.%V", gmtime time);
 			my $preSql;
 			my $sql;
 			my @preValues;
@@ -274,11 +298,16 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				my $table = $1;
 				my $id = $2;
 
-				if ( $user->{Role_ID} != 2 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
-					@values = ($id, $user->{ID});
-					@preValues = ($user->{ID}, $id, $user->{ID});
-					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `ID` = ? AND `Benutzer_ID` = ?";
-					$sql = "DELETE FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ?";
+				if ( $user->{Role_ID} != 2 && $table =~ /^BenutzerModulAbo$/ ) {
+					@values = ($id, $user->{ID}, $cur_week, $cur_week);
+					@preValues = ($user->{ID}, $id, $user->{ID}, $cur_week, $cur_week);
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `ID` = ? AND `Benutzer_ID` = ?  AND `StartWoche` >= ? AND `EndWoche` >= ?";
+					$sql = "DELETE FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ?  AND `StartWoche` >= ? AND `EndWoche` >= ?";
+				} elsif ( $user->{Role_ID} != 2 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
+					@values = ($id, $user->{ID}, $cur_week);
+					@preValues = ($user->{ID}, $id, $user->{ID}, $cur_week);
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `ID` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
+					$sql = "DELETE FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
 				} elsif ( $user->{Role_ID} == 2 ) {
 					@values = ($id);
 					@preValues = ($user->{ID}, $id);
@@ -294,11 +323,16 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				my $column2 = $4;
 				my $id2 = $5;
 
-				if ( $user->{Role_ID} != 2 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
-					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ?";
-					@preValues = ($user->{ID}, $id, $id2, $user->{ID});
-					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ?";
-					@values = ($id, $id2, $user->{ID});
+				if ( $user->{Role_ID} != 2 && $table =~ /^BenutzerModulAbo$/ ) {
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ? AND `StartWoche` >= ? AND `EndWoche` >= ?";
+					@preValues = ($user->{ID}, $id, $id2, $user->{ID}, $cur_week, $cur_week);
+					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ? AND `StartWoche` >= ? AND `EndWoche` >= ?";
+					@values = ($id, $id2, $user->{ID}, $cur_week, $cur_week);
+				} elsif ( $user->{Role_ID} != 2 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
+					@preValues = ($user->{ID}, $id, $id2, $user->{ID}, $cur_week);
+					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
+					@values = ($id, $id2, $user->{ID}, $cur_week);
 				} elsif ( $user->{Role_ID} == 2 ) {
 					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ?";
 					@preValues = ($user->{ID}, $id, $id2);
@@ -332,7 +366,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	}
 
 } else {
-	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
 	print encode_json({result v 0, reason => "path contains forbidden characters"});
 }
 

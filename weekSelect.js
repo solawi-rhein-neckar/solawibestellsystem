@@ -13,6 +13,7 @@ as last, supply the parent element:
 The weekSelect will at itself as a child to this element, make api calls and display selectedWeeks
 */
 var WeekSelect = {
+	allowMulti: true,
     year: 2019,
     tableName: 'ModulInhaltWoche/ModulInhalt_ID/1',
     postData: {ModulInhalt_ID: 1, Woche: '2019.01'},
@@ -72,13 +73,15 @@ var WeekSelect = {
         td = this.createCell(tr, '', handler);
         td.colSpan = weekCount > 52 ? 3 : 4;
         td.className = '';
-        td.style.paddingLeft = 0;
-        td.style.paddingRight = 0;
-        for (var q = 1; q <= 4; q++) {
-            var span = document.createElement('SPAN');
-            span.dataMultiWeeks = span.innerText = 'Q' + q;
-            span.style.paddingLeft = q > 1 && weekCount <= 52 ? '3px' : 0;
-            td.appendChild(span);
+        if (this.allowMulti) {
+	        td.style.paddingLeft = 0;
+	        td.style.paddingRight = 0;
+	        for (var q = 1; q <= 4; q++) {
+	            var span = document.createElement('SPAN');
+	            span.dataMultiWeeks = span.innerText = 'Q' + q;
+	            span.style.paddingLeft = q > 1 && weekCount <= 52 ? '3px' : 0;
+	            td.appendChild(span);
+	        }
         }
 
         td = this.createCell(tr, '', handler);
@@ -113,15 +116,17 @@ var WeekSelect = {
     handleSelect: function(event) {
         console.log('weekSelect click w' + event.target.dataWeek + ', c' + event.target.dataColumn + ', q' + event.target.dataQuartal + ', y' + event.target.dataYear);
         if (event.target.dataWeek) {
-            this.toggleSingle(event.target);
+        	if (this.allowMulti || confirm('Wirklich Urlaub für ausgewählte Woche umschalten?')) {
+        		this.toggleSingle(event.target);
+        	}
         } else if (event.target.dataYear) {
             if (event.target.dataYear != this.year) {
                 this.year=event.target.dataYear;
                 this.refresh();
-            } else if (confirm('Willst Du wirklich alle 52 Wochen des GANZEN JAHRES auf einmal aktivieren/deaktivieren?')) {
+            } else if (this.allowMulti && confirm('Willst Du wirklich alle 52 Wochen des GANZEN JAHRES auf einmal aktivieren/deaktivieren?')) {
                 this.toggleMulti();
             }
-        } else if (event.target.dataMultiWeeks && (Object.keys(this.multiWeeks[event.target.dataMultiWeeks]).length <= 5 || confirm('Willst Du wirklich EIN GANZES QUARTAL auf einmal aktivieren/deaktivieren?'))) {
+        } else if (event.target.dataMultiWeeks && this.allowMulti && (Object.keys(this.multiWeeks[event.target.dataMultiWeeks]).length <= 5 || confirm('Willst Du wirklich EIN GANZES QUARTAL auf einmal aktivieren/deaktivieren?'))) {
             this.toggleMulti(this.multiWeeks[event.target.dataMultiWeeks]);
         }
     },
@@ -181,59 +186,3 @@ var WeekSelect = {
 
 
 };
-
-
-
-/*
-
-//below: archived old idea, can probably be deleted
-
-function createWeekSelectLarge(parentElemId, year) {
-
-    var parent = document.getElementById(parentElemId);
-
-    var ctnr = document.createElement('DIV');
-    ctnr.className = 'weekYear';
-
-    var start = 0;
-    var end = 53;
-
-    var firstDate = new Date(year, 0, 1, 12, 0);
-    firstLen = firstDate.getDay() - 1;
-    if (firstLen < 0) {firstLen = 6;}
-    if (firstLen == 0) {
-        start = 1;
-    }
-    var lastDate = new Date(year, 11, 31, 12, 0);
-    lastLen = lastDate.getDay();
-    if (lastLen > 0) {
-        lastLen = 7 - lastLen;
-    }
-    if (lastLen == 0) {
-        end = weekCount(year);
-    }
-
-    for (var week = start; week <= end; week++) {
-
-        ctnr.append(createWeekPlaceholder(week, week == 0 ? firstLen : week == 53 ? lastLen : 7));
-
-    }
-
-
-
-
-    parent.appendChild(ctnr);
-}
-
-
-function createWeekPlaceholder(week, len) {
-
-    var span = document.createElement('A');
-
-    span.innerText = len == 1 ? '\xa0' : len == 2 ? (week < 10 ? '0' + week : week) : len == 3 ? (week < 10 ? 'W0' + week : ('W'+week)) : len == 4 ? (week < 10 ? 'W0'+week+'\xa0' : ('\xa0W'+week)) : len == 5 ? (week < 10 ? '\xa0W0'+week+'\xa0' : ('\xa0W'+week+'\xa0')) : len == 6 ? (week < 10 ? '\xa0W0'+week+' \xa0' : ('\xa0 W'+week+'\xa0')) : ('\xa0 W' + (week < 10 ? '0' : '') + week + ' \xa0');
-    span.className='weekWeek';
-
-    return span;
-
-}
-*/

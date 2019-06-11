@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Erstellungszeit: 09. Jun 2019 um 11:46
+-- Erstellungszeit: 11. Jun 2019 um 23:04
 -- Server-Version: 5.7.25-nmm2-log
 -- PHP-Version: 7.2.14-nmm1
 
@@ -12,17 +12,9 @@ SET AUTOCOMMIT = 0;
 START TRANSACTION;
 SET time_zone = "+00:00";
 
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
 --
 -- Datenbank: `d02dbcf8`
 --
-CREATE DATABASE IF NOT EXISTS `d02dbcf8` DEFAULT CHARACTER SET utf8 COLLATE utf8_german2_ci;
-USE `d02dbcf8`;
 
 -- --------------------------------------------------------
 
@@ -63,7 +55,7 @@ CREATE TABLE `BenutzerBestellView` (
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
 ,`Anzahl` decimal(42,0)
-,`AnzahlKorb` decimal(42,0)
+,`AnzahlModul` decimal(42,0)
 ,`AnzahlZusatz` decimal(42,0)
 ,`Urlaub` int(1)
 );
@@ -86,7 +78,7 @@ CREATE TABLE `BenutzerBestellViewUnsorted` (
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
 ,`Anzahl` decimal(42,0)
-,`AnzahlKorb` decimal(42,0)
+,`AnzahlModul` decimal(42,0)
 ,`AnzahlZusatz` decimal(42,0)
 ,`Urlaub` int(1)
 );
@@ -94,13 +86,13 @@ CREATE TABLE `BenutzerBestellViewUnsorted` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `BenutzerKorbAbo`
+-- Tabellenstruktur für Tabelle `BenutzerModulAbo`
 --
 
-CREATE TABLE `BenutzerKorbAbo` (
+CREATE TABLE `BenutzerModulAbo` (
   `ID` int(11) NOT NULL,
   `Benutzer_ID` int(11) NOT NULL,
-  `Korb_ID` int(11) NOT NULL,
+  `Modul_ID` int(11) NOT NULL,
   `StartWoche` decimal(6,2) NOT NULL DEFAULT '2019.01',
   `EndWoche` decimal(6,2) DEFAULT NULL,
   `Anzahl` int(11) NOT NULL DEFAULT '1',
@@ -145,7 +137,7 @@ CREATE TABLE `BenutzerView` (
 ,`AenderZeitpunkt` timestamp
 ,`AenderBenutzer_ID` int(11)
 ,`Depot` varchar(255)
-,`Korb` text
+,`Modul` text
 ,`Role` varchar(255)
 );
 
@@ -200,7 +192,7 @@ CREATE TABLE `DepotBestellView` (
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
 ,`Anzahl` decimal(64,0)
-,`AnzahlKorb` decimal(64,0)
+,`AnzahlModul` decimal(64,0)
 ,`AnzahlZusatz` decimal(64,0)
 ,`Urlaub` decimal(32,0)
 );
@@ -221,7 +213,7 @@ CREATE TABLE `DepotBestellViewUnsorted` (
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
 ,`Anzahl` decimal(64,0)
-,`AnzahlKorb` decimal(64,0)
+,`AnzahlModul` decimal(64,0)
 ,`AnzahlZusatz` decimal(64,0)
 ,`Urlaub` decimal(32,0)
 );
@@ -240,7 +232,7 @@ CREATE TABLE `GesamtBestellView` (
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
 ,`Anzahl` decimal(64,0)
-,`AnzahlKorb` decimal(64,0)
+,`AnzahlModul` decimal(64,0)
 ,`AnzahlZusatz` decimal(64,0)
 ,`Urlaub` decimal(32,0)
 );
@@ -259,7 +251,7 @@ CREATE TABLE `GesamtBestellViewUnsorted` (
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
 ,`Anzahl` decimal(64,0)
-,`AnzahlKorb` decimal(64,0)
+,`AnzahlModul` decimal(64,0)
 ,`AnzahlZusatz` decimal(64,0)
 ,`Urlaub` decimal(32,0)
 );
@@ -267,13 +259,14 @@ CREATE TABLE `GesamtBestellViewUnsorted` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `Korb`
+-- Tabellenstruktur für Tabelle `Modul`
 --
 
-CREATE TABLE `Korb` (
+CREATE TABLE `Modul` (
   `ID` int(11) NOT NULL,
   `Name` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `Beschreibung` varchar(2047) COLLATE utf8_german2_ci NOT NULL DEFAULT '',
+  `AnzahlProAnteil` int(11) NOT NULL DEFAULT '0',
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderBenutzer_ID` int(11) DEFAULT NULL
@@ -282,12 +275,12 @@ CREATE TABLE `Korb` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `KorbInhalt`
+-- Tabellenstruktur für Tabelle `ModulInhalt`
 --
 
-CREATE TABLE `KorbInhalt` (
+CREATE TABLE `ModulInhalt` (
   `ID` int(11) NOT NULL,
-  `Korb_ID` int(11) NOT NULL,
+  `Modul_ID` int(11) NOT NULL,
   `Produkt_ID` int(11) NOT NULL,
   `Anzahl` int(11) NOT NULL DEFAULT '1',
   `MindestAnzahl` int(11) NOT NULL DEFAULT '0',
@@ -300,12 +293,12 @@ CREATE TABLE `KorbInhalt` (
 -- --------------------------------------------------------
 
 --
--- Stellvertreter-Struktur des Views `KorbInhaltView`
+-- Stellvertreter-Struktur des Views `ModulInhaltView`
 -- (Siehe unten für die tatsächliche Ansicht)
 --
-CREATE TABLE `KorbInhaltView` (
+CREATE TABLE `ModulInhaltView` (
 `ID` int(11)
-,`Korb_ID` int(11)
+,`Modul_ID` int(11)
 ,`Produkt_ID` int(11)
 ,`Anzahl` int(11)
 ,`MindestAnzahl` int(11)
@@ -319,12 +312,12 @@ CREATE TABLE `KorbInhaltView` (
 -- --------------------------------------------------------
 
 --
--- Tabellenstruktur für Tabelle `KorbInhaltWoche`
+-- Tabellenstruktur für Tabelle `ModulInhaltWoche`
 --
 
-CREATE TABLE `KorbInhaltWoche` (
+CREATE TABLE `ModulInhaltWoche` (
   `ID` int(11) NOT NULL,
-  `KorbInhalt_ID` int(11) NOT NULL,
+  `ModulInhalt_ID` int(11) NOT NULL,
   `Woche` decimal(6,2) NOT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -368,18 +361,6 @@ CREATE TABLE `Recht` (
   `SchreibeEigene` tinyint(1) NOT NULL DEFAULT '1'
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
---
--- Trigger `Recht`
---
-DELIMITER $$
-CREATE TRIGGER `before_Recht_update` BEFORE UPDATE ON `Recht` FOR EACH ROW BEGIN
-    INSERT INTO Recht
-    SET Role_ID = '2',
-     Spalte = Test; 
-END
-$$
-DELIMITER ;
-
 -- --------------------------------------------------------
 
 --
@@ -400,7 +381,7 @@ CREATE TABLE `Role` (
 --
 DROP TABLE IF EXISTS `BenutzerBestellView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellView`  AS  select `BenutzerBestellViewUnsorted`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerBestellViewUnsorted`.`Benutzer` AS `Benutzer`,`BenutzerBestellViewUnsorted`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellViewUnsorted`.`Depot` AS `Depot`,`BenutzerBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellViewUnsorted`.`Produkt` AS `Produkt`,`BenutzerBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellViewUnsorted`.`Einheit` AS `Einheit`,`BenutzerBestellViewUnsorted`.`Menge` AS `Menge`,`BenutzerBestellViewUnsorted`.`Woche` AS `Woche`,`BenutzerBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`BenutzerBestellViewUnsorted`.`AnzahlKorb` AS `AnzahlKorb`,`BenutzerBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`BenutzerBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `BenutzerBestellViewUnsorted` order by `BenutzerBestellViewUnsorted`.`Depot`,`BenutzerBestellViewUnsorted`.`Benutzer`,`BenutzerBestellViewUnsorted`.`Produkt` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellView`  AS  select `BenutzerBestellViewUnsorted`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerBestellViewUnsorted`.`Benutzer` AS `Benutzer`,`BenutzerBestellViewUnsorted`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellViewUnsorted`.`Depot` AS `Depot`,`BenutzerBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellViewUnsorted`.`Produkt` AS `Produkt`,`BenutzerBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellViewUnsorted`.`Einheit` AS `Einheit`,`BenutzerBestellViewUnsorted`.`Menge` AS `Menge`,`BenutzerBestellViewUnsorted`.`Woche` AS `Woche`,`BenutzerBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`BenutzerBestellViewUnsorted`.`AnzahlModul` AS `AnzahlModul`,`BenutzerBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`BenutzerBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `BenutzerBestellViewUnsorted` order by `BenutzerBestellViewUnsorted`.`Depot`,`BenutzerBestellViewUnsorted`.`Benutzer`,`BenutzerBestellViewUnsorted`.`Produkt` ;
 
 -- --------------------------------------------------------
 
@@ -409,7 +390,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `BenutzerBestellViewUnsorted`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellViewUnsorted`  AS  select `u`.`Benutzer_ID` AS `Benutzer_ID`,`Benutzer`.`Name` AS `Benutzer`,`Depot`.`ID` AS `Depot_ID`,`Depot`.`Name` AS `Depot`,`u`.`Produkt_ID` AS `Produkt_ID`,`Produkt`.`Name` AS `Produkt`,`Produkt`.`Beschreibung` AS `Beschreibung`,`Produkt`.`Einheit` AS `Einheit`,`Produkt`.`Menge` AS `Menge`,`u`.`Woche` AS `Woche`,(case when isnull(`BenutzerUrlaub`.`ID`) then sum(`u`.`Anzahl`) else 0 end) AS `Anzahl`,sum((case when (`u`.`Quelle` = 1) then `u`.`Anzahl` else 0 end)) AS `AnzahlKorb`,sum((case when (`u`.`Quelle` = 2) then `u`.`Anzahl` else 0 end)) AS `AnzahlZusatz`,(`BenutzerUrlaub`.`ID` is not null) AS `Urlaub` from ((((((select 1 AS `Quelle`,`BenutzerKorbAbo`.`Benutzer_ID` AS `Benutzer_ID`,`KorbInhalt`.`Produkt_ID` AS `Produkt_ID`,(`KorbInhalt`.`Anzahl` * `BenutzerKorbAbo`.`Anzahl`) AS `Anzahl`,`KorbInhaltWoche`.`Woche` AS `Woche` from ((`KorbInhalt` join `KorbInhaltWoche` on((`KorbInhaltWoche`.`KorbInhalt_ID` = `KorbInhalt`.`ID`))) join `BenutzerKorbAbo` on(((`BenutzerKorbAbo`.`Korb_ID` = `KorbInhalt`.`Korb_ID`) and (isnull(`BenutzerKorbAbo`.`StartWoche`) or (`KorbInhaltWoche`.`Woche` >= `BenutzerKorbAbo`.`StartWoche`)) and (isnull(`BenutzerKorbAbo`.`EndWoche`) or (`KorbInhaltWoche`.`Woche` <= `BenutzerKorbAbo`.`EndWoche`)))))) union all (select 2 AS `Quelle`,`BenutzerZusatzBestellung`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerZusatzBestellung`.`Produkt_ID` AS `Produkt_ID`,`BenutzerZusatzBestellung`.`Anzahl` AS `Anzahl`,`BenutzerZusatzBestellung`.`Woche` AS `Woche` from `BenutzerZusatzBestellung`)) `u` join `Produkt` on((`u`.`Produkt_ID` = `Produkt`.`ID`))) join `Benutzer` on((`u`.`Benutzer_ID` = `Benutzer`.`ID`))) join `Depot` on((`Benutzer`.`Depot_ID` = `Depot`.`ID`))) left join `BenutzerUrlaub` on(((`BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`) and (`BenutzerUrlaub`.`Woche` = `u`.`Woche`)))) group by `u`.`Benutzer_ID`,`Benutzer`.`Name`,`Depot`.`ID`,`Depot`.`Name`,`u`.`Produkt_ID`,`Produkt`.`Name`,`Produkt`.`Beschreibung`,`Produkt`.`Einheit`,`Produkt`.`Menge`,`u`.`Woche`,`BenutzerUrlaub`.`ID` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellViewUnsorted`  AS  select `u`.`Benutzer_ID` AS `Benutzer_ID`,`Benutzer`.`Name` AS `Benutzer`,`Depot`.`ID` AS `Depot_ID`,`Depot`.`Name` AS `Depot`,`u`.`Produkt_ID` AS `Produkt_ID`,`Produkt`.`Name` AS `Produkt`,`Produkt`.`Beschreibung` AS `Beschreibung`,`Produkt`.`Einheit` AS `Einheit`,`Produkt`.`Menge` AS `Menge`,`u`.`Woche` AS `Woche`,(case when isnull(`BenutzerUrlaub`.`ID`) then sum(`u`.`Anzahl`) else 0 end) AS `Anzahl`,sum((case when (`u`.`Quelle` = 1) then `u`.`Anzahl` else 0 end)) AS `AnzahlModul`,sum((case when (`u`.`Quelle` = 2) then `u`.`Anzahl` else 0 end)) AS `AnzahlZusatz`,(`BenutzerUrlaub`.`ID` is not null) AS `Urlaub` from ((((((select 1 AS `Quelle`,`BenutzerModulAbo`.`Benutzer_ID` AS `Benutzer_ID`,`ModulInhalt`.`Produkt_ID` AS `Produkt_ID`,(`ModulInhalt`.`Anzahl` * `BenutzerModulAbo`.`Anzahl`) AS `Anzahl`,`ModulInhaltWoche`.`Woche` AS `Woche` from ((`ModulInhalt` join `ModulInhaltWoche` on((`ModulInhaltWoche`.`ModulInhalt_ID` = `ModulInhalt`.`ID`))) join `BenutzerModulAbo` on(((`BenutzerModulAbo`.`Modul_ID` = `ModulInhalt`.`Modul_ID`) and (isnull(`BenutzerModulAbo`.`StartWoche`) or (`ModulInhaltWoche`.`Woche` >= `BenutzerModulAbo`.`StartWoche`)) and (isnull(`BenutzerModulAbo`.`EndWoche`) or (`ModulInhaltWoche`.`Woche` <= `BenutzerModulAbo`.`EndWoche`)))))) union all (select 2 AS `Quelle`,`BenutzerZusatzBestellung`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerZusatzBestellung`.`Produkt_ID` AS `Produkt_ID`,`BenutzerZusatzBestellung`.`Anzahl` AS `Anzahl`,`BenutzerZusatzBestellung`.`Woche` AS `Woche` from `BenutzerZusatzBestellung`)) `u` join `Produkt` on((`u`.`Produkt_ID` = `Produkt`.`ID`))) join `Benutzer` on((`u`.`Benutzer_ID` = `Benutzer`.`ID`))) join `Depot` on((`Benutzer`.`Depot_ID` = `Depot`.`ID`))) left join `BenutzerUrlaub` on(((`BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`) and (`BenutzerUrlaub`.`Woche` = `u`.`Woche`)))) group by `u`.`Benutzer_ID`,`Benutzer`.`Name`,`Depot`.`ID`,`Depot`.`Name`,`u`.`Produkt_ID`,`Produkt`.`Name`,`Produkt`.`Beschreibung`,`Produkt`.`Einheit`,`Produkt`.`Menge`,`u`.`Woche`,`BenutzerUrlaub`.`ID` ;
 
 -- --------------------------------------------------------
 
@@ -418,7 +399,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `BenutzerView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerView`  AS  select `Benutzer`.`ID` AS `ID`,`Benutzer`.`Name` AS `Name`,`Benutzer`.`Passwort` AS `Passwort`,`Benutzer`.`Cookie` AS `Cookie`,`Benutzer`.`Role_ID` AS `Role_ID`,`Benutzer`.`Depot_ID` AS `Depot_ID`,`Benutzer`.`Anteile` AS `Anteile`,`Benutzer`.`PunkteStand` AS `PunkteStand`,`Benutzer`.`PunkteWoche` AS `PunkteWoche`,`Benutzer`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`Benutzer`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`Benutzer`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`Depot`.`Name` AS `Depot`,group_concat(concat(convert(convert((case when (`BenutzerKorbAbo`.`Anzahl` <> 1) then concat(`BenutzerKorbAbo`.`Anzahl`,'x ') else '' end) using latin1) using utf8),`Korb`.`Name`,convert(convert((case when isnull(`BenutzerKorbAbo`.`Sorte`) then '' else concat(' ',`BenutzerKorbAbo`.`Sorte`) end) using latin1) using utf8)) order by `Korb`.`ID` ASC separator ', ') AS `Korb`,`Role`.`Name` AS `Role` from ((((`Benutzer` left join `Role` on((`Benutzer`.`Role_ID` = `Role`.`ID`))) left join `Depot` on((`Depot`.`ID` = `Benutzer`.`Depot_ID`))) left join `BenutzerKorbAbo` on((`BenutzerKorbAbo`.`Benutzer_ID` = `Benutzer`.`ID`))) left join `Korb` on((`Korb`.`ID` = `BenutzerKorbAbo`.`Korb_ID`))) where ((isnull(`BenutzerKorbAbo`.`StartWoche`) or ((`BenutzerKorbAbo`.`StartWoche` * 100) <= yearweek(curdate(),0))) and (isnull(`BenutzerKorbAbo`.`EndWoche`) or ((`BenutzerKorbAbo`.`EndWoche` * 100) >= yearweek(curdate(),0)))) group by `Benutzer`.`ID` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerView`  AS  select `Benutzer`.`ID` AS `ID`,`Benutzer`.`Name` AS `Name`,`Benutzer`.`Passwort` AS `Passwort`,`Benutzer`.`Cookie` AS `Cookie`,`Benutzer`.`Role_ID` AS `Role_ID`,`Benutzer`.`Depot_ID` AS `Depot_ID`,`Benutzer`.`Anteile` AS `Anteile`,`Benutzer`.`PunkteStand` AS `PunkteStand`,`Benutzer`.`PunkteWoche` AS `PunkteWoche`,`Benutzer`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`Benutzer`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`Benutzer`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`Depot`.`Name` AS `Depot`,group_concat(concat(convert(convert((case when (`BenutzerModulAbo`.`Anzahl` <> 1) then concat(`BenutzerModulAbo`.`Anzahl`,'x ') else '' end) using latin1) using utf8),`Modul`.`Name`,convert(convert((case when isnull(`BenutzerModulAbo`.`Sorte`) then '' else concat(' ',`BenutzerModulAbo`.`Sorte`) end) using latin1) using utf8)) order by `Modul`.`ID` ASC separator ', ') AS `Modul`,`Role`.`Name` AS `Role` from ((((`Benutzer` left join `Role` on((`Benutzer`.`Role_ID` = `Role`.`ID`))) left join `Depot` on((`Depot`.`ID` = `Benutzer`.`Depot_ID`))) left join `BenutzerModulAbo` on((`BenutzerModulAbo`.`Benutzer_ID` = `Benutzer`.`ID`))) left join `Modul` on((`Modul`.`ID` = `BenutzerModulAbo`.`Modul_ID`))) where ((isnull(`BenutzerModulAbo`.`StartWoche`) or ((`BenutzerModulAbo`.`StartWoche` * 100) <= yearweek((curdate() + interval 3 day),1))) and (isnull(`BenutzerModulAbo`.`EndWoche`) or ((`BenutzerModulAbo`.`EndWoche` * 100) >= yearweek((curdate() + interval 3 day),1)))) group by `Benutzer`.`ID` ;
 
 -- --------------------------------------------------------
 
@@ -427,7 +408,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `DepotBestellView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `DepotBestellView`  AS  select `DepotBestellViewUnsorted`.`Depot_ID` AS `Depot_ID`,`DepotBestellViewUnsorted`.`Depot` AS `Depot`,`DepotBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`DepotBestellViewUnsorted`.`Produkt` AS `Produkt`,`DepotBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`DepotBestellViewUnsorted`.`Einheit` AS `Einheit`,`DepotBestellViewUnsorted`.`Menge` AS `Menge`,`DepotBestellViewUnsorted`.`Woche` AS `Woche`,`DepotBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`DepotBestellViewUnsorted`.`AnzahlKorb` AS `AnzahlKorb`,`DepotBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`DepotBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `DepotBestellViewUnsorted` order by `DepotBestellViewUnsorted`.`Depot`,`DepotBestellViewUnsorted`.`Produkt` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `DepotBestellView`  AS  select `DepotBestellViewUnsorted`.`Depot_ID` AS `Depot_ID`,`DepotBestellViewUnsorted`.`Depot` AS `Depot`,`DepotBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`DepotBestellViewUnsorted`.`Produkt` AS `Produkt`,`DepotBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`DepotBestellViewUnsorted`.`Einheit` AS `Einheit`,`DepotBestellViewUnsorted`.`Menge` AS `Menge`,`DepotBestellViewUnsorted`.`Woche` AS `Woche`,`DepotBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`DepotBestellViewUnsorted`.`AnzahlModul` AS `AnzahlModul`,`DepotBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`DepotBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `DepotBestellViewUnsorted` order by `DepotBestellViewUnsorted`.`Depot`,`DepotBestellViewUnsorted`.`Produkt` ;
 
 -- --------------------------------------------------------
 
@@ -436,7 +417,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `DepotBestellViewUnsorted`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `DepotBestellViewUnsorted`  AS  select `BenutzerBestellView`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellView`.`Depot` AS `Depot`,`BenutzerBestellView`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellView`.`Produkt` AS `Produkt`,`BenutzerBestellView`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellView`.`Einheit` AS `Einheit`,`BenutzerBestellView`.`Menge` AS `Menge`,`BenutzerBestellView`.`Woche` AS `Woche`,sum(`BenutzerBestellView`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellView`.`AnzahlKorb`) AS `AnzahlKorb`,sum(`BenutzerBestellView`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellView`.`Urlaub`) AS `Urlaub` from `BenutzerBestellView` group by `BenutzerBestellView`.`Produkt_ID`,`BenutzerBestellView`.`Woche`,`BenutzerBestellView`.`Depot_ID` order by `BenutzerBestellView`.`Depot`,`BenutzerBestellView`.`Produkt` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `DepotBestellViewUnsorted`  AS  select `BenutzerBestellView`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellView`.`Depot` AS `Depot`,`BenutzerBestellView`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellView`.`Produkt` AS `Produkt`,`BenutzerBestellView`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellView`.`Einheit` AS `Einheit`,`BenutzerBestellView`.`Menge` AS `Menge`,`BenutzerBestellView`.`Woche` AS `Woche`,sum(`BenutzerBestellView`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellView`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellView`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellView`.`Urlaub`) AS `Urlaub` from `BenutzerBestellView` group by `BenutzerBestellView`.`Produkt_ID`,`BenutzerBestellView`.`Woche`,`BenutzerBestellView`.`Depot_ID` order by `BenutzerBestellView`.`Depot`,`BenutzerBestellView`.`Produkt` ;
 
 -- --------------------------------------------------------
 
@@ -445,7 +426,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `GesamtBestellView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `GesamtBestellView`  AS  select `GesamtBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`GesamtBestellViewUnsorted`.`Produkt` AS `Produkt`,`GesamtBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`GesamtBestellViewUnsorted`.`Einheit` AS `Einheit`,`GesamtBestellViewUnsorted`.`Menge` AS `Menge`,`GesamtBestellViewUnsorted`.`Woche` AS `Woche`,`GesamtBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`GesamtBestellViewUnsorted`.`AnzahlKorb` AS `AnzahlKorb`,`GesamtBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`GesamtBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `GesamtBestellViewUnsorted` order by `GesamtBestellViewUnsorted`.`Produkt` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `GesamtBestellView`  AS  select `GesamtBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`GesamtBestellViewUnsorted`.`Produkt` AS `Produkt`,`GesamtBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`GesamtBestellViewUnsorted`.`Einheit` AS `Einheit`,`GesamtBestellViewUnsorted`.`Menge` AS `Menge`,`GesamtBestellViewUnsorted`.`Woche` AS `Woche`,`GesamtBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`GesamtBestellViewUnsorted`.`AnzahlModul` AS `AnzahlModul`,`GesamtBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`GesamtBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `GesamtBestellViewUnsorted` order by `GesamtBestellViewUnsorted`.`Produkt` ;
 
 -- --------------------------------------------------------
 
@@ -454,16 +435,16 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `GesamtBestellViewUnsorted`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `GesamtBestellViewUnsorted`  AS  select `BenutzerBestellView`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellView`.`Produkt` AS `Produkt`,`BenutzerBestellView`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellView`.`Einheit` AS `Einheit`,`BenutzerBestellView`.`Menge` AS `Menge`,`BenutzerBestellView`.`Woche` AS `Woche`,sum(`BenutzerBestellView`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellView`.`AnzahlKorb`) AS `AnzahlKorb`,sum(`BenutzerBestellView`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellView`.`Urlaub`) AS `Urlaub` from `BenutzerBestellView` group by `BenutzerBestellView`.`Produkt_ID`,`BenutzerBestellView`.`Woche` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `GesamtBestellViewUnsorted`  AS  select `BenutzerBestellView`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellView`.`Produkt` AS `Produkt`,`BenutzerBestellView`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellView`.`Einheit` AS `Einheit`,`BenutzerBestellView`.`Menge` AS `Menge`,`BenutzerBestellView`.`Woche` AS `Woche`,sum(`BenutzerBestellView`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellView`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellView`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellView`.`Urlaub`) AS `Urlaub` from `BenutzerBestellView` group by `BenutzerBestellView`.`Produkt_ID`,`BenutzerBestellView`.`Woche` ;
 
 -- --------------------------------------------------------
 
 --
--- Struktur des Views `KorbInhaltView`
+-- Struktur des Views `ModulInhaltView`
 --
-DROP TABLE IF EXISTS `KorbInhaltView`;
+DROP TABLE IF EXISTS `ModulInhaltView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `KorbInhaltView`  AS  select `KorbInhalt`.`ID` AS `ID`,`KorbInhalt`.`Korb_ID` AS `Korb_ID`,`KorbInhalt`.`Produkt_ID` AS `Produkt_ID`,`KorbInhalt`.`Anzahl` AS `Anzahl`,`KorbInhalt`.`MindestAnzahl` AS `MindestAnzahl`,`KorbInhalt`.`MaximalAnzahl` AS `MaximalAnzahl`,`KorbInhalt`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`KorbInhalt`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`KorbInhalt`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`KorbInhaltWoche`.`Woche` AS `Woche` from (`KorbInhalt` join `KorbInhaltWoche` on((`KorbInhaltWoche`.`KorbInhalt_ID` = `KorbInhalt`.`ID`))) ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `ModulInhaltView`  AS  select `ModulInhalt`.`ID` AS `ID`,`ModulInhalt`.`Modul_ID` AS `Modul_ID`,`ModulInhalt`.`Produkt_ID` AS `Produkt_ID`,`ModulInhalt`.`Anzahl` AS `Anzahl`,`ModulInhalt`.`MindestAnzahl` AS `MindestAnzahl`,`ModulInhalt`.`MaximalAnzahl` AS `MaximalAnzahl`,`ModulInhalt`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`ModulInhalt`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`ModulInhalt`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`ModulInhaltWoche`.`Woche` AS `Woche` from (`ModulInhalt` join `ModulInhaltWoche` on((`ModulInhaltWoche`.`ModulInhalt_ID` = `ModulInhalt`.`ID`))) ;
 
 --
 -- Indizes der exportierten Tabellen
@@ -480,12 +461,12 @@ ALTER TABLE `Benutzer`
   ADD KEY `BenutzerAender_Benutzer` (`AenderBenutzer_ID`);
 
 --
--- Indizes für die Tabelle `BenutzerKorbAbo`
+-- Indizes für die Tabelle `BenutzerModulAbo`
 --
-ALTER TABLE `BenutzerKorbAbo`
+ALTER TABLE `BenutzerModulAbo`
   ADD PRIMARY KEY (`ID`),
-  ADD KEY `BenutzerKorbAboKorb` (`Korb_ID`),
-  ADD KEY `BenutzerKorbAboBenutzer` (`Benutzer_ID`);
+  ADD KEY `BenutzerModulAboModul` (`Modul_ID`) USING BTREE,
+  ADD KEY `BenutzerModulAboBenutzer` (`Benutzer_ID`) USING BTREE;
 
 --
 -- Indizes für die Tabelle `BenutzerUrlaub`
@@ -514,28 +495,28 @@ ALTER TABLE `Depot`
   ADD KEY `DepotAenderBenutzer` (`AenderBenutzer_ID`);
 
 --
--- Indizes für die Tabelle `Korb`
+-- Indizes für die Tabelle `Modul`
 --
-ALTER TABLE `Korb`
+ALTER TABLE `Modul`
   ADD PRIMARY KEY (`ID`),
   ADD KEY `KorbAenderBenutzer` (`AenderBenutzer_ID`);
 
 --
--- Indizes für die Tabelle `KorbInhalt`
+-- Indizes für die Tabelle `ModulInhalt`
 --
-ALTER TABLE `KorbInhalt`
+ALTER TABLE `ModulInhalt`
   ADD PRIMARY KEY (`ID`),
-  ADD KEY `KorbInhalt_Korb` (`Korb_ID`),
-  ADD KEY `KorbInhalt_Produkt` (`Produkt_ID`),
-  ADD KEY `KorbInhalt_Benutzer` (`AenderBenutzer_ID`);
+  ADD KEY `ModulInhalt_Modul` (`Modul_ID`) USING BTREE,
+  ADD KEY `ModulInhalt_Produkt` (`Produkt_ID`) USING BTREE,
+  ADD KEY `ModulInhalt_Benutzer` (`AenderBenutzer_ID`) USING BTREE;
 
 --
--- Indizes für die Tabelle `KorbInhaltWoche`
+-- Indizes für die Tabelle `ModulInhaltWoche`
 --
-ALTER TABLE `KorbInhaltWoche`
+ALTER TABLE `ModulInhaltWoche`
   ADD PRIMARY KEY (`ID`),
-  ADD UNIQUE KEY `korbwocheuniqu` (`KorbInhalt_ID`,`Woche`),
-  ADD KEY `KorbInhaltWoche_AenderBenutzer` (`AenderBenutzer_ID`);
+  ADD UNIQUE KEY `Modulwocheuniqu` (`ModulInhalt_ID`,`Woche`) USING BTREE,
+  ADD KEY `ModulInhaltWoche_AenderBenutzer` (`AenderBenutzer_ID`) USING BTREE;
 
 --
 -- Indizes für die Tabelle `Produkt`
@@ -568,9 +549,9 @@ ALTER TABLE `Benutzer`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT für Tabelle `BenutzerKorbAbo`
+-- AUTO_INCREMENT für Tabelle `BenutzerModulAbo`
 --
-ALTER TABLE `BenutzerKorbAbo`
+ALTER TABLE `BenutzerModulAbo`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -592,21 +573,21 @@ ALTER TABLE `Depot`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT für Tabelle `Korb`
+-- AUTO_INCREMENT für Tabelle `Modul`
 --
-ALTER TABLE `Korb`
+ALTER TABLE `Modul`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT für Tabelle `KorbInhalt`
+-- AUTO_INCREMENT für Tabelle `ModulInhalt`
 --
-ALTER TABLE `KorbInhalt`
+ALTER TABLE `ModulInhalt`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
--- AUTO_INCREMENT für Tabelle `KorbInhaltWoche`
+-- AUTO_INCREMENT für Tabelle `ModulInhaltWoche`
 --
-ALTER TABLE `KorbInhaltWoche`
+ALTER TABLE `ModulInhaltWoche`
   MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
@@ -639,11 +620,11 @@ ALTER TABLE `Benutzer`
   ADD CONSTRAINT `Benutzer_Role` FOREIGN KEY (`Role_ID`) REFERENCES `Role` (`ID`);
 
 --
--- Constraints der Tabelle `BenutzerKorbAbo`
+-- Constraints der Tabelle `BenutzerModulAbo`
 --
-ALTER TABLE `BenutzerKorbAbo`
+ALTER TABLE `BenutzerModulAbo`
   ADD CONSTRAINT `BenutzerKorbAboBenutzer` FOREIGN KEY (`Benutzer_ID`) REFERENCES `Benutzer` (`ID`),
-  ADD CONSTRAINT `BenutzerKorbAboKorb` FOREIGN KEY (`Korb_ID`) REFERENCES `Korb` (`ID`);
+  ADD CONSTRAINT `BenutzerKorbAboKorb` FOREIGN KEY (`Modul_ID`) REFERENCES `Modul` (`ID`);
 
 --
 -- Constraints der Tabelle `BenutzerUrlaub`
@@ -666,17 +647,17 @@ ALTER TABLE `Depot`
   ADD CONSTRAINT `DepotVerantwortlicherBenutzer` FOREIGN KEY (`VerantwortlicherBenutzer_ID`) REFERENCES `Benutzer` (`ID`);
 
 --
--- Constraints der Tabelle `KorbInhalt`
+-- Constraints der Tabelle `ModulInhalt`
 --
-ALTER TABLE `KorbInhalt`
-  ADD CONSTRAINT `KorbInhalt_Korb` FOREIGN KEY (`Korb_ID`) REFERENCES `Korb` (`ID`),
+ALTER TABLE `ModulInhalt`
+  ADD CONSTRAINT `KorbInhalt_Korb` FOREIGN KEY (`Modul_ID`) REFERENCES `Modul` (`ID`),
   ADD CONSTRAINT `KorbInhalt_Produkt` FOREIGN KEY (`Produkt_ID`) REFERENCES `Produkt` (`ID`);
 
 --
--- Constraints der Tabelle `KorbInhaltWoche`
+-- Constraints der Tabelle `ModulInhaltWoche`
 --
-ALTER TABLE `KorbInhaltWoche`
-  ADD CONSTRAINT `KorbInhaltWoche_KorbInhalt` FOREIGN KEY (`KorbInhalt_ID`) REFERENCES `KorbInhalt` (`ID`);
+ALTER TABLE `ModulInhaltWoche`
+  ADD CONSTRAINT `KorbInhaltWoche_KorbInhalt` FOREIGN KEY (`ModulInhalt_ID`) REFERENCES `ModulInhalt` (`ID`);
 
 --
 -- Constraints der Tabelle `Recht`
@@ -684,7 +665,3 @@ ALTER TABLE `KorbInhaltWoche`
 ALTER TABLE `Recht`
   ADD CONSTRAINT `Recht_Role` FOREIGN KEY (`Role_ID`) REFERENCES `Role` (`ID`);
 COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

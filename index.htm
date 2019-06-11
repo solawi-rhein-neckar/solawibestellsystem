@@ -21,9 +21,27 @@ background-repeat: no-repeat;
         }
         #navi { position: absolute;}
 
+        .weektable {
+            font-size: 16px;
+            text-align: center;
+        }
+        .weektable td {
+            cursor:pointer;
+        }
+        .weektable td.inactive:hover, .weektable td span:hover, .weekWeek:hover, .weektable a:hover {
+            background-color:orange;
+        }
+        .weektable td.active {
+            background-color:yellow;
+        }
+        .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
+            background-color:aqua;
+        }
+
     </style>
     <script src="util.js"> </script>
     <script src="table.js"> </script>
+     <script src="weekSelect.js"> </script>
 </head>
 <body>
 
@@ -52,7 +70,13 @@ getAjax('BenutzerView/MY', function(userResponse){
 
         getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
 
-        getAjax('BenutzerUrlaub', SBTurlaub.showTable);
+        //getAjax('BenutzerUrlaub', SBTurlaub.showTable);
+         var weekSelect = Object.create(WeekSelect);
+         weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
+         weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + SBS.user.ID,
+         weekSelect.postData = {Benutzer_ID: SBS.user.ID, Woche: SBS.selectedWeek},
+         weekSelect.allowMulti = false;
+         weekSelect.addTo(document.getElementById('tableUrlaub'));
 
     } else {
         show('loginform');
@@ -138,18 +162,25 @@ function changeWeek(count) {
     <table id="table" cellspacing="0" > </table>
     <br/>
     <br/>
-    Deine Zusatzbestellungen (in Gesamt-Lieferung oben bereits enthalten) bearbeiten: 
+    Deine <strong>Zusatzbestellungen</strong> (in Gesamt-Lieferung oben bereits enthalten) für die oben gewählte Kalenderwoche bearbeiten:
     <br/>
     <br/>
     <table id="tableEdit" cellspacing="0" > </table>
     <br/>
-    Hinweis: negative Anzahl bestellen, um etwas abzubestellen. Die insgesamt bestellte Anzahl ist in der Liefer-Tabelle fett gedruckt.
+    Hinweis: <strong>negative Anzahl</strong> bestellen, um etwas <strong>abzubestellen</strong>. Die insgesamt bestellte Anzahl ist in der Liefer-Tabelle fett gedruckt.
     <br/>
     <br/>
-    Deine geplanten Urlaube (keine Lieferung!):
+    <br/>
+    Hinweis: Bestellungen und Urlaub können nur für die ZUKUNFT geändert werden.
+    <br/>Änderungen für <strong>vergangene Kalenderwochen ignoriert</strong> das System (derzeit leider noch stillschweigend)!
     <br/>
     <br/>
-    <table id="tableUrlaub" cellspacing="0" > </table>
+    <br/>
+    Deine geplanten <strong>Urlaube</strong> (keine Lieferung!):
+    <br/>
+    <div id="tableUrlaub" > </div>
+    <div style="font-size:85%;color:#666;">(Nach Urlaubs-Änderung für aktuell oben angezeigte Woche:<br/> -> Bitte die Seite manuell neu aufrufen, oder die Woche wechseln, um die Anzeige zu aktualisieren.)</div>
+    <br/>
     <br/>
 </div>
 
