@@ -67,8 +67,8 @@ getAjax('BenutzerView/MY', function(userResponse){
         getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
 
         getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
-        
-        getAjax('BenutzerModulAbo/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTmodule.showTable);
+
+        getAjax('BenutzerModulAbo/Benutzer_ID/MY/Bis/'+SBS.week, SBTmodule.showTable);
 
         //getAjax('BenutzerUrlaub', SBTurlaub.showTable);
          var weekSelect = Object.create(WeekSelect);
@@ -93,7 +93,6 @@ function changeWeek(count) {
     setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
     getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
     getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
-    getAjax('BenutzerModulAbo/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTmodule.showTable);
 }
 
 </script>
@@ -179,11 +178,6 @@ function changeWeek(count) {
     <br/>
     <br/>
     <br/>
-    Deine <strong>Module</strong> für die oben gewählte Kalenderwoche bearbeiten:
-    <table id="tableModule" cellspacing="0" > </table>
-    <br/>
-    <br/>
-    <br/>
     Deine geplanten <strong>Urlaube</strong> (keine Lieferung!):
     <br/>
     <div id="tableUrlaub" > </div>
@@ -191,7 +185,12 @@ function changeWeek(count) {
     <br/>
     <br/>
     <br/>
-    
+    Deine <strong>Module</strong> (aktuelle und auch künftige Änderungen) bearbeiten:
+    <table id="tableModule" cellspacing="0" > </table>
+    <br/>
+    <br/>
+    <br/>
+
 </div>
 
     <!--

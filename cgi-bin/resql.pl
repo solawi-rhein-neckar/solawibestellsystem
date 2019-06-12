@@ -52,7 +52,7 @@ use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!
 my $q = CGI::Simple->new;
 
 # get database handle
-my $dbh = DBI->connect("DBI:mysql:d02dbcf8", "d02dbcf8", "MbXE4cun7E6FkuGo",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => 1 });
+my $dbh = DBI->connect("DBI:mysql:d02dbcf8", "d02dbcf8", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => 1 });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
 	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
@@ -130,6 +130,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( $user->{Role_ID} != 2 && $table =~ /^BenutzerModulAbo$/ && $column =~ /^Woche$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `StartWoche` <= ? AND `EndWoche` >= ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $id, $user->{ID});
+				} elsif ( $user->{Role_ID} != 2 && $table =~ /^BenutzerModulAbo$/ && $column =~ /^Bis$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `EndWoche` >= ? AND `Benutzer_ID` = ?");
+					$sth->execute($id, $user->{ID});
 				} elsif ( $user->{Role_ID} != 2 && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $user->{ID});
@@ -154,6 +157,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( $user->{Role_ID} != 2 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `StartWoche` <= ? AND `EndWoche` >= ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $id2, $id2, $user->{ID});
+				} elsif ( $user->{Role_ID} != 2 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Bis$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `EndWoche` >= ? AND `Benutzer_ID` = ?");
+					$sth->execute($id, $id2, $user->{ID});
 				} elsif ( $user->{Role_ID} != 2 && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $id2, $user->{ID});
