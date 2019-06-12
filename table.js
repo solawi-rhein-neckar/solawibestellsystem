@@ -95,6 +95,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     var tableName;
     var tablePath;
     var disableUnavailableProducts = pDisableUnavailableProducts
+    var responseCache;
 
     /* private constants */
     const columnOrder = ['ID'
@@ -168,6 +169,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         if (path.match(/^BenutzerBestellView.*$/) && disableUnavailableProducts) {
             sbs.saveOrdersIntoProductCache(response);
         }
+        responseCache = response;
 
         var table = document.getElementById(elemIdTable);
         table.innerHTML = '';
@@ -323,6 +325,20 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                     inp.appendChild(opt);
                 }
             }
+        } else if (key.match(/^(Start|End)?Woche$/)) {
+            inp = document.createElement("SELECT");
+            for (var year=2019; year<=(new Date().getFullYear()) + 3; year++) {
+                for (var month=1; month<=weekCount(year); month++) {
+	                var opt = document.createElement("OPTION");
+	                opt.value=year + (month < 10 ? '.0' : '.') + month;
+	                opt.innerText=opt.value;
+	                inp.appendChild(opt);
+                }
+            }
+            var opt = document.createElement("OPTION");
+            opt.value='9999.99';
+            opt.innerText=opt.value;
+            inp.appendChild(opt);
         } else {
             inp = document.createElement("INPUT");
             if (numberColumnNames[key] ||  key.match(/^(.*)_ID$/)) {
@@ -330,6 +346,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                 inp.step=numberColumnNames[key] || 1;
                 inp.min=key.match(/^(.*)_ID$/) ? "0" : "-10";
                 inp.max=key.match(/^(.*)_ID$/) ? "99999" : "999";
+            } else if (key.match(/^(Start|End)?Woche$/)) {
+            	inp.pattern="^(2019|2020|2021|2022|9999)[.](0[1-9]|[1-4][0-9]|5[0-3])$"
             }
         }
         inp.className = 'editor inp_' + key;
@@ -392,21 +410,48 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                 }
             }
 
-            if (disableUnavailableProducts && data['Produkt_ID'] && sbs.tableCache['Produkt']) {
+            if (disableUnavailableProducts) {
                 if ((! data['Anzahl']) || data['Anzahl'] == 0) {
                     setContent('editError', 'Anzahl muss eingegeben werden!');
                     event2.target.disabled='';
                     return;
                 }
-                var row = sbs.tableCache['Produkt'][data['Produkt_ID']]
-                if (row) {
-                    var min = row.AnzahlBestellung * -1;
-                    var max = row.AnzahlZusatzBestellungMax - row.AnzahlZusatzBestellung;
-                    if (data['Anzahl'] < min || data['Anzahl'] > max) {
-                        setContent('editError', 'Anzahl zu ' + (data['Anzahl'] < min ? 'gering' : 'groß') + '. Min: ' + min + ' / Max: ' + max + ' möglich für Produkt ' + row.Name);
+            	var min = 0;
+            	var max = 9999;
+                if (data['Produkt_ID'] && sbs.tableCache['Produkt']) {
+	                var row = sbs.tableCache['Produkt'][data['Produkt_ID']]
+	                if (row) {
+	                    min = row.AnzahlBestellung * -1;
+	                    max = row.AnzahlZusatzBestellungMax - row.AnzahlZusatzBestellung;
+	                }
+                } else if (data['Modul_ID'] && sbs.tableCache['Modul']) {
+                    if (data['StartWoche'] > data['EndWoche']) {
+                        setContent('editError', 'Start muss vor Ende sein.');
                         event2.target.disabled='';
                         return;
                     }
+                    var row = sbs.tableCache['Modul'][data['Modul_ID']]
+	                if (row) {
+	                	if (row.WechselWochen && (row.WechselWochen.indexOf(data['StartWoche'].substr(5)) < 0 || row.WechselWochen.indexOf( ('0' + (parseInt(data['EndWoche'].substr(5)) + 1)).slice(-2) ) < 0)) {
+	                        setContent('editError', 'Ungültige Start/EndWoche für ' + row.Name + ', erlaubte StartWochen: ' + row.WechselWochen + ', EndWoche jeweils eins weniger: ' + ('0' + (parseInt(data['EndWoche'].substr(5)) + 1)).slice(-2) );
+	                        event2.target.disabled='';
+	                        return;
+	                	}
+	                	if (row.AnzahlProAnteil != 0 && responseCache) {
+	                		max = row.AnzahlProAnteil * sbs.user.Anteile;
+	                		for (var a = 0; a < responseCache.length; a++) {
+	                			var abo = responseCache[a];
+	                			if (abo['Modul_ID'] == data['Modul_ID'] && abo['StartWoche'] <= data['EndWoche'] && abo['EndWoche'] >= data['StartWoche'] && abo['Anzahl']) {
+	                				max -= abo['Anzahl'];
+	                			}
+	                		}
+	                	}
+	                }
+                }
+                if (data['Anzahl'] < min || data['Anzahl'] > max) {
+                    setContent('editError', 'Anzahl zu ' + (data['Anzahl'] < min ? 'gering' : 'groß') + '. Min: ' + min + ' / Max: ' + max + ' möglich für ' + row.Name);
+                    event2.target.disabled='';
+                    return;
                 }
             }
 
