@@ -312,6 +312,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 
 		} elsif ( $q->request_method() =~ /^DELETE$/ ) {
 			my $cur_week = POSIX::strftime("%G.%V", gmtime time);
+			my $last_week = POSIX::strftime("%G.%V", gmtime time - 7 * 24 * 60 * 60);
 			my $preSql;
 			my $sql;
 			my @preValues;
@@ -326,8 +327,8 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `ID` = ? AND `Benutzer_ID` = ?  AND `StartWoche` >= ? AND `EndWoche` >= ?";
 					$sql = "DELETE FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ?  AND `StartWoche` >= ? AND `EndWoche` >= ?";
 				} elsif ( $user->{Role_ID} != 2 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
-					@values = ($id, $user->{ID}, $cur_week);
-					@preValues = ($user->{ID}, $id, $user->{ID}, $cur_week);
+					@values = ($id, $user->{ID}, $last_week);
+					@preValues = ($user->{ID}, $id, $user->{ID}, $last_week);
 					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `ID` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
 					$sql = "DELETE FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
 				} elsif ( $user->{Role_ID} == 2 ) {
@@ -352,9 +353,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					@values = ($id, $id2, $user->{ID}, $cur_week, $cur_week);
 				} elsif ( $user->{Role_ID} != 2 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
 					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
-					@preValues = ($user->{ID}, $id, $id2, $user->{ID}, $cur_week);
+					@preValues = ($user->{ID}, $id, $id2, $user->{ID}, $last_week);
 					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
-					@values = ($id, $id2, $user->{ID}, $cur_week);
+					@values = ($id, $id2, $user->{ID}, $last_week);
 				} elsif ( $user->{Role_ID} == 2 ) {
 					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ?";
 					@preValues = ($user->{ID}, $id, $id2);

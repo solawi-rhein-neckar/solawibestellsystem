@@ -17,6 +17,7 @@ var WeekSelect = {
     year: 2019,
     tableName: 'ModulInhaltWoche/ModulInhalt_ID/1',
     postData: {ModulInhalt_ID: 1, Woche: '2019.01'},
+    week: '2019.01',
 
     addTo: function(pElem) {
         this.elem = pElem;
@@ -59,7 +60,7 @@ var WeekSelect = {
         this.htmlTable.appendChild(tr);
         var weekCount = window.weekCount(this.year);
         for (var i = 1; i<= weekCount; i++) {
-            td = this.createCell(tr, i < 10 ? '0' + i : i, handler);
+            td = this.createCell(tr, i < 10 ? '0' + i : i, handler, this.getTitle(i));
             if (weeks[i]) {
                 td.className='active';
             }
@@ -102,11 +103,17 @@ var WeekSelect = {
         td.appendChild(span);
 
     },
+    
+    getTitle: function(weekNr) {
+    	var weekLabel = weekNr < 10 ? '0' + weekNr : weekNr;
+    	return "KW " + weekNr + ": " + weekToDate(this.year + "." + weekLabel, 1).toLocaleDateString() + " - " + weekToDate(this.year + "." + weekLabel, 7).toLocaleDateString()
+    },
 
-    createCell: function(tr, text, onclick) {
+    createCell: function(tr, text, onclick, title) {
         td = document.createElement('TD');
         tr.appendChild(td);
         td.innerText= text;
+        td.title = title;
         td.addEventListener('click', onclick);
         td.className='inactive';
         tr.appendChild(td);
@@ -116,7 +123,9 @@ var WeekSelect = {
     handleSelect: function(event) {
         console.log('weekSelect click w' + event.target.dataWeek + ', c' + event.target.dataColumn + ', q' + event.target.dataQuartal + ', y' + event.target.dataYear);
         if (event.target.dataWeek) {
-        	if (this.allowMulti || confirm('Wirklich Urlaub für ausgewählte Woche umschalten?')) {
+        	if ((!this.allowMulti) && (this.year + '.' + (event.target.dataWeek < 10 ? '0' + event.target.dataWeek : event.target.dataWeek)) < this.week) {
+        		alert('Nur zukünftiger Urlaub kann eingetragen werden.');
+        	} else if (this.allowMulti || confirm('Wirklich Urlaub für ' + this.getTitle(event.target.dataWeek) + ' umschalten?')) {
         		this.toggleSingle(event.target);
         	}
         } else if (event.target.dataYear) {

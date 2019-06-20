@@ -193,6 +193,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche'] 
             											 	: ['Name']));
             btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
+            if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && sbs.selectedWeek < sbs.week ) {
+        		btn.disabled='disabled';
+            }
         }
         for (var i = 0; i < response.length; i++) {
             if(!keys) {
@@ -208,6 +211,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                         var btn = document.createElement('BUTTON');
                         btn.addEventListener('click', createFuncAddNew(keys));
                         btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
+                        if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && sbs.selectedWeek < sbs.week ) {
+                    		btn.disabled='disabled';
+                        }
                         td.appendChild(btn);
                     } else {
                         td.innerText = keys[j];
@@ -247,6 +253,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                     if ( ((! disableUnavailableProducts) || keys[j] == 'Sorte' || keys[j] == 'EndWoche') && editable && keys[j] != 'ID' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && keys[j] != 'ErstellZeitpunkt') {
                         div.addEventListener('click', showEditor);
                         div.style.cursor = "pointer";
+                        if (disableUnavailableProducts) {
+                        	div.style['border-bottom'] = "1px dotted black";
+                        }
                         div.title = "click to edit!";
                     }
                     div.dataId = response[i]["ID"];
@@ -266,15 +275,17 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                 }
                 if (editable) {
                     var delTd = document.createElement("TD");
-                    var delBtn = document.createElement("BUTTON");
-                    delBtn.innerText='entf.';
-                    delBtn.dataId = response[i]["ID"];
-                    delBtn.addEventListener('click', function(event) {
-                        if (confirm(tableName + "/" + event.target.dataId + ' wirklich löschen?')) {
-                            deleteAjax(tableName + "/" + event.target.dataId, function(){pub.reload();});
-                        }
-                    });
-                    delTd.appendChild(delBtn);
+                    if ((!disableUnavailableProducts) || ( (! (response[i]['StartWoche'] && response[i]['StartWoche'] < sbs.week) ) && (! (response[i]['Woche'] && response[i]['Woche'] < addWeek(sbs.week, -1) ) ) )) {
+	                    var delBtn = document.createElement("BUTTON");
+	                    delBtn.innerText='entf.';
+	                    delBtn.dataId = response[i]["ID"];
+	                    delBtn.addEventListener('click', function(event) {
+	                        if (confirm(tableName + "/" + event.target.dataId + ' wirklich löschen?')) {
+	                            deleteAjax(tableName + "/" + event.target.dataId, function(){pub.reload();});
+	                        }
+	                    });
+	                    delTd.appendChild(delBtn);
+                	}
                     tr.appendChild(delTd);
                 }
             }
@@ -332,7 +343,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
 	                var opt = document.createElement("OPTION");
 	                opt.value=year + (month < 10 ? '.0' : '.') + month;
 	                opt.innerText=opt.value;
-	                inp.appendChild(opt);
+	                if ((!disableUnavailableProducts) || opt.value >= sbs.week) {
+	                	inp.appendChild(opt);
+	                }
                 }
             }
             var opt = document.createElement("OPTION");
@@ -399,19 +412,34 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         if (event2.keyCode == null /*blur*/ || event2.keyCode == 13 /*enter*/) {
             event2.target.disabled='disabled';
 
+            var id;
             var data = {};
+            var sendData = {};
             var editor = document.getElementById('editor');
             for (var i = 0; i < editor.children.length; i++) {
                 var inpEle = editor.children[i];
-                var id;
                 if (inpEle.tagName == 'INPUT' || inpEle.tagName == 'SELECT') {
                     data[inpEle.dataKey] = inpEle.value;
+                    sendData[inpEle.dataKey] = inpEle.value;
                     id = id || inpEle.dataId;
+                    if (disableUnavailableProducts && inpEle.dataId && responseCache && (!data['StartWoche']) && (!data['Modul_ID']) && !data['Anzahl']) {
+                    	var editRow = {};
+                    	for (var a = 0; a < responseCache.length; a++) {
+                    		if (responseCache[a] && responseCache[a]['ID'] == inpEle.dataId) {
+                    			editRow = responseCache[a];
+                    		}
+                    	}
+                    	if (editRow['Modul_ID'] && editRow['StartWoche'] && editRow['Anzahl']) {
+	                		data['Modul_ID'] = editRow['Modul_ID']; 
+	                		data['StartWoche'] = editRow['StartWoche']; 
+	                		data['Anzahl'] = editRow['Anzahl'];
+                    	}
+                    }
                 }
             }
 
             if (disableUnavailableProducts) {
-                if ((! data['Anzahl']) || data['Anzahl'] == 0) {
+                if (typeof data['Anzahl'] != 'undefined' && ((! data['Anzahl']) || data['Anzahl'] == 0)) {
                     setContent('editError', 'Anzahl muss eingegeben werden!');
                     event2.target.disabled='';
                     return;
@@ -432,8 +460,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                     }
                     var row = sbs.tableCache['Modul'][data['Modul_ID']]
 	                if (row) {
-	                	if (row.WechselWochen && (row.WechselWochen.indexOf(data['StartWoche'].substr(5)) < 0 || row.WechselWochen.indexOf( ('0' + (parseInt(data['EndWoche'].substr(5)) + 1)).slice(-2) ) < 0)) {
-	                        setContent('editError', 'Ungültige Start/EndWoche für ' + row.Name + ', erlaubte StartWochen: ' + row.WechselWochen + ', EndWoche jeweils eins weniger: ' + ('0' + (parseInt(data['EndWoche'].substr(5)) + 1)).slice(-2) );
+	                	if (row.WechselWochen && (((!id) && row.WechselWochen.indexOf(data['StartWoche'].substr(5)) < 0) || row.WechselWochen.indexOf(addWeek(data['EndWoche'], 1).substr(5)) < 0)) {
+	                        setContent('editError', 'Ungültige Start/EndWoche für ' + row.Name + ', erlaubte StartWochen: ' + row.WechselWochen + ', EndWoche jeweils eins weniger.' );
 	                        event2.target.disabled='';
 	                        return;
 	                	}
@@ -441,14 +469,14 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
 	                		max = row.AnzahlProAnteil * sbs.user.Anteile;
 	                		for (var a = 0; a < responseCache.length; a++) {
 	                			var abo = responseCache[a];
-	                			if (abo['Modul_ID'] == data['Modul_ID'] && abo['StartWoche'] <= data['EndWoche'] && abo['EndWoche'] >= data['StartWoche'] && abo['Anzahl']) {
+	                			if (abo['Modul_ID'] == data['Modul_ID'] && abo['StartWoche'] <= data['EndWoche'] && abo['EndWoche'] >= data['StartWoche'] && abo['Anzahl'] && ((!id) || abo['ID'] != id) ) {
 	                				max -= abo['Anzahl'];
 	                			}
 	                		}
 	                	}
 	                }
                 }
-                if (data['Anzahl'] < min || data['Anzahl'] > max) {
+                if (typeof data['Anzahl'] != 'undefined' && (data['Anzahl'] < min || data['Anzahl'] > max)) {
                     setContent('editError', 'Anzahl zu ' + (data['Anzahl'] < min ? 'gering' : 'groß') + '. Min: ' + min + ' / Max: ' + max + ' möglich für ' + row.Name);
                     event2.target.disabled='';
                     return;
@@ -456,7 +484,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             }
 
 
-            postAjax(tableName + (id ? '/'+id : ''), data, function(){pub.reload();});
+            postAjax(tableName + (id ? '/'+id : ''), sendData, function(){pub.reload();});
             hide('blockui_edit');
         }
     }

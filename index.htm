@@ -73,6 +73,7 @@ getAjax('BenutzerView/MY', function(userResponse){
         //getAjax('BenutzerUrlaub', SBTurlaub.showTable);
          var weekSelect = Object.create(WeekSelect);
          weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
+         weekSelect.week = SBS.week;
          weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + SBS.user.ID,
          weekSelect.postData = {Benutzer_ID: SBS.user.ID, Woche: SBS.selectedWeek},
          weekSelect.allowMulti = false;
@@ -174,7 +175,7 @@ function changeWeek(count) {
     <br/>
     <br/>
     Hinweis: Bestellungen, Module und Urlaub können nur für die ZUKUNFT geändert werden.
-    <br/>Änderungen für <strong>vergangene Kalenderwochen ignoriert</strong> das System (derzeit leider noch stillschweigend)!
+    <br/>Änderungen für <strong>vergangene Kalenderwochen ignoriert</strong> das System.
     <br/>
     <br/>
     <br/>
