@@ -23,7 +23,7 @@ use warnings;
 # (further restrictions apply, i.e. only editing if "Woche" is in Future)
 #
 # Users with Benutzer.Role_ID == 3 can update/insert/delete all rows in all Tables, that have 'Benutzer' in their name (= Depotverwalter etc)
-# Users with Benutzer.Role_ID == 1 can update all other Tables (Produkte, Deliveries etc = Packteam)  
+# Users with Benutzer.Role_ID == 1 can update all other Tables (Produkte, Deliveries etc = Packteam)
 #
 # Users with Benutzer.Role_ID == 2 can do everything (=Admin).
 #
@@ -118,6 +118,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( $user->{Role_ID} <= 1 && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $user->{ID});
+				} elsif ( $table =~ /^Pivot.*/ ) {
+					$sth = $dbh->prepare("CALL $table(?)");
+					$sth->execute($id);
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ?");
 					$sth->execute($id);
@@ -267,9 +270,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				}
 			} elsif ( $q->path_info =~ /^\/([a-zA-Z]+)\/?$/ ) { # NO ID yet -> INSERT
 				my $table = $1;
-				if ( $user->{Role_ID} == 2 
-					|| ( $user->{Role_ID} == 3 && $table =~ /.*Benutzer.*/)  
-					|| ( $user->{Role_ID} == 0 && ( ! ( $table =~ /.*Benutzer.*/) )  ) 
+				if ( $user->{Role_ID} == 2
+					|| ( $user->{Role_ID} == 3 && $table =~ /.*Benutzer.*/)
+					|| ( $user->{Role_ID} == 0 && ( ! ( $table =~ /.*Benutzer.*/) )  )
 					|| ( $user->{Role_ID} <= 1 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) && $body->{Benutzer_ID} == $user->{ID} )  ) {
 
 					my @keys = ();
