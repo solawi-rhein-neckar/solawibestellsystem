@@ -56,7 +56,7 @@ use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!
 my $q = CGI::Simple->new;
 
 # get database handle
-my $dbh = DBI->connect("DBI:mysql:d02dbcf8", "d02dbcf8", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => 1 });
+my $dbh = DBI->connect("DBI:mysql:d02dbcf8", "d02dbcf8", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => ($q->request_method() =~ /^POST$/) });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
 	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
@@ -118,6 +118,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( $user->{Role_ID} <= 1 && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $user->{ID});
+				} elsif ( $table =~ /^PivotDepot.*/ ) {
+					$sth = $dbh->prepare("CALL $table(?,?)");
+					$sth->execute($id,$user->{Depot_ID});
 				} elsif ( $table =~ /^Pivot.*/ ) {
 					$sth = $dbh->prepare("CALL $table(?)");
 					$sth->execute($id);

@@ -215,6 +215,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                     		btn.disabled='disabled';
                         }
                         td.appendChild(btn);
+                    } else if (keys[j].match(/^[0-9][0-9][.].*/) ) {
+                        td.innerText = keys[j].substr(3);
                     } else {
                         td.innerText = keys[j];
                     }
@@ -296,7 +298,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         return function() {
             var edit = resetEditor("Add new " + tableName);
             for (var j = 0; j < keys.length; j++) {
-                if (keys[j] != 'ID' && keys[j] != 'ErstellZeitpunkt' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt') {
+                if (keys[j] != 'ID' && keys[j] != 'ErstellZeitpunkt' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && (/*generated column Produkt.Name*/ tableName != 'Produkt' || keys[j] != 'Name')) {
 
                     var inp = createInput(keys[j]);
 

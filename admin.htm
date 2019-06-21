@@ -66,6 +66,8 @@ function changeWeek(count) {
     if (SBTview.getTableName() && SBTview.getTablePath()) {
         if (SBTview.getTablePath().match(/.*Woche.*/)) {
             getAjax(SBTview.getTableName()+'/Woche/'+SBS.selectedWeek, SBTview.showTable);
+        } else if (SBTview.getTablePath().match(/.*Pivot.*/)) {
+            getAjax(SBTview.getTableName()+'/'+SBS.selectedWeek, SBTview.showTable);
         }
     }
 }
@@ -116,6 +118,7 @@ function changeWeek(count) {
             <button onclick="SBTedit.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellung</button>
             <button onclick="SBTedit.reset();getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">DepotBestellungen</button>
             <button onclick="SBTedit.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">GesamtBestellungen</button>
+            <button onclick="SBTedit.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">PivotDepot</button>
             <button onclick="SBTedit.reset();getAjax('PivotBestellungen/'+SBS.selectedWeek, SBTview.showTable);">PivotBestellungen</button>
         </span>
         <span style="display:inline-block;max-width: 42%;vertical-align: top;">
