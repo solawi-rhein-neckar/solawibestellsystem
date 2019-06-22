@@ -76,10 +76,10 @@ function changeWeek(count) {
 
 
 <div id="blockui_post" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:250;background-color:rgba(0,0,0,0.3);display:none;">
-    SAVING DATA...
+    <span style="display:inline-block;padding:30px;background-color:#FFF;border:1px solid black;">SENDE DATEN...</span>
 </div>
 <div id="blockui_get" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:240;background-color:rgba(0,0,0,0.3);display:none;">
-    LOADING - PLEASE WAIT
+    <span style="display:inline-block;padding:30px;background-color:#FFF;border:1px solid black;">EMPFANGE DATEN - BITTE WARTEN....</span>
 </div>
 <div id="blockui_edit" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;z-index:230;background-color:rgba(0,0,0,0.3);display:none;">
         <div style="display:inline-block;padding: 5px; margin: 10px; border:1px solid black;background-color:#FFF;">
@@ -118,8 +118,11 @@ function changeWeek(count) {
             <button onclick="SBTedit.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellung</button>
             <button onclick="SBTedit.reset();getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">DepotBestellungen</button>
             <button onclick="SBTedit.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">GesamtBestellungen</button>
-            <button onclick="SBTedit.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">PivotDepot</button>
+            <button onclick="SBTedit.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">PivotDepotBest.</button>
             <button onclick="SBTedit.reset();getAjax('PivotBestellungen/'+SBS.selectedWeek, SBTview.showTable);">PivotBestellungen</button>
+            
+            <a target="_blank" href="print.htm#PivotBestellungen">Bestellung_Drucken</a>
+            <a target="_blank" href="print.htm#PivotDepot">DepotBest._Drucken</a>           
         </span>
         <span style="display:inline-block;max-width: 42%;vertical-align: top;">
             <b>Bearbeiten </b>  <a style="float:right;padding-right: 20px;" href="index.htm">zurück zu Startseite</a>
