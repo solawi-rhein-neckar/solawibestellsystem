@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Erstellungszeit: 21. Jun 2019 um 23:45
+-- Erstellungszeit: 22. Jun 2019 um 11:44
 -- Server-Version: 5.7.26-nmm1-log
 -- PHP-Version: 7.2.19-nmm1
 
@@ -24,9 +24,11 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `PivotBestellungen` (IN `pWoche`
     SQL SECURITY INVOKER
 BEGIN
 
+SET SESSION group_concat_max_len = 32000;
+
 SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('MAX(IF(Produkt_ID = ', ID, ', Anzahl, 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
 
-SET @query = CONCAT('SELECT Depot_ID, ', @query, ' , MAX(Urlaub) as `',pWoche,' Urlauber` FROM DepotBestellView WHERE Woche = ', pWoche ,' GROUP BY Depot_ID');
+SET @query = CONCAT('SELECT Depot as `00.',pWoche,'`, ', @query, ' , MAX(Urlaub) as `',pWoche,' Urlauber` FROM DepotBestellView WHERE Woche = ', pWoche ,' GROUP BY Depot_ID');
 
 PREPARE stt FROM @query;
 
@@ -39,6 +41,8 @@ END$$
 CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `PivotDepot` (IN `pWoche` DECIMAL(6,2), IN `pDepot` INT)  READS SQL DATA
     SQL SECURITY INVOKER
 BEGIN
+
+SET SESSION group_concat_max_len = 32000;
 
 SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('MAX(IF(Produkt_ID = ', ID, ', Anzahl, 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
 
@@ -825,7 +829,7 @@ CREATE TABLE `ModulInhaltWoche` (
 
 CREATE TABLE `Produkt` (
   `ID` int(11) NOT NULL,
-  `Name` varchar(511) COLLATE utf8_german2_ci GENERATED ALWAYS AS (concat(`Produkt`,' [',`Menge`,' ',`Einheit`,']')) VIRTUAL,
+  `Name` varchar(511) COLLATE utf8_german2_ci GENERATED ALWAYS AS (if((`Menge` <> 1.00),concat(`Produkt`,' [',(trim(`Menge`) + 0),unhex('C2A0'),`Einheit`,']'),`Produkt`)) VIRTUAL,
   `Produkt` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `Beschreibung` varchar(2047) COLLATE utf8_german2_ci NOT NULL DEFAULT '',
   `Einheit` varchar(7) COLLATE utf8_german2_ci NOT NULL DEFAULT 'Stueck',
