@@ -30,6 +30,13 @@
     <script src="util.js"> </script>
     <script src="table.js"> </script>
     <script src="weekSelect.js"> </script>
+    
+	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
+	<script type="text/javascript" src="FileSaver.min.js"></script> 
+    <!-- add the shim first
+	<script type="text/javascript" src="shim.min.js"></script>-->
+	<!-- after the shim is referenced, add the library 
+	<script type="text/javascript" src="xlsx.full.min14.js"></script>-->
 
 </head>
 <body>
@@ -120,6 +127,7 @@ function changeWeek(count) {
             <button onclick="SBTedit.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">GesamtBestellungen</button>
             <button onclick="SBTedit.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">PivotDepotBest.</button>
             <button onclick="SBTedit.reset();getAjax('PivotBestellungen/'+SBS.selectedWeek, SBTview.showTable);">PivotBestellungen</button>
+            <button onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Bestellungen</button>
             
             <a target="_blank" href="print.htm#PivotBestellungen">Bestellung_Drucken</a>
             <a target="_blank" href="print.htm#PivotDepot">DepotBest._Drucken</a>           

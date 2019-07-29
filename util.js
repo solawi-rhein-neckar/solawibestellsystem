@@ -123,3 +123,138 @@ function weekCount(year) {
     var date = new Date(year, 11 /*month index 0 based - dec = 11*/, 31, 12 /*mid of day*/, 0);
     return date.getWeek() != 53 ? 52 : 53;
 }
+
+function downloadWithSheetJs() { if (false) {
+	  /* convert data to binary string */
+	  var data = new Uint8Array(arraybuffer);
+	  var arr = new Array();
+	  for(var i = 0; i != data.length; ++i) arr[i] = String.fromCharCode(data[i]);
+	  var bstr = arr.join("");
+
+	  /* Call XLSX */
+		var workbook = XLSX.read(bstr, {type:"binary", cellNF: true, cellStyles:true});		
+		
+	  /* simpler version with newest sheetJs version
+	  var data = new Uint8Array(req.response);
+	  var workbook = XLSX.read(data, {type:"array"});*/
+	
+	  /* DO SOMETHING WITH workbook HERE */
+	  var first_sheet_name = workbook.SheetNames[0];
+	  var address_of_cell = 'C6';
+
+	  /* Get worksheet */
+	  var worksheet = workbook.Sheets[first_sheet_name];
+
+	  /* Find desired cell */
+	  var desired_cell = worksheet[address_of_cell];
+
+	  /* Get the value */
+	  desired_cell.v = '2017'
+	  
+	  /* output format determined by filename */
+	  /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
+	  var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
+
+	  var wbout = XLSX.write(workbook,wopts);
+
+	  function s2ab(s) {
+	    var buf = new ArrayBuffer(s.length);
+	    var view = new Uint8Array(buf);
+	    for (var i=0; i!=s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF;
+		  return buf;
+	  }
+
+	  /* the saveAs call downloads a file on the local machine */
+	  saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")
+	  /* at this point, out.xlsb will have been downloaded */
+	}
+	
+	req.send();
+}
+
+function downloadDepotbestellungen(response, path) {
+	console.log('downloading...');
+	var responseCache = response;
+	
+	var url = "Depotbestellungen.xlsx";
+	
+	/* set up async GET request */
+	var req = new XMLHttpRequest();
+	req.open("GET", url, true);
+	req.responseType = "arraybuffer";
+	
+	req.onload = function(e) {
+		var arraybuffer = req.response;
+		var workbook = new ExcelJS.Workbook();
+	// workbook.xlsx.read(buffer)
+	console.log('Depotbestellungen: loading...');
+	
+	workbook.xlsx.load(arraybuffer).then(
+			function(workbook) {
+			console.log('Depotbestellungen: loaded, writing...');
+			console.log('loaded, filling...');
+			
+			var columns = [];
+			var rows = {};
+			
+			var worksheet = workbook.getWorksheet(1);
+			worksheet.eachRow(
+				
+				function(row, rowNumber) {
+					console.log('Depotbestellungen: Row ' + rowNumber + ' = ' + JSON.stringify(row.values));
+					
+					if (row.getCell(2).value == 'Anteile') {
+						row.eachCell({ includeEmpty: true }, 
+							function(cell, colNumber) {
+								console.log('Depotbestellungen: Cell ' + colNumber + ' = ' + cell.value);
+								if (cell.value) {
+									columns[colNumber] = cell.value.replace(',5kg', '.5kg').replace('Quark', 'Quark, 400g').replace('Anteile', 'Saisongemüse').replace('Apfelsaft, 1L', 'Apfelsaft');
+								}
+							}
+						);
+					}
+					
+					if (row.getCell(1) && row.getCell(1).value) {
+						rows[row.getCell(1).value] = rowNumber;
+					}
+				}
+			);
+			
+			console.log(columns);
+			console.log(rows);
+			console.log(response);
+			
+	        for (var i = 0; i < response.length; i++) {
+	        	
+	        	var depot = response[i]['Depot'];
+	        	console.log("Depotbestellungen: " + depot);
+	        	console.log(response[i]);
+	        	
+	        	if (depot && rows[depot]) {
+	        		var row = worksheet.getRow(rows[depot]);
+			        for (var j = 0; j < columns.length; j++) {
+			       		if (columns[j]) {
+		       				var val = response[i][columns[j]];
+		       				if (val) {
+	       						row.getCell(j).value = val.replace(/^([0-9]+)[.]([05])[0]+$/, '$1,$2');
+		       				} else if (j > 1) {
+		       					row.getCell(j).value = '';
+		       				}
+			       		}
+			        }
+	        	}
+	        	
+	        }
+			
+			console.log('Depotbestellungen: filled, writing...');
+			workbook.xlsx.writeBuffer().then(
+				function(buffer) {
+					console.log('Depotbestellungen: written, downloading...');
+	   				saveAs(new Blob([buffer],{type:""}), "Depotbestellungen_"+SBS.selectedWeek+".xlsx");
+	  			}
+			);
+		}
+		);
+	};
+	req.send();
+}
