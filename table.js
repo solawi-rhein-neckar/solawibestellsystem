@@ -130,8 +130,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         ,'PunkteWoche'
         ,'Role'
         ,'Role_ID'
-        ,'StellvertreterBenutzer_ID'
-        ,'VerantwortlicherBenutzer_ID'
+        ,'BestellerBenutzer_ID'
+        ,'VerwalterBenutzer_ID'
         ,'Tabelle'
         ,'Spalte'
         ,'SpalteBenutzerID'
@@ -246,7 +246,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                     var div = document.createElement("DIV");
                     div.id = "span_" + path + "_" + i + "_" + j;
                     div.innerText = response[i][keys[j]] === undefined || response[i][keys[j]] === null || response[i][keys[j]] === '' ? '-' : response[i][keys[j]];
-                    var relation = keys[j].match(/^(?:Verantwortlicher|Stellvertreter)?(.*)_ID$/);
+                    var relation = keys[j].match(/^(?:Besteller|Verwalter)?(.*)_ID$/);
                     if (relation && sbs.tableCache[relation[1]]) {
                         var row = sbs.tableCache[relation[1]][div.innerText];
                         div.dataValue = div.innerText;
@@ -316,7 +316,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
 
     function createInput(key) {
         var inp;
-        var relation = key.match(/^(?:Verantwortlicher|Stellvertreter)?(.*)_ID$/);
+        var relation = key.match(/^(?:Besteller|Verwalter)?(.*)_ID$/);
         if (relation && sbs.tableCache[relation[1]]) {
             inp = document.createElement("SELECT");
             for (var k=0; k<sbs.tableCache[relation[1]].length; k++) {
