@@ -48,7 +48,7 @@ var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
 
 //check login status
 getAjax('Benutzer/OWN', function(userResponse){
-    if (userResponse.length > 0) {
+    if (userResponse.length > 0 && userResponse[0]) {
         SBS.user = userResponse[0];
         document.getElementById('logoutbtn').innerText='Logout ' + SBS.user.Name;
         setContent('selectedWeek', SBS.selectedWeek);
@@ -58,6 +58,7 @@ getAjax('Benutzer/OWN', function(userResponse){
     } else {
         show('loginform');
         hide('logoutbtn');
+        hide('tableContainer');
     }
 });
 
@@ -96,9 +97,9 @@ function changeWeek(count) {
 </div>
 
 
-<div id="logoutform" style="position:fixed;right: 1px; top: 0; width: 15em; height: 5em; background: #EEE; border: 1px dotted #999;text-align:center;">
-    <button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');" >Logout</button>
-    <div id="messages" style="height:3.3em; overflow:hidden;font-size=85%;box-shadow: inset 0px -9px 9px -9px black;">
+<div id="logoutform" style="position:fixed;right: 1px; top: 0; width: 15em; height: 10em; background: rgba(222,222,222,0.6); border: 1px dotted #999;text-align:center;">
+    <button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn'); hide('tableContainer');" >Logout</button>
+    <div id="messages" style="height:8.3em; overflow:hidden;font-size=85%;box-shadow: inset 0px -9px 9px -9px black;position:absolute;bottom:0;width:15em;">
     </div>
 </div>
 
@@ -107,8 +108,12 @@ function changeWeek(count) {
     <form method='post' action='/cgi-bin/query.pl/login'>
         Name: <input type='text' id='inpName' name='name' placeholder='name'/>
         Password: <input type='password' id='inpPass' name='password'/>
-        <input type='submit' value='Login' onclick='event.preventDefault();postAjax("login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(){window.setTimeout(function(){document.location.reload();},333);});return false;'/>
+        <input type='submit' value='Login' onclick='event.preventDefault();postAjax("login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result, path){if (!(!result || result.result != "1")){window.setTimeout(function(){document.location.reload();},333);} else {show("loginError")};});return false;'/>
+        <div id="loginError" style="display:none;color:red;font-weight:bold;padding-top:20px;">
+        	Falscher Benutzername oder Falsches Passwort!<br/>Der Admin-Bereich funktioniert NICHT mit dem Login des Mitgliederbereichs, sondern hat eigene Logins!<br/>Zum Login als Mitglied, bitte den Link "Zurück zur Startseite" verwenden.
+        </div>
     </form>
+    <br/><br/><a style="padding-left: 20px;" href="index.htm">Zurück zu Startseite</a><br/>
 </div>
 
 <div id="warning" style="color:red"></div>
@@ -133,7 +138,7 @@ function changeWeek(count) {
             <a target="_blank" href="print.htm#PivotDepot">DepotBest._Drucken</a>           
         </span>
         <span style="display:inline-block;max-width: 42%;vertical-align: top;">
-            <b>Bearbeiten </b>  <a style="float:right;padding-right: 20px;" href="index.htm">zurück zu Startseite</a>
+            <b>Bearbeiten </b>  
             <br/>
             <button onclick="SBTview.reset();getAjax('Depot', SBTedit.showTable);">Depot</button>
             <button onclick="SBTview.reset();getAjax('Modul', SBTedit.showTable);">Modul</button>

@@ -103,6 +103,12 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( ($myOwn || $user->{Role_ID} <= 1) && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `Benutzer_ID` = ?");
 					$sth->execute($user->{ID});
+				} elsif ( ($user->{Role_ID} == 3) && $table =~ /^Benutzer(View)?$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($user->{Depot_ID});
+				} elsif ( ($user->{Role_ID} == 3) && $table =~ /.*Benutzer.*/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($user->{Depot_ID});
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table`");
 					$sth->execute();
@@ -146,9 +152,24 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( $user->{Role_ID} <= 1 && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $user->{ID});
+				} elsif ( ($user->{Role_ID} == 3) && $table =~ /^Benutzer(View)?$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $user->{Depot_ID});
+				} elsif ( $user->{Role_ID} == 3 && $table =~ /^BenutzerModulAbo$/ && $column =~ /^Woche$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `StartWoche` <= ? AND `EndWoche` >= ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $id, $user->{Depot_ID});
+				} elsif ( $user->{Role_ID} == 3 && $table =~ /^BenutzerModulAbo$/ && $column =~ /^Bis$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `EndWoche` >= ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $user->{Depot_ID});
+				} elsif ( ($user->{Role_ID} == 3) && $table =~ /.*Benutzer.*/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $user->{Depot_ID});
 				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column =~ /^Woche$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `StartWoche` <= ? AND `EndWoche` >= ?");
 					$sth->execute($id, $id);
+				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column =~ /^Bis$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `EndWoche` >= ?");
+					$sth->execute($id);
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ?");
 					$sth->execute($id);
@@ -173,9 +194,24 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( $user->{Role_ID} <= 1 && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $id2, $user->{ID});
+				} elsif ( ($user->{Role_ID} == 3) && $table =~ /^Benutzer(View)?$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $id2, $user->{Depot_ID});
+				} elsif ( $user->{Role_ID} == 3 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `StartWoche` <= ? AND `EndWoche` >= ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $id2, $id2, $user->{Depot_ID});
+				} elsif ( $user->{Role_ID} == 3 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Bis$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `EndWoche` >= ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $id2, $user->{Depot_ID});
+				} elsif ( ($user->{Role_ID} == 3) && $table =~ /.*Benutzer.*/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $id2, $user->{Depot_ID});
 				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `StartWoche` <= ? AND `EndWoche` >= ?");
 					$sth->execute($id, $id2, $id2);
+				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Bis$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `EndWoche` >= ?");
+					$sth->execute($id, $id2);
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ?");
 					$sth->execute($id, $id2);

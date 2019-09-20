@@ -4,12 +4,15 @@ function postAjax(path, data, success, method) {
     var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
     xhr.open(method || (data ? 'POST' : 'GET'), 'https://' + (document.location.host || 'www.solawi.fairtrademap.de') + (path.match(/^\//) ? path : ('/cgi-bin/resql.pl/' + path)) );
     xhr.onreadystatechange = function() {
-        window.activeAjaxRequestCount--;
-        if (window.activeAjaxRequestCount <= 0) {
-            window.activeAjaxRequestCount = 0;
-            hide('blockui_get');
-            hide('blockui_post');
-        }
+    	if (xhr.readyState>3) {
+	        window.activeAjaxRequestCount--;
+	        if (window.activeAjaxRequestCount <= 0) {
+	            window.activeAjaxRequestCount = 0;
+	            hide('blockui_get');
+	            hide('blockui_post');
+	        }
+	        console.log('unblock ' + window.activeAjaxRequestCount);
+    	}
         if (xhr.readyState>3 && xhr.status==200) {
             var result = JSON.parse(xhr.responseText);
             if (result.reason || result.result) {
@@ -28,6 +31,7 @@ function postAjax(path, data, success, method) {
     xhr.withCredentials = true;
     xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
     xhr.setRequestHeader('Content-Type', 'application/json; charset=utf-8');
+    console.log('block ' + window.activeAjaxRequestCount);
     if (data) {
         show('blockui_post');
         window.activeAjaxRequestCount++;
@@ -49,6 +53,10 @@ function deleteAjax(path, success) {
 function show(id) {
     var ele = document.getElementById(id);
     if (ele) ele.style.display='block';
+}
+function showInline(id) {
+    var ele = document.getElementById(id);
+    if (ele) ele.style.display='inline-block';
 }
 function hide(id) {
     var ele = document.getElementById(id);
