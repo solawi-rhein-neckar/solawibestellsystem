@@ -4,19 +4,21 @@
      <meta charset="UTF-8">
 <title></title>
     <style>
-        table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
+      table, td { border: 1px solid #999;
+                  border-collapse: collapse;
+                  padding: 3px;
+      }
         .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID, .inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID {display: none;}
         #table .col_Anzahl, .col_Produkt { font-weight: bold; }
         .col_ID > div {display: none;}
-        .inp_Woche, .inp_Benutzer_ID {color:#CCC; pointer-events:none; }
-        #greeting {
-font-size: 125%;
-padding-top: 100px;
-background: url(https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png);
-   background-position: top center;
-    background-repeat: repeat;
-background-repeat: no-repeat;
-
+        .inp_Woche, .inp_Benutzer_ID { color:#CCC;
+	                               pointer-events:none;
+	}
+        #greeting { font-size: 125%;
+	            padding-top: 100px;
+	            background-position: top center;
+                    background-repeat: repeat;
+                    background-repeat: no-repeat;
         }
         #navi { position: absolute;}
 
@@ -45,7 +47,7 @@ background-repeat: no-repeat;
      	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
 	<script type="text/javascript" src="FileSaver.min.js"></script> 
 </head>
-<body>
+<body style="margin: 0px">
 
 <script>
 var SBS = SolawiBestellSystem();
@@ -145,6 +147,10 @@ function changeWeek(count) {
 
 <div id="content" >
 
+  <div id="logo_menu" style="background-color: #f0d9b5; padding-left: 30px; padding-top: 30px; padding-bottom: 30px;">
+    <img src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png">
+  </div>
+  
 <div id="navi" style="width:33%;">
    <a target="_blank" href="print.htm#PivotBestellungen">Bestellübersicht_Solawi</a> / <a href="#" onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);event.preventDefault();return false;">DOWNLOAD</a><br/><br/>
    <a target="_blank" href="print.htm#PivotDepot">Bestellübersicht_Depot</a> <span style="display:none;" id="depotManageLink"> / <a href="depot.htm">DEPOT-VERWALTUNG</a></span>
