@@ -28,6 +28,7 @@ getAjax('BenutzerView/MY', function(userResponse){
 
         if (SBS.user['Role_ID'] == 3) {
         	showInline('depotManageLink');
+          showInline('depotManageLink2');
         }
 
         setContent('logoutbtn', 'Logout ' + SBS.user.Name);
@@ -115,13 +116,16 @@ function resetWeek(){
 <header>
   <img src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png" alt="Logo Solawi">
   <div class="header-right">
-  <h1 id=header_title>Solawi Bestellsystem</h1>
+  <span style="display:none;" id="depotManageLink"><a href="depot.htm">Depotverwaltung</a></span>
+  <a href="#Urlaub">Urlaub</a>
+  <a href="#Module">Module</a>
+  <a href="#Downloads"> Bestellübersicht</a>
   </div>
 </header>
 <main>
 <div class="greeting">
   <p class="greeting">Nächste Lieferung: <span id="calendarWeek">00</span>
-<br>Deine Bestellung: <span id="Modul">Vegetarisch_mit_Milch</span></p>
+<br><span id="Modul">Vegetarisch_mit_Milch</span></p>
   <p>
 </div>
 <h1>Lieferübersicht</h1>
@@ -143,32 +147,32 @@ function resetWeek(){
 
 <h2>Änderung der Bestellung</h2>
 <div class="text_zentral">
-<p>Bestellungen, Module und Urlaub können nur für die Zukunft geändert werden.</p>
-  <p>Zum Abbestellen eine negative Anzahl eingeben</p>
-  <p>Die endgültige Anzahl ist in der Liefer-Tabelle fett gedruckt.</p>
-  <p>Änderungen für <strong>vergangene Kalenderwochen ignoriert</strong> das System.</p>
+Bestellungen, Module und Urlaub können nur <strong>für die Zukunft</strong> geändert werden.
+Zum Abbestellen eine <strong>negative Anzahl</strong> eingeben. Die endgültige Anzahl ist in der Liefer-Tabelle fett gedruckt.
+Änderungen für <strong>vergangene Kalenderwochen ignoriert</strong> das System.
 </div>
   <div class="table_center" id="table2_center"><table id="tableEdit" cellspacing="0" > </table></div>
 
 
 
-<h1>Urlaub</h1>
-Deine geplanten <strong>Urlaube</strong>: Kalenderwoche anklicken -> in GELB markierter Kalenderwoche erfolgt KEINE LIEFERUNG!
+<h1 id=Urlaub>Urlaub</h1>
+<div class="text_zentral">Deine geplanten <strong>Urlaube</strong>: Kalenderwoche anklicken -> in GELB markierter Kalenderwoche erfolgt KEINE LIEFERUNG!
+(Nach Urlaubs-Änderung: Bitte die Seite NEU LADEN (Taste F5), um die Bestellungen für die aktuelle Woche zu aktualisieren!)</div>
 <div class="table_center" id="table3_center">
     <div id="tableUrlaub" > </div>
 </div>
-<div>(Nach Urlaubs-Änderung: Bitte die Seite NEU LADEN (Taste F5), um die Bestellungen für die aktuelle Woche zu aktualisieren!)</div>
 
-<h1>Module</h1>
-<div>Deine <strong>Module</strong> (aktuelle und auch künftige Änderungen) bearbeiten:</div>
+
+<h1 id=Module>Module</h1>
+<div class="text_zentral">Hier kannst Du Deine <strong>Module</strong> (aktuelle und auch künftige Änderungen) bearbeiten. Nach Modul-Änderung die Seite NEU LADEN (Taste F5), um die Bestellungen für die aktuelle Woche zu aktualisieren!</div>
 <div class="table_center" id="table4_center"><table id="tableModule" cellspacing="0" > </table></div>
-<div>Nach Modul-Änderung die Seite NEU LADEN (Taste F5), um die Bestellungen für die aktuelle Woche zu aktualisieren!</div>
 
-<h1>Bestellübersichten und Downloads</h1>
+
+<h1 id=Downloads>Bestellübersichten und Downloads</h1>
 <a target="_blank" href="print.htm#PivotBestellungen">Gesamte Solawi</a> <br>
 <a href="#" onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);event.preventDefault();return false;">Download als Exceltabelle</a> <br>
-<a target="_blank" href="print.htm#PivotDepot">Bestellübersicht Depot</a> <span style="display:none;" id="depotManageLink"><br>
-<a href="depot.htm">DEPOT-VERWALTUNG</a></span>
+<a target="_blank" href="print.htm#PivotDepot">Bestellübersicht Depot</a>
+</br><span style="display:none;" id="depotManageLink2"><a href="depot.htm">DEPOT-VERWALTUNG</a></span>
 </div>
 
 
