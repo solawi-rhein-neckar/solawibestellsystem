@@ -186,13 +186,13 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             var btn = document.createElement('BUTTON');
             td.appendChild(btn);
 
-            btn.addEventListener('click', createFuncAddNew(	tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Woche'] 
-            											 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID'] 
-            												: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID'] 
-            											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Sorte', 'StartWoche', 'EndWoche'] 
-            												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche'] 
+            btn.addEventListener('click', createFuncAddNew(	tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Woche']
+            											 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID']
+            												: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID']
+            											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Sorte', 'StartWoche', 'EndWoche']
+            												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
             											 	: ['Name']));
-            btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
+            btn.innerText = tableName == 'BenutzerZusatzBestellung' ? '+' : '+';
             if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && sbs.selectedWeek < sbs.week ) {
         		btn.disabled='disabled';
             }
@@ -210,7 +210,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                     if (j == 0 && editable) {
                         var btn = document.createElement('BUTTON');
                         btn.addEventListener('click', createFuncAddNew(keys));
-                        btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
+                        btn.innerText = tableName == 'BenutzerZusatzBestellung' ? '+' : '+';
+                        btn.className='btn_plus'
                         if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && sbs.selectedWeek < sbs.week ) {
                     		btn.disabled='disabled';
                         }
@@ -279,7 +280,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                     var delTd = document.createElement("TD");
                     if ((!disableUnavailableProducts) || ( (! (response[i]['StartWoche'] && response[i]['StartWoche'] < sbs.week) ) && (! (response[i]['Woche'] && response[i]['Woche'] < addWeek(sbs.week, -1) ) ) )) {
 	                    var delBtn = document.createElement("BUTTON");
-	                    delBtn.innerText='entf.';
+	                    delBtn.innerText='-';
+                      delBtn.className="btn_minus"
 	                    delBtn.dataId = response[i]["ID"];
 	                    delBtn.addEventListener('click', function(event) {
 	                        if (confirm(tableName + "/" + event.target.dataId + ' wirklich löschen?')) {
@@ -432,8 +434,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                     		}
                     	}
                     	if (editRow['Modul_ID'] && editRow['StartWoche'] && editRow['Anzahl']) {
-	                		data['Modul_ID'] = editRow['Modul_ID']; 
-	                		data['StartWoche'] = editRow['StartWoche']; 
+	                		data['Modul_ID'] = editRow['Modul_ID'];
+	                		data['StartWoche'] = editRow['StartWoche'];
 	                		data['Anzahl'] = editRow['Anzahl'];
                     	}
                     }
