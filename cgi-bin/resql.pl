@@ -281,7 +281,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( @keys.length > 0 && $user->{Role_ID} <= 1 && $table =~ /^BenutzerModulAbo$/ ) {
 					push(@values, $user->{ID});
 					push(@values, $cur_week);
-					if (@keys.length == 3 && $keys[0] =~ /^`(EndWoche|Sorte)` = .$/ && $keys[1] =~ /^`AenderBenutzer_ID` = .$/ && $keys[2] =~ /^`AenderZeitpunkt` = NOW..$/) {
+					if (@keys.length == 3 && $keys[0] =~ /^`(EndWoche|Kommentar)` = .$/ && $keys[1] =~ /^`AenderBenutzer_ID` = .$/ && $keys[2] =~ /^`AenderZeitpunkt` = NOW..$/) {
 						$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `Benutzer_ID` = ? AND `EndWoche` >= ?";
 					} else {
 						$sql = "UPDATE `$table` SET $keys WHERE `ID` = ? AND `Benutzer_ID` = ? AND `StartWoche` >= ? AND `EndWoche` >= ?";
