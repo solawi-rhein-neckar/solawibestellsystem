@@ -1,0 +1,196 @@
+body {
+  font-family: Open Sans,Helvetica,Arial,Lucida,sans-serif;
+  line-height: 1.45;
+  color: #4d3a27;
+  letter-spacing: .05em;
+  margin: 0 0 0 0;
+}
+
+
+header {
+  overflow: hidden;
+  background-color: #f0d9b5;
+  height: 110px;
+  padding: 15px 35px;
+}
+
+.header-right {
+  float: right;
+  margin-right: 13em;
+  margin-top: 45px;
+  font-size: 1.2em;
+}
+
+#header_title {
+  text-align: left;
+  border-bottom-style: none;
+}
+
+main {
+  text-align: center;
+}
+
+
+
+
+.container {
+  display: flex; /* oder inline-flex */
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+a {
+  font-family: 'Special Elite',display;
+  color: #4d3a27;
+  text-decoration: none;
+  padding-left:1.2em;
+}
+
+a:hover {
+  font-family: 'Special Elite',display;
+  color: #679b14;
+  text-decoration: none;
+
+}
+
+
+h1, h2, h3, h4, h5, h6 {
+font-family: 'Special Elite',display;
+font-weight: lighter;
+color: #4d3a27;
+}
+
+main h1 {
+  text-align: center;
+  border-bottom-style: solid;
+  border-bottom-width: medium;
+  margin-left: 13%;
+  margin-right: 13%;
+  padding-top: 3%;
+  margin-bottom: 3%;
+  font-size: 1.8em;
+}
+h2 {
+  text-align: center;
+  margin-left: 25%;
+  margin-right: 25%;
+  padding-top: 3%;
+  margin-bottom: 3%;
+}
+#Modul, #calendarWeek {
+  color: white;
+  font-weight: 300;
+}
+
+.greeting {
+  background-color: #4d3b27;
+  text-align: center;
+  margin:0em !important;
+  font-size: 1.2em;
+  /*font-weight: normal !important;*/
+}
+p.greeting {
+  margin-top: 0em;
+  margin-block-start:0em;
+  padding-top: 1.5em;
+  padding-bottom: 1.5em;
+  font-family: 'Special Elite',display;
+  font-weight: 300;
+  font-size: 1.3em;
+  line-height: 1.9em;
+  color: #679b14;
+  text-shadow: 0 1px 3px #000000;
+}
+
+.text_zentral {
+  text-align: left;
+  margin-left: 13%;
+  margin-right: 13%;
+  margin-bottom: 1%;
+}
+
+button {
+    background-color: #679b14;
+    border-width: 0px;
+    border-radius: 0px;
+    letter-spacing: 0px;
+    padding: 0.3em 1em !important;
+    color: white;
+    font-size: 16px;
+    font-weight: 300;
+}
+
+button:hover {
+    background: #e07000 !important;
+    border-radius: 8px;
+}
+
+table, td { border: 1px solid #999;
+            border-collapse: collapse;
+            padding: 3px;
+}
+
+.pfeil_back, .pfeil_forward {
+  font-size: 1em !important;
+  padding: 0.3em 0.5em !important;
+  border-radius: 0px;
+}
+
+.col_Woche, .col_Benutzer_ID, .col_Benutzer, .col_Depot, .col_Depot_ID, .col_Einheit, .col_Menge{
+  display: none;
+
+}
+
+button.btn_plus:hover {
+  background-color: #679b14 !important;
+}
+
+button.btn_minus {
+  background-color: #e07000 !important;
+}
+
+div.table_center {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: left;
+}
+
+#table1_center {
+  max-width: 1044px;
+}
+#table2_center {
+  max-width: 396px;
+}
+#table3_center {
+  max-width: 325px;
+}
+#table4_center {
+  max-width: 603px;
+}
+
+
+  .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID, .inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID {display: none;}
+  #table .col_Anzahl, .col_Produkt { font-weight: bold; }
+  .col_ID > div {display: none;}
+  .inp_Woche, .inp_Benutzer_ID { color:#CCC;
+                           pointer-events:none;
+}
+
+  #navi { position: absolute;}
+
+  .weektable {
+      font-size: 16px;
+      text-align: center;
+  }
+  .weektable td {
+      cursor:pointer;
+  }
+  .weektable td.inactive:hover, .weektable td span:hover, .weekWeek:hover, .weektable a:hover {
+      background-color:orange;
+  }
+  .weektable td.active {
+      background-color:yellow;
+  }
+  .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
+      background-color:aqua;
+  }
