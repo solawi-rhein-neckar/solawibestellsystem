@@ -120,7 +120,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         ,'MindestAnzahl'
         ,'MaximalAnzahl'
         ,'Beschreibung'
-        ,'Sorte'
+        ,'Kommentar'
         ,'Anteile'
         ,'StartWoche'
         ,'EndWoche'
@@ -186,10 +186,10 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             var btn = document.createElement('BUTTON');
             td.appendChild(btn);
 
-            btn.addEventListener('click', createFuncAddNew(	tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Woche'] 
+            btn.addEventListener('click', createFuncAddNew(	tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar', 'Woche'] 
             											 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID'] 
             												: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID'] 
-            											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Sorte', 'StartWoche', 'EndWoche'] 
+            											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche'] 
             												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche'] 
             											 	: ['Name']));
             btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'BESTELLEN' : 'NEU';
@@ -252,7 +252,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                         div.dataValue = div.innerText;
                         div.innerText = row == null ? ' (' + div.innerText + ') ' : row.Name;
                     }
-                    if ( ((! disableUnavailableProducts) || keys[j] == 'Sorte' || keys[j] == 'EndWoche') && editable && keys[j] != 'ID' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && keys[j] != 'ErstellZeitpunkt') {
+                    if ( ((! disableUnavailableProducts) || keys[j] == 'Kommentar' || keys[j] == 'EndWoche') && editable && keys[j] != 'ID' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && keys[j] != 'ErstellZeitpunkt') {
                         div.addEventListener('click', showEditor);
                         div.style.cursor = "pointer";
                         if (disableUnavailableProducts) {
