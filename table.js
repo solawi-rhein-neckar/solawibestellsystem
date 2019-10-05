@@ -186,19 +186,11 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             var btn = document.createElement('BUTTON');
             td.appendChild(btn);
 
-<<<<<<< HEAD
             btn.addEventListener('click', createFuncAddNew(	tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar', 'Woche'] 
             											 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID'] 
             												: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID'] 
             											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche'] 
             												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche'] 
-=======
-            btn.addEventListener('click', createFuncAddNew(	tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Woche']
-            											 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID']
-            												: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID']
-            											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Sorte', 'StartWoche', 'EndWoche']
-            												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
->>>>>>> branch 'master' of https://github.com/solawi-rhein-neckar/solawibestellsystem.git
             											 	: ['Name']));
             btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'Änderung' : '+';
             if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && sbs.selectedWeek < sbs.week ) {
