@@ -96,6 +96,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     var tablePath;
     var disableUnavailableProducts = pDisableUnavailableProducts
     var responseCache;
+    var sortByColumn1 = null;
+    var sortByColumn2 = null;
 
     /* private constants */
     const columnOrder = ['ID'
@@ -163,12 +165,19 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     }
 
     const columnWeight = {};
-
+    
     /* public */
     function showTable(response, path) {
         if (path.match(/^BenutzerBestellView.*$/) && disableUnavailableProducts) {
             sbs.saveOrdersIntoProductCache(response);
         }
+        
+    	console.log('show table ' + path);
+        if (sortByColumn1) {
+        	console.log('sorting by ' + sortByColumn1 + (sortByColumn2 ? (', then ' + sortByColumn2) : ''));
+        	response.sort(rowSortFunc);
+        }
+
         responseCache = response;
 
         var table = document.getElementById(elemIdTable);
@@ -220,6 +229,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                         td.innerText = keys[j].substr(3);
                     } else {
                         td.innerText = keys[j];
+                        td.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
+                        td.style.cursor='pointer';
                     }
                 }
                 if (tableName == 'ModulInhalt') {
@@ -491,6 +502,14 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             postAjax(tableName + (id ? '/'+id : ''), sendData, function(){pub.reload();});
             hide('blockui_edit');
         }
+    }
+
+    function createRedisplaySortedFunc(sortBy) {
+    	return function(){sortByColumn2 = sortByColumn1; sortByColumn1 = sortBy; showTable(responseCache, tablePath);}
+    }
+    
+    function rowSortFunc(a,b) {
+    	return a[sortByColumn1] < b[sortByColumn1] ? -1 : a[sortByColumn1] > b[sortByColumn1] ? 1 : (sortByColumn2 ? (a[sortByColumn2] < b[sortByColumn2] ? -1 : a[sortByColumn2] > b[sortByColumn2]) : 0);
     }
 
     function columnSortFunc(a,b){return columnWeight[a] && columnWeight[b] ? columnWeight[a] - columnWeight[b] : columnWeight[a] ? -1 : columnWeight[b] ? 1 : a>b ? 1 : a<b ? -1 : 0}
