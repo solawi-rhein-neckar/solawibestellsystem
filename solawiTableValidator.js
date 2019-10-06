@@ -9,7 +9,7 @@ function SolawiTableValidator(pSbs) {
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
     		validateEditorInput: validateEditorInput,
-    		setResponse: setResponse
+    		setResponse: function(path, response) {responseCache = response;}
     };
 
     /* private vars */
@@ -35,14 +35,7 @@ function SolawiTableValidator(pSbs) {
    
 
 /**** private ****/
-    
-    function setResponse(path, response) {
-    	responseCache = response;
-    	if (path.match(/^BenutzerBestellView.*$/)) {
-    		sbs.saveOrdersIntoProductCache(response);
-    	}
-    }
-    
+
     function validateEditorAnzahl(anzahl, min, max, name) {
     	if (typeof anzahl != 'undefined' && ((! anzahl) || anzahl == 0)) {
             setContent('editError', 'Anzahl muss eingegeben werden!');

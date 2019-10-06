@@ -6,25 +6,24 @@
     
     This file is meant to be used by solawiTable.
 */
-function SolawiTableEditor(pSbs, pSolawiTable, pEditable, pDisableUnavailableProducts) {
+function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
+    		makeDataCellEditable: makeDataCellEditable,
     		addDeleteButtonColumnHeader: addDeleteButtonColumnHeader,
     		addDeleteButtonCell: addDeleteButtonCell,
     		addWeekSelectColumnHeader: addWeekSelectColumnHeader,
     		addWeekSelectCell: addWeekSelectCell,
     		addCreateButton: addCreateButton,
-    		showEditor: showEditor,
-    		setResponse: function(pPath, pResponse) {if (disableUnavailableProducts) { tableValidator.setResponse(pPath, pResponse); } }
+    		setResponse: function(pPath, pResponse) {if (tableValidator) { tableValidator.setResponse(pPath, pResponse); } }
     };
 
     /* private vars */
     var sbs = pSbs;
     var solawiTable = pSolawiTable;
-    var editable = pEditable;
     var disableUnavailableProducts = pDisableUnavailableProducts;
-    var tableValidator = SolawiTableValidator(sbs);
+    var tableValidator = disableUnavailableProducts ? SolawiTableValidator(sbs) : null;
 
     const numberColumnNames = {
             'Menge':1
@@ -40,31 +39,39 @@ function SolawiTableEditor(pSbs, pSolawiTable, pEditable, pDisableUnavailablePro
         }
 
 /**** public ****/
-    function addDeleteButtonColumnHeader(tr) {
-        if (editable) {
-            var delTd = document.createElement("TD");
-            delTd.innerText= 'löschen';
-            tr.appendChild(delTd);
+    function makeDataCellEditable(div, key) {
+        /* if disableUnavailableProducts ist true, only certain columns are editable, else all columns (except audit metadata) are editable. */
+        if ( ((! disableUnavailableProducts) || key == 'Kommentar' || key == 'EndWoche') && key != 'ID' && key != 'AenderBenutzer_ID' && key != 'AenderZeitpunkt' && key != 'ErstellZeitpunkt') {
+            div.addEventListener('click', showEditor);
+            div.style.cursor = "pointer";
+            if (disableUnavailableProducts) {
+            	div.style['border-bottom'] = "1px dotted black";
+            }
+            div.title = "click to edit!";
         }
     }
     
+    function addDeleteButtonColumnHeader(tr) {
+        var delTd = document.createElement("TD");
+        delTd.innerText= 'löschen';
+        tr.appendChild(delTd);
+    }
+    
     function addDeleteButtonCell(tr, dataRow) {
-        if (editable) {
-            var delTd = document.createElement("TD");
-            if ((!disableUnavailableProducts) || ( (! (dataRow['StartWoche'] && dataRow['StartWoche'] < sbs.week) ) && (! (dataRow['Woche'] && dataRow['Woche'] < addWeek(sbs.week, -1) ) ) )) {
-                var delBtn = document.createElement("BUTTON");
-                delBtn.innerText='-';
-              delBtn.className="btn_minus"
-                delBtn.dataId = dataRow['ID'];
-                delBtn.addEventListener('click', function(event) {
-                    if (confirm(solawiTable.getTableName() + "/" + event.target.dataId + ' wirklich löschen?')) {
-                        deleteAjax(solawiTable.getTableName() + "/" + event.target.dataId, function(){solawiTable.reload();});
-                    }
-                });
-                delTd.appendChild(delBtn);
-        	}
-            tr.appendChild(delTd);
-        }
+        var delTd = document.createElement("TD");
+        if ((!disableUnavailableProducts) || ( (! (dataRow['StartWoche'] && dataRow['StartWoche'] < sbs.week) ) && (! (dataRow['Woche'] && dataRow['Woche'] < addWeek(sbs.week, -1) ) ) )) {
+            var delBtn = document.createElement("BUTTON");
+            delBtn.innerText='-';
+          delBtn.className="btn_minus"
+            delBtn.dataId = dataRow['ID'];
+            delBtn.addEventListener('click', function(event) {
+                if (confirm(solawiTable.getTableName() + "/" + event.target.dataId + ' wirklich löschen?')) {
+                    deleteAjax(solawiTable.getTableName() + "/" + event.target.dataId, function(){solawiTable.reload();});
+                }
+            });
+            delTd.appendChild(delBtn);
+    	}
+        tr.appendChild(delTd);
     }
     
     function addWeekSelectColumnHeader(tr) {
@@ -91,6 +98,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pEditable, pDisableUnavailablePro
     }
 
     function addCreateButton(td, keys) {
+		td.innerText = '';
         var btn = document.createElement('BUTTON');
         td.appendChild(btn);
         var tableName = solawiTable.getTableName();
@@ -108,6 +116,9 @@ function SolawiTableEditor(pSbs, pSolawiTable, pEditable, pDisableUnavailablePro
         }
     }
 
+    
+    /**** private ****/   
+        
     function showEditor(event) {
         var edit = resetEditor("ID " + event.target.dataId + ": " + event.target.dataKey + " ");
 
@@ -121,9 +132,6 @@ function SolawiTableEditor(pSbs, pSolawiTable, pEditable, pDisableUnavailablePro
         finishEditor(edit);
     }
 
-    
-/**** private ****/   
-    
     function createFuncAddNew(keys) {
         return function() {
             var edit = resetEditor("Add new " + solawiTable.getTableName());
@@ -256,7 +264,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pEditable, pDisableUnavailablePro
                 }
             }
 
-            if (disableUnavailableProducts &&   ! tableValidator.validateEditorInput(data, id) ) {
+            if ( tableValidator &&   ! tableValidator.validateEditorInput(data, id) ) {
                 event2.target.disabled='';
             } else {
             	postAjax(solawiTable.getTableName() + (id ? '/'+id : ''), sendData, function(){solawiTable.reload();});

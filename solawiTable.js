@@ -34,14 +34,12 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     var sbs = pSbs;
     var elemIdTable = pElemIdTable;
     var elemIdLabel = pElemIdLabel;
-    var editable = pEditable;
     var tableName;
     var tablePath;
-    var disableUnavailableProducts = pDisableUnavailableProducts
     var responseCache;
     var sortByColumn1 = null;
     var sortByColumn2 = null;
-    var tableEditor = SolawiTableEditor(sbs, pub, editable, disableUnavailableProducts);
+    var tableEditor = pEditable ? SolawiTableEditor(sbs, pub, pDisableUnavailableProducts) : null;
 
     /* private constants */
     const columnWeight = {};
@@ -49,11 +47,15 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
 /**** public ****/
     function showTable(response, path) {
     	console.log('show table ' + path);
+    	
+    	if (path.match(/^BenutzerBestellView.*$/)) {
+    		sbs.saveOrdersIntoProductCache(response);
+    	}
 
         sortResponse(response);
         
         responseCache = response;
-        tableEditor.setResponse(path, responseCache);
+        if (tableEditor) tableEditor.setResponse(path, responseCache);
 
         var table = document.getElementById(elemIdTable);
         table.innerHTML = '';
@@ -62,36 +64,50 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         setContent(elemIdLabel, tablePath);
         table.className = tableName;
         var keys = null;
-        if (response.length == 0 && editable) {
-            var tr = document.createElement("TR");
-            var td = document.createElement("TD");
-            table.appendChild(tr);
-            tr.appendChild(td);
-        	tableEditor.addCreateButton(td, keys);
+        if (response.length == 0) {
+        	var td = handleEmpty(table);
+        	if (tableEditor) tableEditor.addCreateButton(td, keys);
         }
         for (var i = 0; i < response.length; i++) {
             if(!keys) {
                 keys = Object.keys(response[i]).sort(columnSortFunc);
-                addColumnHeaderRow(table, keys);
+                var tr = addColumnHeaderRow(table, keys);
+                if (tableEditor) {
+	            	tableEditor.addCreateButton(tr.firstChild, keys);
+	                tableEditor.addWeekSelectColumnHeader(tr);
+	                tableEditor.addDeleteButtonColumnHeader(tr);
+                }
             }
             var dataRow = response[i];
             for (var j = 0; j < keys.length; j++) {
                 var tr = document.createElement("TR");
                 table.appendChild(tr);
                 for (var j = 0; j < keys.length; j++) {
-                	var div = addDataCell(keys[j], dataRow[keys[j]], tr);
-                    div.dataId = dataRow["ID"];
+                	var div = addDataCell(keys[j], dataRow, tr);
                     div.id = "span_" + tablePath + "_" + i + "_" + j;
+                    if (tableEditor) tableEditor.makeDataCellEditable(div, keys[j]);
                 }
-                tableEditor.addWeekSelectCell(tr, dataRow["ID"]);
-                tableEditor.addDeleteButtonCell(tr, dataRow);
+                if (tableEditor) {
+	                tableEditor.addWeekSelectCell(tr, dataRow["ID"]);
+	                tableEditor.addDeleteButtonCell(tr, dataRow);
+                }
             }
         }
     }
 
 /**** private ****/
+    
+    function handleEmpty(table) {
+        var tr = document.createElement("TR");
+        var td = document.createElement("TD");
+        table.appendChild(tr);
+        tr.appendChild(td);
+    	td.innerText = ' (empty) ';
+    	return td;
+    }
 
-    function addDataCell(key, value, tr) {
+    function addDataCell(key, dataRow, tr) {
+    	var value = dataRow[key];
         var td = document.createElement("TD");
         td.className='col_'+key;
         tr.appendChild(td);
@@ -106,18 +122,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             div.dataValue = div.innerText;
             div.innerText = row == null ? ' (' + div.innerText + ') ' : row.Name;
         }
-        
-        /* if disableUnavailableProducts ist true, only certain columns are editable, else all columns (except audit metadata) are editable. */
-        if ( ((! disableUnavailableProducts) || key == 'Kommentar' || key == 'EndWoche') && editable && key != 'ID' && key != 'AenderBenutzer_ID' && key != 'AenderZeitpunkt' && key != 'ErstellZeitpunkt') {
-            div.addEventListener('click', tableEditor.showEditor);
-            div.style.cursor = "pointer";
-            if (disableUnavailableProducts) {
-            	div.style['border-bottom'] = "1px dotted black";
-            }
-            div.title = "click to edit!";
-        }
-        
+
         div.dataKey = key;
+        div.dataId = dataRow["ID"];
         td.appendChild(div);    	
         return div;
     }    
@@ -129,9 +136,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             var td = document.createElement("TD");
             td.className='col_'+keys[j];
             tr.appendChild(td);
-            if (j == 0 && editable) {
-            	tableEditor.addCreateButton(td, keys);
-            } else if (keys[j].match(/^[0-9][0-9][.].*/) ) {
+            if (keys[j].match(/^[0-9][0-9][.].*/) ) {
                 td.innerText = keys[j].substr(3);
             } else {
                 td.innerText = keys[j];
@@ -139,8 +144,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                 td.style.cursor='pointer';
             }
         }
-        tableEditor.addWeekSelectColumnHeader(tr);
-        tableEditor.addDeleteButtonColumnHeader(tr);
+        return tr;
     }
     
     function createRedisplaySortedFunc(sortBy) {
