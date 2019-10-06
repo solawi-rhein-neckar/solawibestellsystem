@@ -130,8 +130,9 @@ function resetWeek(){
 </div>
 <h1>Lieferübersicht</h1>
 <div id="gesamt_lieferung">
-<p><button class="pfeil_back" onclick="changeWeek(-1)">&lt;</button> KW <span id="selectedWeek" style="font-weight:bold;">00</span><button class="pfeil_forward" onclick="changeWeek(+1)">&gt;</button></p>
+<p><button class="pfeil_back" onclick="changeWeek(-1)">&lt;</button> KW <span id="selectedWeek" style="font-weight:bold;">00</span> <button class="pfeil_forward" onclick="changeWeek(+1)">&gt;</button></p>
 <p> <button onclick="resetWeek();">zurück zur aktuellen Woche</button> </p>
+</div>
 <!--
     <button onclick="getAjax('Benutzer', showTable);">Benutzer</button>
     <button onclick="getAjax('BenutzerUrlaub', showTable);">BenutzerUrlaub</button>
@@ -173,7 +174,7 @@ Zum Abbestellen eine <strong>negative Anzahl</strong> eingeben. Die endgültige 
 <a href="#" onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);event.preventDefault();return false;">Download als Exceltabelle</a> <br>
 <a target="_blank" href="print.htm#PivotDepot">Bestellübersicht Depot</a>
 </br><span style="display:none;" id="depotManageLink2"><a href="depot.htm">DEPOT-VERWALTUNG</a></span>
-</div>
+
 
 
     <!--
