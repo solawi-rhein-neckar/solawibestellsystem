@@ -144,7 +144,8 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     }
 
     function createFuncAddNew(keys) {
-        return function() {
+        return function(event) {
+        	event.stopPropagation();
             var edit = resetEditor("Neu hinzufügen: " + solawiTable.getTableName());
             
             if (solawiTable.editorDefault['Benutzer_ID'] && !keys.includes('Benutzer_ID')) {
