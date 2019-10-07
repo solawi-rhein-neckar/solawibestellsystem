@@ -5,7 +5,7 @@
 <title></title>
     <style>
         table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
-        .BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID { display:none; }
+        table.Benutzer td.col_BenutzerAbo td.col_Woche, .BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID { display:none; }
 
         .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID { font-size: 75%; color:#999; }
 
@@ -32,6 +32,7 @@
     <script src="solawiBestellSystem.js"> </script>
     <script src="solawiTableValidator.js"> </script>
     <script src="solawiTableEditor.js"> </script>
+    <script src="solawiTableVerwalter.js"> </script>
     <script src="solawiTable.js"> </script>
     
 	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
@@ -46,7 +47,7 @@
 
 <script>
 var SBS = SolawiBestellSystem();
-var SBTedit= SolawiTable(SBS, 'table', 'tablePath', true, false);
+var SBTedit= SolawiTable(SBS, 'table', 'tablePath', true, false, true);
 var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
 
 //check login status
@@ -155,7 +156,7 @@ function changeWeek(count) {
             	Bearbeiten  &#160;  &#160; &#160; <b>ohne Woche</b>  &#160; &#160; &#160; Berichte
             </div>
 	        <span style="display:inline-block;width: 48%;vertical-align: top;border-right:1px dotted black;">
-            <button onclick="SBTview.reset();getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
+            <button onclick="SBTview.reset();SBTedit.setSortBy('Name');getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
             <button onclick="SBTview.reset();getAjax('BenutzerModulAbo', SBTedit.showTable);">ModulAbo (Alle)</button>
             <button onclick="SBTview.reset();getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">ZusatzBestellungen</button>
             <button onclick="SBTview.reset();getAjax('BenutzerUrlaub', SBTedit.showTable);">Urlaube</button>

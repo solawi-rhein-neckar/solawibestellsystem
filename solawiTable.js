@@ -19,7 +19,7 @@
     No need to recreate the instance at anytime, to display another table just call SBT.showTable once again with another response.
     You will only need multiple instances to display multiple tables at the same time.
 */
-function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavailableProducts) {
+function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavailableProducts, pVerwalter) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
@@ -27,7 +27,10 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         getTableName: function(){return tableName},
         getTablePath: function(){return tablePath},
         reload: function(){getAjax(tablePath, showTable)},
-        reset: function(){clearContent(elemIdTable);clearContent(elemIdLabel);tableName='';tablePath='';}
+        reset: function(){clearContent(elemIdTable);clearContent(elemIdLabel);tableName='';tablePath='';},
+        setSortBy: function(sortBy){sortByColumn2 = sortByColumn1; sortByColumn1 = sortBy;},
+        columns: [],
+        editorDefault: {}
     };
 
     /* private vars */
@@ -39,7 +42,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     var responseCache;
     var sortByColumn1 = null;
     var sortByColumn2 = null;
-    var tableEditor = pEditable ? SolawiTableEditor(sbs, pub, pDisableUnavailableProducts) : null;
+    var tableExtensions = [];
+    if (pEditable) tableExtensions.push(SolawiTableEditor(sbs, pub, pDisableUnavailableProducts));
+    if (pVerwalter) tableExtensions.push(SolawiTableVerwalter(sbs, pub));
 
     /* private constants */
     const columnWeight = {};
@@ -55,7 +60,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         sortResponse(response);
         
         responseCache = response;
-        if (tableEditor) tableEditor.setResponse(path, responseCache);
+        tableExtensions.forEach(function(ext){ext.setResponse(path, responseCache);});
 
         var table = document.getElementById(elemIdTable);
         table.innerHTML = '';
@@ -65,18 +70,14 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         table.className = tableName;
         var keys = null;
         if (response.length == 0) {
-        	var td = handleEmpty(table);
-        	if (tableEditor) tableEditor.addCreateButton(td, keys);
+        	var tr = handleEmpty(table);
+        	tableExtensions.forEach(function(ext){ext.addColumnHeaders(tr, keys);});
         }
         for (var i = 0; i < response.length; i++) {
             if(!keys) {
-                keys = Object.keys(response[i]).sort(columnSortFunc);
+                keys = pub.columns.length ? pub.columns : Object.keys(response[i]).sort(columnSortFunc);
                 var tr = addColumnHeaderRow(table, keys);
-                if (tableEditor) {
-	            	tableEditor.addCreateButton(tr.firstChild, keys);
-	                tableEditor.addWeekSelectColumnHeader(tr);
-	                tableEditor.addDeleteButtonColumnHeader(tr);
-                }
+                tableExtensions.forEach(function(ext){ext.addColumnHeaders(tr, keys);});
             }
             var dataRow = response[i];
             for (var j = 0; j < keys.length; j++) {
@@ -85,12 +86,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                 for (var j = 0; j < keys.length; j++) {
                 	var div = addDataCell(keys[j], dataRow, tr);
                     div.id = "span_" + tablePath + "_" + i + "_" + j;
-                    if (tableEditor) tableEditor.makeDataCellEditable(div, keys[j]);
+                    tableExtensions.forEach(function(ext){ext.enhanceDataCell(div, keys[j]);});
                 }
-                if (tableEditor) {
-	                tableEditor.addWeekSelectCell(tr, dataRow["ID"]);
-	                tableEditor.addDeleteButtonCell(tr, dataRow);
-                }
+                tableExtensions.forEach(function(ext){ext.addColumnCells(tr, dataRow);});
             }
         }
     }
@@ -103,7 +101,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         table.appendChild(tr);
         tr.appendChild(td);
     	td.innerText = ' (empty) ';
-    	return td;
+    	return tr;
     }
 
     function addDataCell(key, dataRow, tr) {
@@ -170,6 +168,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         const columnOrder = ['ID'
             ,'KurzName'
             ,'Name'
+            ,'MitName'
             ,'ModulInhalt_ID'
             ,'Woche'
             ,'Benutzer_ID'
@@ -191,6 +190,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             ,'Beschreibung'
             ,'Kommentar'
             ,'Anteile'
+            ,'FleischAnteile'
             ,'StartWoche'
             ,'EndWoche'
 
@@ -213,6 +213,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             ,'Cookie'
             ,'Passwort'
             ,'AnzahlZusatzBestellungMax'
+            ,'AltName'
             ,'ErstellZeitpunkt'
             ,'AenderZeitpunkt'
             ,'AenderBenutzer_ID'

@@ -10,12 +10,9 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
-    		makeDataCellEditable: makeDataCellEditable,
-    		addDeleteButtonColumnHeader: addDeleteButtonColumnHeader,
-    		addDeleteButtonCell: addDeleteButtonCell,
-    		addWeekSelectColumnHeader: addWeekSelectColumnHeader,
-    		addWeekSelectCell: addWeekSelectCell,
-    		addCreateButton: addCreateButton,
+    		enhanceDataCell: enhanceDataCell,
+    		addColumnHeaders: addColumnHeaders,
+    		addColumnCells: addColumnCells,
     		setResponse: function(pPath, pResponse) {if (tableValidator) { tableValidator.setResponse(pPath, pResponse); } }
     };
 
@@ -39,7 +36,21 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         }
 
 /**** public ****/
-    function makeDataCellEditable(div, key) {
+    
+    function addColumnHeaders(tr, keys) {
+    	addCreateButton(tr.firstChild, keys);
+    	if (keys) {
+    		addDeleteButtonColumnHeader(tr);
+    		addWeekSelectColumnHeader(tr);
+    	}
+    }
+    
+    function addColumnCells(tr, dataRow) {
+    	addDeleteButtonCell(tr, dataRow);
+    	addWeekSelectCell(tr, dataRow['ID']);
+    }
+    
+    function enhanceDataCell(div, key) {
         /* if disableUnavailableProducts ist true, only certain columns are editable, else all columns (except audit metadata) are editable. */
         if ( ((! disableUnavailableProducts) || key == 'Kommentar' || key == 'EndWoche') && key != 'ID' && key != 'AenderBenutzer_ID' && key != 'AenderZeitpunkt' && key != 'ErstellZeitpunkt') {
             div.addEventListener('click', showEditor);
@@ -50,6 +61,9 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
             div.title = "click to edit!";
         }
     }
+
+    
+    /**** private ****/   
     
     function addDeleteButtonColumnHeader(tr) {
         var delTd = document.createElement("TD");
@@ -115,9 +129,6 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     		btn.disabled='disabled';
         }
     }
-
-    
-    /**** private ****/   
         
     function showEditor(event) {
         var edit = resetEditor("ID " + event.target.dataId + ": " + event.target.dataKey + " ");
@@ -134,14 +145,21 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
 
     function createFuncAddNew(keys) {
         return function() {
-            var edit = resetEditor("Add new " + solawiTable.getTableName());
+            var edit = resetEditor("Neu hinzufügen: " + solawiTable.getTableName());
+            
+            if (solawiTable.editorDefault['Benutzer_ID'] && !keys.includes('Benutzer_ID')) {
+                var inp = createInput('Benutzer_ID');
+                inp.value = solawiTable.editorDefault['Benutzer_ID'];
+                edit.appendChild(inp);
+            }
+
             for (var j = 0; j < keys.length; j++) {
                 if (keys[j] != 'ID' && keys[j] != 'ErstellZeitpunkt' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && (/*generated column Produkt.Name*/ solawiTable.getTableName() != 'Produkt' || keys[j] != 'Name')) {
 
                     var inp = createInput(keys[j]);
 
                     if (keys[j] == 'Benutzer_ID') {
-                        inp.value = sbs.user.ID;
+                        inp.value = solawiTable.editorDefault['Benutzer_ID'] ? solawiTable.editorDefault['Benutzer_ID'] : sbs.user.ID;
                     } else if (keys[j] == 'Woche' && sbs.selectedWeek) {
                         inp.value = sbs.selectedWeek;
                     }
@@ -151,7 +169,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
             finishEditor(edit);
         }
     }    
-    
+
     function createInput(key) {
         var inp;
 
@@ -221,13 +239,13 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         return inp;
     }
 
-    function resetEditor(label) {
+    function resetEditor(pLabel) {
         var edit = document.getElementById('editor');
-        var label = document.createElement("SPAN");
+        var label = document.createElement("DIV");
         edit.className = 'edit' + solawiTable.getTableName();
-        label.innerText = label;
-        edit.appendChild(label);
+        label.innerText = pLabel;
         while (edit.firstChild) edit.removeChild(edit.firstChild);
+        edit.appendChild(label);
         setContent('editError', '');
         show('blockui_edit');
         return edit;
