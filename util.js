@@ -25,7 +25,7 @@ function postAjax(path, data, success, method) {
                 msg.innerText = (msgs.children.length + 1) + ": (" + result.result + ") " + (result.reason || (result.result ? "success" : "error"));
                 msgs.insertBefore(msg, msgs.firstChild);
             }
-            success(result, path);
+            success(result, path, data);
         }
     };
     xhr.withCredentials = true;
@@ -112,7 +112,7 @@ function weekToDate(yearWeekSeparatedByDot, dayOfWeek) {
     var year = Math.floor(yearWeekSeparatedByDot);
     var week = (yearWeekSeparatedByDot - year) * 100;
     var date = new Date(year, 0, 4, 12, 0, 0);
-    return new Date(date.getTime() + ((week-1) * 86400000 * 7) + ((dayOfWeek - date.getDay()) * 86400000)); 
+    return new Date(date.getTime() + ((week-1) * 86400000 * 7) + ((dayOfWeek - date.getDay()) * 86400000));
 }
 
 function addWeek(yearWeekSeparatedByDot, count) {
@@ -140,12 +140,12 @@ function downloadWithSheetJs() { if (false) {
 	  var bstr = arr.join("");
 
 	  /* Call XLSX */
-		var workbook = XLSX.read(bstr, {type:"binary", cellNF: true, cellStyles:true});		
-		
+		var workbook = XLSX.read(bstr, {type:"binary", cellNF: true, cellStyles:true});
+
 	  /* simpler version with newest sheetJs version
 	  var data = new Uint8Array(req.response);
 	  var workbook = XLSX.read(data, {type:"array"});*/
-	
+
 	  /* DO SOMETHING WITH workbook HERE */
 	  var first_sheet_name = workbook.SheetNames[0];
 	  var address_of_cell = 'C6';
@@ -158,7 +158,7 @@ function downloadWithSheetJs() { if (false) {
 
 	  /* Get the value */
 	  desired_cell.v = '2017'
-	  
+
 	  /* output format determined by filename */
 	  /* bookType can be 'xlsx' or 'xlsm' or 'xlsb' */
 	  var wopts = { bookType:'xlsx', bookSST:false, type:'binary' };
@@ -176,43 +176,43 @@ function downloadWithSheetJs() { if (false) {
 	  saveAs(new Blob([s2ab(wbout)],{type:""}), "test.xlsx")
 	  /* at this point, out.xlsb will have been downloaded */
 	}
-	
+
 	req.send();
 }
 
 function downloadDepotbestellungen(response, path) {
 	console.log('downloading...');
 	var responseCache = response;
-	
+
 	var url = "Depotbestellungen.xlsx";
-	
+
 	/* set up async GET request */
 	var req = new XMLHttpRequest();
 	req.open("GET", url, true);
 	req.responseType = "arraybuffer";
-	
+
 	req.onload = function(e) {
 		var arraybuffer = req.response;
 		var workbook = new ExcelJS.Workbook();
 	// workbook.xlsx.read(buffer)
 	console.log('Depotbestellungen: loading...');
-	
+
 	workbook.xlsx.load(arraybuffer).then(
 			function(workbook) {
 			console.log('Depotbestellungen: loaded, writing...');
 			console.log('loaded, filling...');
-			
+
 			var columns = [];
 			var rows = {};
-			
+
 			var worksheet = workbook.getWorksheet(1);
 			worksheet.eachRow(
-				
+
 				function(row, rowNumber) {
 					console.log('Depotbestellungen: Row ' + rowNumber + ' = ' + JSON.stringify(row.values));
-					
+
 					if (row.getCell(2).value == 'Anteile') {
-						row.eachCell({ includeEmpty: true }, 
+						row.eachCell({ includeEmpty: true },
 							function(cell, colNumber) {
 								console.log('Depotbestellungen: Cell ' + colNumber + ' = ' + cell.value);
 								if (cell.value) {
@@ -221,23 +221,23 @@ function downloadDepotbestellungen(response, path) {
 							}
 						);
 					}
-					
+
 					if (row.getCell(1) && row.getCell(1).value) {
 						rows[row.getCell(1).value] = rowNumber;
 					}
 				}
 			);
-			
+
 			console.log(columns);
 			console.log(rows);
 			console.log(response);
-			
+
 	        for (var i = 0; i < response.length; i++) {
-	        	
+
 	        	var depot = response[i]['Depot'];
 	        	console.log("Depotbestellungen: " + depot);
 	        	console.log(response[i]);
-	        	
+
 	        	if (depot && rows[depot]) {
 	        		var row = worksheet.getRow(rows[depot]);
 			        for (var j = 0; j < columns.length; j++) {
@@ -251,9 +251,9 @@ function downloadDepotbestellungen(response, path) {
 			       		}
 			        }
 	        	}
-	        	
+
 	        }
-			
+
 			console.log('Depotbestellungen: filled, writing...');
 			workbook.xlsx.writeBuffer().then(
 				function(buffer) {

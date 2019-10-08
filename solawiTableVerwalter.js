@@ -1,9 +1,9 @@
 /*
  * Requires: solawiTableValidator
- * 
+ *
     Defined as (closure-)function, because we don't want to put all our private variables into the global namespace.
     The new operator is not required! (We do not use 'this' anywhere in the code).
-    
+
     This file is meant to be used by solawiTable.
 */
 function SolawiTableVerwalter(pSbs, pSolawiTable) {
@@ -13,12 +13,20 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
     		enhanceDataCell: enhanceDataCell,
     		addColumnHeaders: addColumnHeaders,
     		addColumnCells: addColumnCells,
+    		onEntitySaved: onEntitySaved,
     		setResponse : function(){}
     };
 
     /* private vars */
     var sbs = pSbs;
     var solawiTable = pSolawiTable;
+    var alleLieferungen = [];
+    var alleBestellungen = [];
+    var alleAbos = [];
+    var viewLieferungTables = {};
+    var editBestellungenTables = {};
+    var editAboTables = {};
+    var weekSelects = {}
 
 /**** public ****/
     function addColumnHeaders(tr) {
@@ -42,9 +50,18 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             wtd.className='col_Urlaub';
             wtd.innerText='Urlaub';
             tr.insertBefore(wtd, tr.childNodes[9]);
-}
+
+            viewLieferungTables = {};
+            editBestellungenTables = {};
+            editAboTables = {};
+
+            getAjax('BenutzerBestellView/Woche/'+sbs.selectedWeek, createShowFilteredResultsFunction(viewLieferungTables));
+            getAjax('BenutzerZusatzBestellung/Woche/'+sbs.selectedWeek, createShowFilteredResultsFunction(editBestellungenTables));
+            getAjax('BenutzerModulAbo/Bis/'+sbs.selectedWeek, createShowFilteredResultsFunction(editAboTables));
+            getAjax('BenutzerUrlaub/', createShowFilteredResultsFunction(weekSelects));
+    	}
     }
-    
+
     function addColumnCells(tr, row) {
         if (solawiTable.getTableName() == 'Benutzer') {
             var td = document.createElement("TD");
@@ -61,9 +78,10 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             viewLieferung.setSortBy('Anzahl');
             viewLieferung.setSortBy('Produkt_ID');
             viewLieferung.columns = ['Produkt', 'Anzahl', 'Kommentar'];
-            getAjax('BenutzerBestellView/Benutzer_ID/'+row['ID']+'/Woche/'+sbs.selectedWeek, viewLieferung.showTable);
+            viewLieferungTables[row['ID']] = viewLieferung;
 
-            
+
+
             td = document.createElement("TD");
             tr.insertBefore(td, tr.childNodes[7]);
             td.className='col_BenutzerAbo';
@@ -79,11 +97,11 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             editBestellung.setSortBy('Produkt_ID');
             editBestellung.editorDefault['Benutzer_ID'] = row['ID'];
             editBestellung.columns = ['Produkt_ID', 'Anzahl', 'Kommentar', 'Woche'];
+            editBestellungenTables[row['ID']] = editBestellung;
             var editBestellungReload = editBestellung.reload;
             editBestellung.reload = function() {editBestellungReload(); viewLieferung.reload();};
-            getAjax('BenutzerZusatzBestellung/Benutzer_ID/'+row['ID']+'/Woche/'+sbs.selectedWeek, editBestellung.showTable);
 
-        	
+
         	td = document.createElement("TD");
             tr.insertBefore(td, tr.childNodes[8]);
             td.className='col_BenutzerAbo';
@@ -99,10 +117,10 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             editAbo.setSortBy('Modul_ID');
             editAbo.editorDefault['Benutzer_ID'] = row['ID'];
             editAbo.columns = ['Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche'];
+            editAboTables[row['ID']] = editAbo;
             var editAboReload = editAbo.reload;
             editAbo.reload = function() {editAboReload(); viewLieferung.reload();};
-            getAjax('BenutzerModulAbo/Benutzer_ID/'+row['ID']+'/Bis/'+sbs.selectedWeek, editAbo.showTable);
-            
+
             td = document.createElement("TD");
             td.className='col_Urlaub';
             tr.insertBefore(td, tr.childNodes[9]);
@@ -111,11 +129,55 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + row['ID'],
             weekSelect.postData = {Benutzer_ID: row['ID'], Woche: sbs.selectedWeek},
             weekSelect.allowMulti = false;
-            weekSelect.addTo(td);
+            weekSelect.setElem(td);
+            weekSelects[row['ID']] = weekSelect;
         }
     }
-    
+
     function enhanceDataCell() {}
+
+    function onEntitySaved(result, path, data) {
+    	var modules = sbs && sbs.tableCache ? sbs.tableCache['Modul'] : null;
+    	if (path == 'Benutzer' && result && result.type == 'insert' && result.id && modules) {
+    		var userId = result.id;
+    		for (var i = 0; i < modules.length; i++) {
+    			if (modules[i] && modules[i].ID && (modules[i].AnzahlProAnteil || modules[i].ID == 2)) {
+    	    		var anteile = modules[i].ID == 4 ? (data.FleischAnteile === '' ? 1 : data.FleischAnteile) : (data.Anteile === '' ? 1 : data.Anteile);
+    	    		if (anteile) {
+    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(!modules[i].AnzahlProAnteil && modules[i].ID == 2 ? 3 : modules[i].AnzahlProAnteil), StartWoche: sbs.selectedWeek, EndWoche: '9999.99'}, createReloadFunction(userId));
+    				}
+    			}
+    		}
+
+    	}
+
+    }
+
+    function createReloadFunction(userId) {
+    	return function() {
+    		if (editAboTables && editAboTables[userId] && editAboTables[userId].reload) editAboTables[userId].reload();
+    		if (viewLieferungTables && viewLieferungTables[userId] && viewLieferungTables[userId].reload) viewLieferungTables[userId].reload();
+    	};
+    }
+
+    function createShowFilteredResultsFunction(tables) {
+    	return function(result, path){
+        	var keys = Object.keys(tables);
+        	for (var i = 0; i < keys.length; i++) {
+        		var filtered = [];
+        		for (var j = 0; j < result.length; j++) {
+        			if (result[j] && result[j]['Benutzer_ID'] == keys[i]) {
+        				filtered.push(result[j]);
+        			}
+        		}
+        		if (tables[keys[i]].showTable)
+        			tables[keys[i]].showTable(filtered, path.replace(/\//, '/Benutzer_ID/'+keys[i]+'/'));
+        		else if (tables[keys[i]].init) {
+        			tables[keys[i]].init(filtered);
+        		}
+        	}
+    	}
+    }
 
     return pub;
 }

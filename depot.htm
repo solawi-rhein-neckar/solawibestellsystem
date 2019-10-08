@@ -34,12 +34,12 @@
     <script src="solawiTableEditor.js"> </script>
     <script src="solawiTableVerwalter.js"> </script>
     <script src="solawiTable.js"> </script>
-    
+
 	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
-	<script type="text/javascript" src="FileSaver.min.js"></script> 
+	<script type="text/javascript" src="FileSaver.min.js"></script>
     <!-- add the shim first
 	<script type="text/javascript" src="shim.min.js"></script>-->
-	<!-- after the shim is referenced, add the library 
+	<!-- after the shim is referenced, add the library
 	<script type="text/javascript" src="xlsx.full.min14.js"></script>-->
 
 </head>
@@ -89,6 +89,8 @@ function changeWeek(count) {
                 getAjax(SBTedit.getTableName()+'/Bis/'+SBS.selectedWeek, SBTedit.showTable);
         } else if (SBTedit.getTablePath().match(/.*Pivot.*/)) {
             getAjax(SBTedit.getTableName()+'/'+SBS.selectedWeek, SBTedit.showTable);
+        } else if (SBTedit.getTablePath().match(/^Benutzer$/)) {
+            getAjax(SBTedit.getTableName(), SBTedit.showTable);
         }
     }
 }
@@ -145,11 +147,11 @@ function changeWeek(count) {
 	            <button onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Solawi</button>
 	        </span>
 	        <span style="display:inline-block;width: 38%;vertical-align: top;">
-	
+
 	            <button onclick="SBTview.reset();getAjax('BenutzerModulAbo/Bis/'+SBS.selectedWeek, SBTedit.showTable);">ModulAbo (Zukunft)</button>
             	<button onclick="SBTview.reset();getAjax('BenutzerZusatzBestellung/Woche/'+SBS.selectedWeek, SBTedit.showTable);">ZusatzBestellungen</button>
             </span>
-            
+
         </span>
         <span style="display:inline-block;width: 45%;vertical-align: top;">
             <div style="text-align: center;padding: 5px 0 10px 0;white-space:nowrap;overflow:hidden;">
@@ -164,7 +166,7 @@ function changeWeek(count) {
 	        <span style="display:inline-block;width: 48%;vertical-align: top;">
             	<button onclick="SBTedit.reset();getAjax('BenutzerView', SBTview.showTable);">Benutzer-Abo (Aktuell)</button>
 	            <a target="_blank" href="print.htm#PivotBestellungen">Solawi_Lieferung_Drucken</a>
-	            <a target="_blank" href="print.htm#PivotDepot">Depot_Lieferung_Drucken</a>           
+	            <a target="_blank" href="print.htm#PivotDepot">Depot_Lieferung_Drucken</a>
             </span>
         </span>
     </div>

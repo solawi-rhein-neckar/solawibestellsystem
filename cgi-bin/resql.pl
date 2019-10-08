@@ -346,7 +346,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 							$sth = $dbh->prepare($sql);
 							$sth->execute(@values);
 							$dbh->commit();
-							print encode_json({result => 1, type => "insert", query => $sql, params => [@values]});
+							print encode_json({result => 1, type => "insert", query => $sql, params => [@values], id => $sth->{'mysql_insertid'});
 						};
 						if ($@) {
 							print encode_json({result => 0, type => "insert", reason => $@, query => $sql, params => [@values]});

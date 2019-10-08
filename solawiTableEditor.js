@@ -1,9 +1,9 @@
 /*
  * Requires: solawiTableValidator
- * 
+ *
     Defined as (closure-)function, because we don't want to put all our private variables into the global namespace.
     The new operator is not required! (We do not use 'this' anywhere in the code).
-    
+
     This file is meant to be used by solawiTable.
 */
 function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
@@ -36,7 +36,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         }
 
 /**** public ****/
-    
+
     function addColumnHeaders(tr, keys) {
     	addCreateButton(tr.firstChild, keys);
     	if (keys) {
@@ -44,12 +44,12 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     		addWeekSelectColumnHeader(tr);
     	}
     }
-    
+
     function addColumnCells(tr, dataRow) {
     	addDeleteButtonCell(tr, dataRow);
     	addWeekSelectCell(tr, dataRow['ID']);
     }
-    
+
     function enhanceDataCell(div, key) {
         /* if disableUnavailableProducts ist true, only certain columns are editable, else all columns (except audit metadata) are editable. */
         if ( ((! disableUnavailableProducts) || key == 'Kommentar' || key == 'EndWoche') && key != 'ID' && key != 'AenderBenutzer_ID' && key != 'AenderZeitpunkt' && key != 'ErstellZeitpunkt') {
@@ -62,15 +62,15 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         }
     }
 
-    
-    /**** private ****/   
-    
+
+    /**** private ****/
+
     function addDeleteButtonColumnHeader(tr) {
         var delTd = document.createElement("TD");
         delTd.innerText= 'löschen';
         tr.appendChild(delTd);
     }
-    
+
     function addDeleteButtonCell(tr, dataRow) {
         var delTd = document.createElement("TD");
         if ((!disableUnavailableProducts) || ( (! (dataRow['StartWoche'] && dataRow['StartWoche'] < sbs.week) ) && (! (dataRow['Woche'] && dataRow['Woche'] < addWeek(sbs.week, -1) ) ) )) {
@@ -87,7 +87,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     	}
         tr.appendChild(delTd);
     }
-    
+
     function addWeekSelectColumnHeader(tr) {
         if (solawiTable.getTableName() == 'ModulInhalt') {
             var wtd = document.createElement("TD");
@@ -97,7 +97,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
 
         }
     }
-    
+
     function addWeekSelectCell(tr, rowId) {
         if (solawiTable.getTableName() == 'ModulInhalt') {
             var td = document.createElement("TD");
@@ -116,12 +116,12 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         var btn = document.createElement('BUTTON');
         td.appendChild(btn);
         var tableName = solawiTable.getTableName();
-        btn.addEventListener('click', createFuncAddNew(	keys ? keys 
-        												: tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar', 'Woche'] 
-        											 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID'] 
-        												: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID'] 
-        											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche'] 
-        												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche'] 
+        btn.addEventListener('click', createFuncAddNew(	keys ? keys
+        												: tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar', 'Woche']
+        											 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID']
+        												: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID']
+        											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche']
+        												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
         											 	: ['Name']));
         btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'Änderung' : '+';
         btn.className='btn_plus'
@@ -129,7 +129,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     		btn.disabled='disabled';
         }
     }
-        
+
     function showEditor(event) {
         var edit = resetEditor("ID " + event.target.dataId + ": " + event.target.dataKey + " ");
 
@@ -147,7 +147,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         return function(event) {
         	event.stopPropagation();
             var edit = resetEditor("Neu hinzufügen: " + solawiTable.getTableName());
-            
+
             if (solawiTable.editorDefault['Benutzer_ID'] && !keys.includes('Benutzer_ID')) {
                 var inp = createInput('Benutzer_ID');
                 inp.value = solawiTable.editorDefault['Benutzer_ID'];
@@ -161,6 +161,8 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
 
                     if (keys[j] == 'Benutzer_ID') {
                         inp.value = solawiTable.editorDefault['Benutzer_ID'] ? solawiTable.editorDefault['Benutzer_ID'] : sbs.user.ID;
+                    } else if (keys[j] == 'Depot_ID') {
+                        inp.value = solawiTable.editorDefault['Depot_ID'] ? solawiTable.editorDefault['Depot_ID'] : sbs.user.Depot_ID;
                     } else if (keys[j] == 'Woche' && sbs.selectedWeek) {
                         inp.value = sbs.selectedWeek;
                     }
@@ -169,7 +171,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
             }
             finishEditor(edit);
         }
-    }    
+    }
 
     function createInput(key) {
         var inp;
@@ -196,7 +198,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         inp.placeholder = key;
         return inp;
     }
-    
+
     function createInputSelect(response) {
         inp = document.createElement("SELECT");
         for (var k=0; k<response.length; k++) {
@@ -220,7 +222,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         }
         return inp;
     }
-    
+
     function createInputDateSelect() {
         inp = document.createElement("SELECT");
         for (var year=2019; year<=(new Date().getFullYear()) + 3; year++) {
@@ -286,7 +288,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
             if ( tableValidator &&   ! tableValidator.validateEditorInput(data, id) ) {
                 event2.target.disabled='';
             } else {
-            	postAjax(solawiTable.getTableName() + (id ? '/'+id : ''), sendData, function(){solawiTable.reload();});
+            	postAjax(solawiTable.getTableName() + (id ? '/'+id : ''), sendData, solawiTable.onEntitySaved);
 	            hide('blockui_edit');
             }
         }

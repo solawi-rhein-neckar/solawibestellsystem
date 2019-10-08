@@ -1,6 +1,6 @@
 /*
  * Requires: solawiTableEditor, solawiTableValidator, solawiBestellSystem
- * 
+ *
     Defined as (closure-)function, because we don't want to put all our private variables into the global namespace.
     The new operator is not required! (We do not use 'this' anywhere in the code).
 
@@ -26,6 +26,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         showTable: showTable,
         getTableName: function(){return tableName},
         getTablePath: function(){return tablePath},
+        onEntitySaved: onEntitySaved,
         reload: function(){getAjax(tablePath, showTable)},
         reset: function(){clearContent(elemIdTable);clearContent(elemIdLabel);tableName='';tablePath='';},
         setSortBy: function(sortBy){sortByColumn2 = sortByColumn1; sortByColumn1 = sortBy;},
@@ -48,17 +49,17 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
 
     /* private constants */
     const columnWeight = {};
-    
+
 /**** public ****/
     function showTable(response, path) {
     	console.log('show table ' + path);
-    	
+
     	if (path.match(/^BenutzerBestellView.*$/)) {
     		sbs.saveOrdersIntoProductCache(response);
     	}
 
         sortResponse(response);
-        
+
         responseCache = response;
         tableExtensions.forEach(function(ext){ext.setResponse(path, responseCache);});
 
@@ -93,8 +94,13 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         }
     }
 
+    function onEntitySaved(result, path, data) {
+    	tableExtensions.forEach(function(ext){if (ext.onEntitySaved) {ext.onEntitySaved(result, path, data)};});
+    	pub.reload();
+	}
+
 /**** private ****/
-    
+
     function handleEmpty(table) {
         var tr = document.createElement("TR");
         var td = document.createElement("TD");
@@ -112,7 +118,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
 
         var div = document.createElement("DIV");
         div.innerText = value === undefined || value === null || value === '' ? '-' : value;
-        
+
         /* foreign key lookup in sbs.tableCache */
         var relation = key.match(/^(?:Besteller|Verwalter)?(.*)_ID$/);
         if (relation && sbs.tableCache[relation[1]]) {
@@ -123,9 +129,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
 
         div.dataKey = key;
         div.dataId = dataRow["ID"];
-        td.appendChild(div);    	
+        td.appendChild(div);
         return div;
-    }    
+    }
 
     function addColumnHeaderRow(table, keys) {
         var tr = document.createElement("TR");
@@ -144,7 +150,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         }
         return tr;
     }
-    
+
     function createRedisplaySortedFunc(sortBy) {
     	return function(){sortByColumn2 = sortByColumn1; sortByColumn1 = sortBy; showTable(responseCache, tablePath);}
     }

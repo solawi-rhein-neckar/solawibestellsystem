@@ -24,6 +24,10 @@ var WeekSelect = {
         getAjax(this.tableName, this.init.bind(this));
     },
 
+    setElem: function(pElem) {
+        this.elem = pElem;
+    },
+
     refresh: function() {
         getAjax(this.tableName, this.init.bind(this));
     },
@@ -103,7 +107,7 @@ var WeekSelect = {
         td.appendChild(span);
 
     },
-    
+
     getTitle: function(weekNr) {
     	var weekLabel = weekNr < 10 ? '0' + weekNr : weekNr;
     	return "KW " + weekNr + ": " + weekToDate(this.year + "." + weekLabel, 1).toLocaleDateString() + " - " + weekToDate(this.year + "." + weekLabel, 7).toLocaleDateString()
