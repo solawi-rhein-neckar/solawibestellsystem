@@ -70,9 +70,9 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             var span = document.createElement("SPAN");
             span.style.display = 'none';
             span.id='editLieferungLabel'+row['ID'];
-            var div = document.createElement("DIV");
-            div.id='editLieferungTable'+row['ID'];
-            td.appendChild(div);
+            var table = document.createElement("TABLE");
+            table.id='editLieferungTable'+row['ID'];
+            td.appendChild(table);
             td.appendChild(span);
             var viewLieferung = SolawiTable(sbs, 'editLieferungTable'+row['ID'], 'editLieferungLabel'+row['ID'], false, false);
             viewLieferung.setSortBy('Anzahl');
@@ -88,9 +88,9 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             var span = document.createElement("SPAN");
             span.style.display = 'none';
             span.id='editBestellungLabel'+row['ID'];
-            var div = document.createElement("DIV");
-            div.id='editBestellungTable'+row['ID'];
-            td.appendChild(div);
+            var table = document.createElement("TABLE");
+            table.id='editBestellungTable'+row['ID'];
+            td.appendChild(table);
             td.appendChild(span);
             var editBestellung = SolawiTable(sbs, 'editBestellungTable'+row['ID'], 'editBestellungLabel'+row['ID'], true, false);
             editBestellung.setSortBy('Anzahl');
@@ -108,9 +108,9 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             var span = document.createElement("SPAN");
             span.style.display = 'none';
             span.id='editAboLabel'+row['ID'];
-            var div = document.createElement("DIV");
-            div.id='editAboTable'+row['ID'];
-            td.appendChild(div);
+            var table = document.createElement("TABLE");
+            table.id='editAboTable'+row['ID'];
+            td.appendChild(table);
             td.appendChild(span);
             var editAbo = SolawiTable(sbs, 'editAboTable'+row['ID'], 'editAboLabel'+row['ID'], true, false);
             editAbo.setSortBy('StartWoche');

@@ -7,6 +7,25 @@
         table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
         table.Benutzer td.col_BenutzerAbo td.col_Woche, .BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID { display:none; }
 
+
+	
+		div.fixedHeaderTable > table > tr:first-child > td {
+			position: -webkit-sticky; /* for Safari */
+  			position: sticky;
+  			top: 0;
+  			background:#EEE;
+  			z-index: 222;
+  			box-shadow: 0px 0px 0px 1px #999;
+		}
+		div.fixedHeaderTable > table > tr:nth-child(1n+2) > td:nth-child(2) {
+			position: -webkit-sticky; /* for Safari */
+  			position: sticky;
+  			left: 0;
+  			background:#EEE;
+  			z-index: 111;
+  			box-shadow: 0px 0px 0px 1px #999;
+		}
+
         .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID { font-size: 75%; color:#999; }
 
         .weektable {
@@ -174,10 +193,13 @@ function changeWeek(count) {
     <br/>
 
     <div id="tableEditPath"> </div>
-    <table id="tableEdit" cellspacing="0" > </table>
+   	<table id="tableEdit" cellspacing="0" > </table>
 
     <div id="tablePath"> </div>
-    <table id="table" cellspacing="0" > </table>
+    <div class="fixedHeaderTable">
+       	<table id="table" cellspacing="0" > </table>
+    </div>
+
 
 
     <br/>

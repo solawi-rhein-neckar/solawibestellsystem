@@ -79,6 +79,13 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                 keys = pub.columns.length ? pub.columns : Object.keys(response[i]).sort(columnSortFunc);
                 var tr = addColumnHeaderRow(table, keys);
                 tableExtensions.forEach(function(ext){ext.addColumnHeaders(tr, keys);});
+                /*tr.childNodes.forEach(function(child){
+                	var div = document.createElement("DIV");
+                	div.innerText = child.innerText;
+                	div.style.position = 'absolute';
+                	div.style.backgroundColor = 'white';
+                	child.insertBefore(div, child.firstChild);
+                });*/
             }
             var dataRow = response[i];
             for (var j = 0; j < keys.length; j++) {
