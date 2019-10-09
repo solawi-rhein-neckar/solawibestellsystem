@@ -1,9 +1,9 @@
 -- phpMyAdmin SQL Dump
--- version 4.8.5
+-- version 4.9.0.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Erstellungszeit: 22. Jun 2019 um 11:44
+-- Erstellungszeit: 09. Okt 2019 um 11:54
 -- Server-Version: 5.7.26-nmm1-log
 -- PHP-Version: 7.2.19-nmm1
 
@@ -20,7 +20,222 @@ DELIMITER $$
 --
 -- Prozeduren
 --
+CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `BenutzerBestellungen` (IN `pWoche` DECIMAL(6,2))  READS SQL DATA
+BEGIN
+DROP TEMPORARY TABLE IF EXISTS BenutzerBestellungenTemp;
+CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (SELECT
+    `u`.`Benutzer_ID` AS `Benutzer_ID`,
+    `d02dbcf8`.`Benutzer`.`Name` AS `Benutzer`,
+    `d02dbcf8`.`Depot`.`ID` AS `Depot_ID`,
+    `d02dbcf8`.`Depot`.`Name` AS `Depot`,
+   `u`.`Produkt`,
+   `u`.`Beschreibung`,
+     `u`.`Einheit`,
+    `u`.`Menge`,
+    `u`.`Woche` AS `Woche`,
+    CONVERT(GROUP_CONCAT(
+        (
+            CASE WHEN(TRIM(`u`.`Kommentar`) = '') THEN NULL ELSE `u`.`Kommentar`
+        END
+    ) SEPARATOR ', '
+), char(255)) AS `Kommentar`,
+    (
+        CASE WHEN ISNULL(`d02dbcf8`.`BenutzerUrlaub`.`ID`) THEN SUM(`u`.`Anzahl`) ELSE 0
+    END
+) AS `Anzahl`,
+SUM(
+    (
+        CASE WHEN(`u`.`Quelle` = 1) THEN `u`.`Anzahl` ELSE 0
+    END
+)
+) AS `AnzahlModul`,
+SUM(
+    (
+        CASE WHEN(`u`.`Quelle` = 2) THEN `u`.`Anzahl` ELSE 0
+    END
+)
+) AS `AnzahlZusatz`,
+(
+    `d02dbcf8`.`BenutzerUrlaub`.`ID` IS NOT NULL
+) AS `Urlaub`
+                                                                                FROM
+    (
+        (
+            (
+                (
+                    (
+                        (
+                        SELECT
+                            1 AS `Quelle`,
+                            `d02dbcf8`.`BenutzerModulAbo`.`Benutzer_ID` AS `Benutzer_ID`,
+ `d02dbcf8`.`BenutzerModulAbo`.`Kommentar` AS `Kommentar`,
+						    Replace(Replace(`d02dbcf8`.`Modul`.`Name`, 'Kräutermodul', 'Kräuter'), 'Quarkmodul' , 'Quark, 400g')  AS `Produkt`,
+						    `d02dbcf8`.`Modul`.`Beschreibung` AS `Beschreibung`,
+						    '' AS `Einheit`,
+						    `d02dbcf8`.`Modul`.`AnzahlProAnteil` AS `Menge`,
+						    (
+                                `d02dbcf8`.`BenutzerModulAbo`.`Anzahl`
+                            ) AS `Anzahl`,
+                            pWoche AS `Woche`
+                        FROM
+                           `d02dbcf8`.`BenutzerModulAbo`
+		                JOIN `d02dbcf8`.`Modul` ON
+		                    (
+		                        (
+		                            `BenutzerModulAbo`.`Modul_ID` = `d02dbcf8`.`Modul`.`ID`
+		                        )
+		                    )                                   WHERE
+                               (
+                                            ISNULL(
+                                                `d02dbcf8`.`BenutzerModulAbo`.`StartWoche`
+                                            ) OR(
+                                                 pWoche >= `d02dbcf8`.`BenutzerModulAbo`.`StartWoche`
+                                            )
+                                        ) AND(
+                                            ISNULL(
+                                                `d02dbcf8`.`BenutzerModulAbo`.`EndWoche`
+                                            ) OR(
+                                                pWoche <= `d02dbcf8`.`BenutzerModulAbo`.`EndWoche`
+                                            )
+                                        )
+                                    )
+                UNION ALL
+                    (
+                    SELECT
+                        2 AS `Quelle`,
+                        `d02dbcf8`.`BenutzerZusatzBestellung`.`Benutzer_ID` AS `Benutzer_ID`,
+                        `d02dbcf8`.`BenutzerZusatzBestellung`.`Kommentar` AS `Kommentar`,
+						    `d02dbcf8`.`Produkt`.`Name` AS `Produkt`,
+						    `d02dbcf8`.`Produkt`.`Beschreibung` AS `Beschreibung`,
+						    `d02dbcf8`.`Produkt`.`Einheit` AS `Einheit`,
+						    `d02dbcf8`.`Produkt`.`Menge` AS `Menge`,
+                            `d02dbcf8`.`BenutzerZusatzBestellung`.`Anzahl` AS `Anzahl`,
+                        `d02dbcf8`.`BenutzerZusatzBestellung`.`Woche` AS `Woche`
+                    FROM
+                        `d02dbcf8`.`BenutzerZusatzBestellung`
+		                JOIN `d02dbcf8`.`Produkt` ON
+		                    (
+		                        (
+		                            `BenutzerZusatzBestellung`.`Produkt_ID` = `d02dbcf8`.`Produkt`.`ID`
+		                        )
+		                    )
+		                  WHERE    `d02dbcf8`.`BenutzerZusatzBestellung`.`Woche` = pWoche
+                    )
+                ) `u`
+
+                )
+            JOIN `d02dbcf8`.`Benutzer` ON
+                (
+                    (
+                        `u`.`Benutzer_ID` = `d02dbcf8`.`Benutzer`.`ID`
+                    )
+                )
+            )
+        JOIN `d02dbcf8`.`Depot` ON
+            (
+                (
+                    `d02dbcf8`.`Benutzer`.`Depot_ID` = `d02dbcf8`.`Depot`.`ID`
+                )
+            )
+        )
+    LEFT JOIN `d02dbcf8`.`BenutzerUrlaub` ON
+        (
+            (
+                (
+                    `d02dbcf8`.`BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`
+                ) AND(
+                    `d02dbcf8`.`BenutzerUrlaub`.`Woche` = `u`.`Woche`
+                )
+            )
+        )
+    )
+GROUP BY
+    `u`.`Benutzer_ID`,
+    `d02dbcf8`.`Benutzer`.`Name`,
+    `d02dbcf8`.`Depot`.`ID`,
+    `d02dbcf8`.`Depot`.`Name`,
+    `u`.`Produkt`,
+    `u`.`Beschreibung`,
+    `u`.`Einheit`,
+    `u`.`Menge`,
+    `u`.`Woche`,
+    `d02dbcf8`.`BenutzerUrlaub`.`ID`);
+END$$
+
+CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `CreateDefaultModulAbosForUsersCreatedAfter` (IN `pDate` DATETIME)  MODIFIES SQL DATA
+INSERT INTO `BenutzerModulAbo`(`Benutzer_ID`, `Modul_ID`, `StartWoche`, `EndWoche`, `Anzahl`)
+SELECT
+   Benutzer.ID, Modul.ID, Benutzer.PunkteWoche, '9999.99', Case when Modul.ID = 2 then 3 * Benutzer.Anteile when Modul.ID = 4 then Modul.AnzahlProAnteil * Benutzer.FleischAnteile ELSE Modul.AnzahlProAnteil * Benutzer.Anteile end
+FROM
+   Benutzer JOIN Modul
+WHERE
+   Benutzer.ErstellZeitpunkt > pDate and (Modul.AnzahlProAnteil > 0 or Modul.ID = 2) and (Modul.ID != 4 or Benutzer.FleischAnteile > 0)$$
+
+CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `PivotBestellung` (IN `pWoche` DECIMAL(6,2))  READS SQL DATA
+    SQL SECURITY INVOKER
+BEGIN
+
+SET SESSION group_concat_max_len = 32000;
+
+SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('MAX(IF(Produkt = \'', Name, '\', Anzahl, 0)) AS `', Name, '`' ))  FROM Produkt ORDER BY Nr);
+
+SET @query = CONCAT('SELECT Depot, MAX(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `Milch`,', @query, ' , MAX(Urlaub) as `Urlauber`,GROUP_CONCAT(`subq`.Kommentar SEPARATOR \', \') as `Kommentar` FROM
+
+(select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellungenTemp`.`Depot` AS `Depot`,`BenutzerBestellungenTemp`.`Produkt` AS `Produkt`,`BenutzerBestellungenTemp`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,`BenutzerBestellungenTemp`.`Menge` AS `Menge`,`BenutzerBestellungenTemp`.`Woche` AS `Woche`,sum(`BenutzerBestellungenTemp`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`, GROUP_CONCAT(
+        (
+             CASE WHEN(`BenutzerBestellungenTemp`.`Kommentar` is NULL or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'\' or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'-\' or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) like \'Tausch\') THEN NULL ELSE concat((select name from Benutzer where Benutzer.ID = BenutzerBestellungenTemp.Benutzer_ID), case when Produkt is null or TRIM(Produkt) = \'\' or TRIM(Produkt) = \'-\' THEN \'\' ELSE concat(\' \', Produkt) end, \': \', `BenutzerBestellungenTemp`.`Kommentar`)
+        END
+    ) SEPARATOR \', \'
+) AS `Kommentar`                    from `d02dbcf8`.`BenutzerBestellungenTemp` group by `BenutzerBestellungenTemp`.`Produkt`,`BenutzerBestellungenTemp`.`Woche`,`BenutzerBestellungenTemp`.`Depot_ID` order by `BenutzerBestellungenTemp`.`Depot`,`BenutzerBestellungenTemp`.`Produkt`) subq
+
+ WHERE Woche = ', pWoche ,' GROUP BY Depot_ID');
+
+CALL BenutzerBestellungen(pWoche);
+
+PREPARE stt FROM @query;
+
+EXECUTE stt;
+
+DEALLOCATE PREPARE stt;
+
+END$$
+
 CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `PivotBestellungen` (IN `pWoche` DECIMAL(6,2))  READS SQL DATA
+BEGIN
+
+SET SESSION group_concat_max_len = 32000;
+
+SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('MAX(IF(Produkt = \'', Name, '\', Anzahl, 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
+
+SET @query = CONCAT('SELECT Depot as `00.',pWoche,'`, MAX(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `00.Milch`,', @query, ' , MAX(Urlaub) as `99.',pWoche,' Urlauber`,
+(SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `97.Mitglieder`,
+(SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `98.Anteile`,
+(SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `98.FleischAnteileErlaubt`,
+  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`
+ FROM
+
+(select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellungenTemp`.`Depot` AS `Depot`,`BenutzerBestellungenTemp`.`Produkt` AS `Produkt`,`BenutzerBestellungenTemp`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,`BenutzerBestellungenTemp`.`Menge` AS `Menge`,`BenutzerBestellungenTemp`.`Woche` AS `Woche`,sum(`BenutzerBestellungenTemp`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`,GROUP_CONCAT(
+        (
+            CASE WHEN(`BenutzerBestellungenTemp`.`Kommentar` is NULL or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'\' or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'-\') THEN NULL ELSE concat((select name from Benutzer where Benutzer.ID = BenutzerBestellungenTemp.Benutzer_ID), case when Produkt is null or TRIM(Produkt) = \'\' or TRIM(Produkt) = \'-\' THEN \'\' ELSE concat(\' \', Produkt) end, \': \', `BenutzerBestellungenTemp`.`Kommentar`)
+        END
+    ) SEPARATOR \', \'
+) AS `Kommentar`
+
+                    from `d02dbcf8`.`BenutzerBestellungenTemp` group by `BenutzerBestellungenTemp`.`Produkt`,`BenutzerBestellungenTemp`.`Woche`,`BenutzerBestellungenTemp`.`Depot_ID` order by `BenutzerBestellungenTemp`.`Depot`,`BenutzerBestellungenTemp`.`Produkt`) subq
+
+ WHERE Woche = ', pWoche ,' GROUP BY Depot_ID');
+
+CALL BenutzerBestellungen(pWoche);
+
+PREPARE stt FROM @query;
+
+EXECUTE stt;
+
+DEALLOCATE PREPARE stt;
+
+END$$
+
+CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `PivotBestellungenAlt` (IN `pWoche` DECIMAL(6,2))  READS SQL DATA
     SQL SECURITY INVOKER
 BEGIN
 
@@ -40,6 +255,30 @@ END$$
 
 CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `PivotDepot` (IN `pWoche` DECIMAL(6,2), IN `pDepot` INT)  READS SQL DATA
     SQL SECURITY INVOKER
+BEGIN
+
+SET SESSION group_concat_max_len = 32000;
+
+SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('MAX(IF(Produkt = \'', Name, '\', Anzahl, 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
+
+SET @query = CONCAT('SELECT Benutzer as `00.',pWoche, ' ', (SELECT Name FROM Depot WHERE ID = pDepot),'`, MAX(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `00.Milch`,', @query, ' , MAX(Urlaub) as `99.',pWoche, ' Urlaub` ,GROUP_CONCAT(
+        (
+            CASE WHEN(`BenutzerBestellungenTemp`.`Kommentar` is null or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'\' or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'-\') THEN NULL ELSE concat(Produkt, \': \', `BenutzerBestellungenTemp`.`Kommentar`)
+        END
+    ) SEPARATOR \', \'
+) AS `96.Kommentar` FROM BenutzerBestellungenTemp WHERE Woche = ', pWoche ,' AND Depot_ID = ',pDepot,' GROUP BY Benutzer_ID');
+
+CALL BenutzerBestellungen(pWoche);
+
+PREPARE stt FROM @query;
+
+EXECUTE stt;
+
+DEALLOCATE PREPARE stt;
+
+END$$
+
+CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `PivotDepotAlt` (IN `pWoche` DECIMAL(6,2), IN `pDepot` INT)  READS SQL DATA
 BEGIN
 
 SET SESSION group_concat_max_len = 32000;
@@ -181,7 +420,7 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 	-- Check to see if the specified table exists
 	SET c := (SELECT COUNT(*) FROM information_schema.tables
-			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 				AND BINARY table_name = BINARY audit_table_name);
 	IF c <> 1 THEN
 		SET out_errors := CONCAT( out_errors, '\n', 'The table you specified `', audit_schema_name, '`.`', audit_table_name, '` does not exists.' );
@@ -191,7 +430,7 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 	-- Check audit and meta table exists
 	SET c := (SELECT COUNT(*) FROM information_schema.tables
-			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 				AND (BINARY table_name = BINARY 'zaudit' OR BINARY table_name = BINARY 'zaudit_meta') );
 	IF c <> 2 THEN
 		SET out_errors := CONCAT( out_errors, '\n', 'Audit table structure do not exists, please check or run the audit setup script again.' );
@@ -200,43 +439,43 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 	-- Check triggers exists
 	SET c := ( SELECT GROUP_CONCAT( TRIGGER_NAME SEPARATOR ', ') FROM information_schema.triggers
-			WHERE BINARY EVENT_OBJECT_SCHEMA = BINARY audit_schema_name 
-				AND BINARY EVENT_OBJECT_TABLE = BINARY audit_table_name 
+			WHERE BINARY EVENT_OBJECT_SCHEMA = BINARY audit_schema_name
+				AND BINARY EVENT_OBJECT_TABLE = BINARY audit_table_name
 				AND BINARY ACTION_TIMING = BINARY 'AFTER' AND BINARY TRIGGER_NAME NOT LIKE BINARY CONCAT('z', audit_table_name, '_%') GROUP BY EVENT_OBJECT_TABLE );
 	IF c IS NOT NULL AND LENGTH(c) > 0 THEN
 		SET out_errors := CONCAT( out_errors, '\n', 'MySQL 5 only supports one trigger per insert/update/delete action. Currently there are these triggers (', c, ') already assigned to `', audit_schema_name, '`.`', audit_table_name, '`. You must remove them before the audit trigger can be applied' );
 	END IF;
 
-	
 
-	-- Get the first primary key 
+
+	-- Get the first primary key
 	SET at_id1 := (SELECT COLUMN_NAME FROM information_schema.columns
-			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 				AND BINARY table_name = BINARY audit_table_name
 			AND column_key = 'PRI' LIMIT 1);
 
-	-- Get the second primary key 
+	-- Get the second primary key
 	SET at_id2 := (SELECT COLUMN_NAME FROM information_schema.columns
-			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 				AND BINARY table_name = BINARY audit_table_name
 			AND column_key = 'PRI' LIMIT 1,1);
 
 	-- Check at least one id exists
-	IF at_id1 IS NULL AND at_id2 IS NULL THEN 
+	IF at_id1 IS NULL AND at_id2 IS NULL THEN
 		SET out_errors := CONCAT( out_errors, '\n', 'The table you specified `', audit_schema_name, '`.`', audit_table_name, '` does not have any primary key.' );
 	END IF;
 
 
 
-	SET header := CONCAT( 
+	SET header := CONCAT(
 		'-- --------------------------------------------------------------------\n',
 		'-- MySQL Audit Trigger\n',
 		'-- Copyright (c) 2014 Du T. Dang. MIT License\n',
 		'-- https://github.com/hotmit/mysql-sp-audit\n',
-		'-- --------------------------------------------------------------------\n\n'		
+		'-- --------------------------------------------------------------------\n\n'
 	);
 
-	
+
 	SET trg_insert := CONCAT( 'DROP TRIGGER IF EXISTS `', audit_schema_name, '`.`z', audit_table_name, '_AINS`\n$$\n',
 						'CREATE TRIGGER `', audit_schema_name, '`.`z', audit_table_name, '_AINS` AFTER INSERT ON `', audit_schema_name, '`.`', audit_table_name, '` FOR EACH ROW \nBEGIN\n', header );
 	SET trg_update := CONCAT( 'DROP TRIGGER IF EXISTS `', audit_schema_name, '`.`z', audit_table_name, '_AUPD`\n$$\n',
@@ -254,12 +493,12 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 	-- [ Create Insert Statement Into Audit & Audit Meta Tables ]
 	-- ----------------------------------------------------------
 
-	SET stmt := CONCAT( 'INSERT IGNORE INTO `', audit_schema_name, '`.zaudit (user, table_name, pk1, ', CASE WHEN at_id2 IS NULL THEN '' ELSE 'pk2, ' END , 'action)  VALUE ( IFNULL( @zaudit_user, USER() ), ', 
+	SET stmt := CONCAT( 'INSERT IGNORE INTO `', audit_schema_name, '`.zaudit (user, table_name, pk1, ', CASE WHEN at_id2 IS NULL THEN '' ELSE 'pk2, ' END , 'action)  VALUE ( IFNULL( @zaudit_user, USER() ), ',
 		'''', audit_table_name, ''', ', 'NEW.`', at_id1, '`, ', IFNULL( CONCAT('NEW.`', at_id2, '`, ') , '') );
 
 	SET trg_insert := CONCAT( trg_insert, stmt, '''INSERT''); \n\n');
 
-	SET stmt := CONCAT( 'INSERT IGNORE INTO `', audit_schema_name, '`.zaudit (user, table_name, pk1, ', CASE WHEN at_id2 IS NULL THEN '' ELSE 'pk2, ' END , 'action)  VALUE ( IFNULL( @zaudit_user, USER() ), ', 
+	SET stmt := CONCAT( 'INSERT IGNORE INTO `', audit_schema_name, '`.zaudit (user, table_name, pk1, ', CASE WHEN at_id2 IS NULL THEN '' ELSE 'pk2, ' END , 'action)  VALUE ( IFNULL( @zaudit_user, USER() ), ',
 		'''', audit_table_name, ''', ', 'OLD.`', at_id1, '`, ', IFNULL( CONCAT('OLD.`', at_id2, '`, ') , '') );
 
 	SET trg_update := CONCAT( trg_update, stmt, '''UPDATE''); \n\n' );
@@ -270,16 +509,16 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 	SET trg_insert := CONCAT( trg_insert, stmt );
 	SET trg_update := CONCAT( trg_update, stmt );
 	SET trg_delete := CONCAT( trg_delete, stmt );
-	
+
 	SET stmt := CONCAT( 'INSERT IGNORE INTO `', audit_schema_name, '`.zaudit_meta (audit_id, col_name, old_value, new_value) VALUES \n' );
 	SET trg_insert := CONCAT( trg_insert, '\n', stmt );
 	SET trg_update := CONCAT( trg_update, '\n', stmt );
 	SET trg_delete := CONCAT( trg_delete, '\n', stmt );
 
-	SET stmt := ( SELECT GROUP_CONCAT(' (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', NULL, ',	
-						CASE WHEN INSTR( '|binary|varbinary|tinyblob|blob|mediumblob|longblob|', LOWER(DATA_TYPE) ) <> 0 THEN 
-							'''[UNSUPPORTED BINARY DATATYPE]''' 
-						ELSE 						
+	SET stmt := ( SELECT GROUP_CONCAT(' (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', NULL, ',
+						CASE WHEN INSTR( '|binary|varbinary|tinyblob|blob|mediumblob|longblob|', LOWER(DATA_TYPE) ) <> 0 THEN
+							'''[UNSUPPORTED BINARY DATATYPE]'''
+						ELSE
 							CONCAT('NEW.`', COLUMN_NAME, '`')
 						END,
 						'),'
@@ -293,7 +532,7 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 
 
-	SET stmt := ( SELECT GROUP_CONCAT('   (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', ', 
+	SET stmt := ( SELECT GROUP_CONCAT('   (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', ',
 						CASE WHEN INSTR( '|binary|varbinary|tinyblob|blob|mediumblob|longblob|', LOWER(DATA_TYPE) ) <> 0 THEN
 							'''[SAME]'''
 						ELSE
@@ -306,9 +545,9 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 							CONCAT('NEW.`', COLUMN_NAME, '`')
 						END,
 						'),'
-					SEPARATOR '\n') 
+					SEPARATOR '\n')
 					FROM information_schema.columns
-						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 							AND BINARY TABLE_NAME = BINARY audit_table_name );
 
 	SET stmt := CONCAT( TRIM( TRAILING ',' FROM stmt ), ';\n\nEND\n$$' );
@@ -316,16 +555,16 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 
 
-	SET stmt := ( SELECT GROUP_CONCAT('   (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', ', 
-						CASE WHEN INSTR( '|binary|varbinary|tinyblob|blob|mediumblob|longblob|', LOWER(DATA_TYPE) ) <> 0 THEN 
-							'''[UNSUPPORTED BINARY DATATYPE]''' 
-						ELSE 						
+	SET stmt := ( SELECT GROUP_CONCAT('   (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', ',
+						CASE WHEN INSTR( '|binary|varbinary|tinyblob|blob|mediumblob|longblob|', LOWER(DATA_TYPE) ) <> 0 THEN
+							'''[UNSUPPORTED BINARY DATATYPE]'''
+						ELSE
 							CONCAT('OLD.`', COLUMN_NAME, '`')
 						END,
 						', NULL ),'
-					SEPARATOR '\n') 
+					SEPARATOR '\n')
 					FROM information_schema.columns
-						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 							AND BINARY TABLE_NAME = BINARY audit_table_name );
 
 
@@ -333,14 +572,14 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 	SET trg_delete := CONCAT( trg_delete, stmt );
 
 	-- -----------------------------------------------
-	-- [ Generating Helper Views For The Audit Table ] 
+	-- [ Generating Helper Views For The Audit Table ]
 	-- -----------------------------------------------
 	SET stmt := CONCAT( 'DROP VIEW IF EXISTS `', audit_schema_name, '`.`zvw_audit_', audit_table_name, '_meta`\n$$\n',
 						'CREATE VIEW `', audit_schema_name, '`.`zvw_audit_', audit_table_name, '_meta` AS \n', header,
 						'SELECT za.audit_id, zm.audit_meta_id, za.user, \n',
 						'	za.pk1, za.pk2,\n',
 						'	za.action, zm.col_name, zm.old_value, zm.new_value, za.timestamp\n',
-						'FROM `', audit_schema_name, '`.zaudit za \n', 
+						'FROM `', audit_schema_name, '`.zaudit za \n',
 						'INNER JOIN `', audit_schema_name, '`.zaudit_meta zm ON za.audit_id = zm.audit_id \n',
 						'WHERE za.table_name = ''', audit_table_name, '''');
 
@@ -348,19 +587,19 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 
 	SET stmt := ( SELECT GROUP_CONCAT( 	'		MAX((CASE WHEN zm.col_name = ''', COLUMN_NAME, ''' THEN zm.old_value ELSE NULL END)) AS `', COLUMN_NAME, '_old`, \n',
-										'		MAX((CASE WHEN zm.col_name = ''', COLUMN_NAME, ''' THEN zm.new_value ELSE NULL END)) AS `', COLUMN_NAME, '_new`, \n' 
-						SEPARATOR '\n') 
+										'		MAX((CASE WHEN zm.col_name = ''', COLUMN_NAME, ''' THEN zm.new_value ELSE NULL END)) AS `', COLUMN_NAME, '_new`, \n'
+						SEPARATOR '\n')
 					FROM information_schema.columns
-						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
-							AND BINARY TABLE_NAME = BINARY audit_table_name 
+						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
+							AND BINARY TABLE_NAME = BINARY audit_table_name
 				);
-	SET stmt := TRIM( TRAILING ', \n' FROM stmt );		
+	SET stmt := TRIM( TRAILING ', \n' FROM stmt );
 	SET stmt := ( SELECT CONCAT( 	'DROP VIEW IF EXISTS `', audit_schema_name, '`.`zvw_audit_', audit_table_name, '`\n$$\n',
 									'CREATE VIEW `', audit_schema_name, '`.`zvw_audit_', audit_table_name, '` AS \n', header,
-									'SELECT za.audit_id, za.user, za.pk1, za.pk2,\n', 
-									'za.action, za.timestamp, \n', 
+									'SELECT za.audit_id, za.user, za.pk1, za.pk2,\n',
+									'za.action, za.timestamp, \n',
 									stmt , '\n',
-									'	FROM `', audit_schema_name, '`.zaudit za \n', 
+									'	FROM `', audit_schema_name, '`.zaudit za \n',
 									'	INNER JOIN `', audit_schema_name, '`.zaudit_meta zm ON za.audit_id = zm.audit_id \n'
 									'WHERE za.table_name = ''', audit_table_name, '''\n',
 									'GROUP BY zm.audit_id') );
@@ -370,34 +609,34 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 	-- SELECT trg_insert, trg_update, trg_delete, vw_audit, vw_audit_meta;
 
-	SET stmt = CONCAT( 
+	SET stmt = CONCAT(
 		'-- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
 		'-- --------------------------------------------------------------------\n',
 		'-- Audit Script For `',audit_schema_name, '`.`', audit_table_name, '`\n',
 		'-- Date Generated: ', NOW(), '\n',
 		'-- Generated By: ', CURRENT_USER(), '\n',
 		'-- BEGIN\n',
-		'-- --------------------------------------------------------------------\n\n'	
+		'-- --------------------------------------------------------------------\n\n'
 		'DELIMITER $$',
-		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` After Insert Trigger Code ]\n',		
+		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` After Insert Trigger Code ]\n',
 		'-- -----------------------------------------------------------\n',
 		trg_insert,
 		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` After Update Trigger Code ]\n',
 		'-- -----------------------------------------------------------\n',
 		trg_update,
-		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` After Delete Trigger Code ]\n',		
+		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` After Delete Trigger Code ]\n',
 		'-- -----------------------------------------------------------\n',
 		trg_delete,
-		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` Audit Meta View ]\n',		
+		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` Audit Meta View ]\n',
 		'-- -----------------------------------------------------------\n',
 		vw_audit_meta,
-		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` Audit View ]\n',		
+		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` Audit View ]\n',
 		'-- -----------------------------------------------------------\n',
 		vw_audit,
 		'\n\n',
 		'-- --------------------------------------------------------------------\n',
 		'-- END\n',
-		'-- Audit Script For `',audit_schema_name, '`.`', audit_table_name, '`\n',		
+		'-- Audit Script For `',audit_schema_name, '`.`', audit_table_name, '`\n',
 		'-- --------------------------------------------------------------------\n\n',
 		'-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n'
 		);
@@ -413,8 +652,8 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_batch_audit` (IN `
 	DECLARE s, e, scripts, error_msgs LONGTEXT;
 	DECLARE audit_table_name VARCHAR(255);
 	DECLARE done INT DEFAULT FALSE;
-	DECLARE cursor_table_list CURSOR FOR SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
-		WHERE BINARY TABLE_TYPE = BINARY 'BASE TABLE' 
+	DECLARE cursor_table_list CURSOR FOR SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+		WHERE BINARY TABLE_TYPE = BINARY 'BASE TABLE'
 			AND BINARY TABLE_SCHEMA = BINARY audit_schema_name
 			AND LOCATE( BINARY CONCAT(TABLE_NAME, ','), BINARY CONCAT(audit_table_names, ',') ) > 0;
 
@@ -451,8 +690,8 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_batch_remove_audit
 	DECLARE s, scripts LONGTEXT;
 	DECLARE audit_table_name VARCHAR(255);
 	DECLARE done INT DEFAULT FALSE;
-	DECLARE cursor_table_list CURSOR FOR SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
-		WHERE BINARY TABLE_TYPE = BINARY 'BASE TABLE' 
+	DECLARE cursor_table_list CURSOR FOR SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+		WHERE BINARY TABLE_TYPE = BINARY 'BASE TABLE'
 			AND BINARY TABLE_SCHEMA = BINARY audit_schema_name
 			AND LOCATE( BINARY CONCAT(TABLE_NAME, ','), BINARY CONCAT(audit_table_names, ',') ) > 0;
 
@@ -490,7 +729,7 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_remove_audit` (IN 
 		'-- Date Generated: ', NOW(), '\n',
 		'-- Generated By: ', CURRENT_USER(), '\n',
 		'-- BEGIN\n',
-		'-- --------------------------------------------------------------------\n\n', 
+		'-- --------------------------------------------------------------------\n\n',
 		'DELIMITER $$\n\n',
 
 		'DROP TRIGGER IF EXISTS `', audit_schema_name, '`.`z', audit_table_name, '_AINS`\n$$\n',
@@ -503,7 +742,7 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_remove_audit` (IN 
 		'\n\n',
 		'-- --------------------------------------------------------------------\n',
 		'-- END\n',
-		'-- Audit Removal Script For `',audit_schema_name, '`.`', audit_table_name, '`\n',		
+		'-- Audit Removal Script For `',audit_schema_name, '`.`', audit_table_name, '`\n',
 		'-- --------------------------------------------------------------------\n\n',
 		'-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n'
 	);
@@ -521,11 +760,14 @@ DELIMITER ;
 CREATE TABLE `Benutzer` (
   `ID` int(11) NOT NULL,
   `Name` varchar(255) COLLATE utf8_german2_ci NOT NULL,
+  `MitName` varchar(255) COLLATE utf8_german2_ci DEFAULT NULL,
+  `AltName` varchar(255) COLLATE utf8_german2_ci DEFAULT NULL,
   `Passwort` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `Cookie` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `Role_ID` int(11) NOT NULL DEFAULT '1',
-  `Depot_ID` int(11) NOT NULL DEFAULT '1',
+  `Depot_ID` int(11) DEFAULT NULL,
   `Anteile` int(11) NOT NULL DEFAULT '1',
+  `FleischAnteile` int(11) NOT NULL DEFAULT '1',
   `PunkteStand` int(11) NOT NULL DEFAULT '0',
   `PunkteWoche` decimal(6,2) NOT NULL DEFAULT '2019.01',
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -546,7 +788,7 @@ CREATE TABLE `BenutzerBestellView` (
 ,`Depot` varchar(255)
 ,`Produkt_ID` int(11)
 ,`Produkt` varchar(511)
-,`Beschreibung` varchar(2047)
+,`Beschreibung` varchar(255)
 ,`Einheit` varchar(7)
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
@@ -554,6 +796,7 @@ CREATE TABLE `BenutzerBestellView` (
 ,`AnzahlModul` decimal(42,0)
 ,`AnzahlZusatz` decimal(42,0)
 ,`Urlaub` int(1)
+,`Kommentar` mediumtext
 );
 
 -- --------------------------------------------------------
@@ -569,9 +812,10 @@ CREATE TABLE `BenutzerBestellViewUnsorted` (
 ,`Depot` varchar(255)
 ,`Produkt_ID` int(11)
 ,`Produkt` varchar(511)
-,`Beschreibung` varchar(2047)
+,`Beschreibung` varchar(255)
 ,`Einheit` varchar(7)
 ,`Menge` decimal(8,2)
+,`Kommentar` mediumtext
 ,`Woche` decimal(6,2)
 ,`Anzahl` decimal(42,0)
 ,`AnzahlModul` decimal(42,0)
@@ -592,7 +836,7 @@ CREATE TABLE `BenutzerModulAbo` (
   `StartWoche` decimal(6,2) NOT NULL DEFAULT '2019.01',
   `EndWoche` decimal(6,2) DEFAULT NULL,
   `Anzahl` int(11) NOT NULL DEFAULT '1',
-  `Sorte` varchar(31) COLLATE utf8_german2_ci DEFAULT NULL,
+  `Kommentar` varchar(31) COLLATE utf8_german2_ci DEFAULT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderBenutzer_ID` int(11) DEFAULT NULL
@@ -633,7 +877,7 @@ CREATE TABLE `BenutzerView` (
 ,`AenderZeitpunkt` timestamp
 ,`AenderBenutzer_ID` int(11)
 ,`Depot` varchar(255)
-,`Modul` text
+,`Modul` mediumtext
 ,`Role` varchar(255)
 );
 
@@ -649,6 +893,7 @@ CREATE TABLE `BenutzerZusatzBestellung` (
   `Produkt_ID` int(11) NOT NULL,
   `Woche` decimal(6,2) NOT NULL,
   `Anzahl` int(11) NOT NULL DEFAULT '1',
+  `Kommentar` varchar(255) COLLATE utf8_german2_ci DEFAULT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderBenutzer_ID` int(11) DEFAULT NULL
@@ -665,8 +910,8 @@ CREATE TABLE `Depot` (
   `Name` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `KurzName` varchar(7) COLLATE utf8_german2_ci NOT NULL,
   `Beschreibung` varchar(2047) COLLATE utf8_german2_ci NOT NULL DEFAULT '',
-  `VerantwortlicherBenutzer_ID` int(11) DEFAULT NULL,
-  `StellvertreterBenutzer_ID` int(11) DEFAULT NULL,
+  `VerwalterBenutzer_ID` int(11) DEFAULT NULL,
+  `BestellerBenutzer_ID` int(11) DEFAULT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderBenutzer_ID` int(11) DEFAULT NULL
@@ -683,13 +928,14 @@ CREATE TABLE `DepotBestellView` (
 ,`Depot` varchar(255)
 ,`Produkt_ID` int(11)
 ,`Produkt` varchar(511)
-,`Beschreibung` varchar(2047)
+,`Beschreibung` varchar(255)
 ,`Einheit` varchar(7)
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
 ,`Anzahl` decimal(64,0)
 ,`AnzahlModul` decimal(64,0)
 ,`AnzahlZusatz` decimal(64,0)
+,`Kommentar` mediumtext
 ,`Urlaub` decimal(32,0)
 );
 
@@ -704,10 +950,11 @@ CREATE TABLE `DepotBestellViewUnsorted` (
 ,`Depot` varchar(255)
 ,`Produkt_ID` int(11)
 ,`Produkt` varchar(511)
-,`Beschreibung` varchar(2047)
+,`Beschreibung` varchar(255)
 ,`Einheit` varchar(7)
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
+,`Kommentar` mediumtext
 ,`Anzahl` decimal(64,0)
 ,`AnzahlModul` decimal(64,0)
 ,`AnzahlZusatz` decimal(64,0)
@@ -723,13 +970,14 @@ CREATE TABLE `DepotBestellViewUnsorted` (
 CREATE TABLE `GesamtBestellView` (
 `Produkt_ID` int(11)
 ,`Produkt` varchar(511)
-,`Beschreibung` varchar(2047)
+,`Beschreibung` varchar(255)
 ,`Einheit` varchar(7)
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
 ,`Anzahl` decimal(64,0)
 ,`AnzahlModul` decimal(64,0)
 ,`AnzahlZusatz` decimal(64,0)
+,`Kommentar` mediumtext
 ,`Urlaub` decimal(32,0)
 );
 
@@ -742,10 +990,11 @@ CREATE TABLE `GesamtBestellView` (
 CREATE TABLE `GesamtBestellViewUnsorted` (
 `Produkt_ID` int(11)
 ,`Produkt` varchar(511)
-,`Beschreibung` varchar(2047)
+,`Beschreibung` varchar(255)
 ,`Einheit` varchar(7)
 ,`Menge` decimal(8,2)
 ,`Woche` decimal(6,2)
+,`Kommentar` mediumtext
 ,`Anzahl` decimal(64,0)
 ,`AnzahlModul` decimal(64,0)
 ,`AnzahlZusatz` decimal(64,0)
@@ -761,7 +1010,7 @@ CREATE TABLE `GesamtBestellViewUnsorted` (
 CREATE TABLE `Modul` (
   `ID` int(11) NOT NULL,
   `Name` varchar(255) COLLATE utf8_german2_ci NOT NULL,
-  `Beschreibung` varchar(2047) COLLATE utf8_german2_ci NOT NULL DEFAULT '',
+  `Beschreibung` varchar(255) COLLATE utf8_german2_ci NOT NULL DEFAULT '',
   `AnzahlProAnteil` int(11) NOT NULL DEFAULT '0',
   `WechselWochen` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -829,9 +1078,9 @@ CREATE TABLE `ModulInhaltWoche` (
 
 CREATE TABLE `Produkt` (
   `ID` int(11) NOT NULL,
-  `Name` varchar(511) COLLATE utf8_german2_ci GENERATED ALWAYS AS (if((`Menge` <> 1.00),concat(`Produkt`,' [',(trim(`Menge`) + 0),unhex('C2A0'),`Einheit`,']'),`Produkt`)) VIRTUAL,
+  `Name` varchar(511) COLLATE utf8_german2_ci GENERATED ALWAYS AS (if((`Menge` <> 1.00),concat(`Produkt`,', ',(trim(`Menge`) + 0),`Einheit`),`Produkt`)) VIRTUAL,
   `Produkt` varchar(255) COLLATE utf8_german2_ci NOT NULL,
-  `Beschreibung` varchar(2047) COLLATE utf8_german2_ci NOT NULL DEFAULT '',
+  `Beschreibung` varchar(255) COLLATE utf8_german2_ci NOT NULL DEFAULT '',
   `Einheit` varchar(7) COLLATE utf8_german2_ci NOT NULL DEFAULT 'Stueck',
   `Menge` decimal(8,2) NOT NULL DEFAULT '1.00',
   `Punkte` int(11) NOT NULL DEFAULT '1',
@@ -880,7 +1129,7 @@ CREATE TABLE `Role` (
 --
 DROP TABLE IF EXISTS `BenutzerBestellView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellView`  AS  select `BenutzerBestellViewUnsorted`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerBestellViewUnsorted`.`Benutzer` AS `Benutzer`,`BenutzerBestellViewUnsorted`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellViewUnsorted`.`Depot` AS `Depot`,`BenutzerBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellViewUnsorted`.`Produkt` AS `Produkt`,`BenutzerBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellViewUnsorted`.`Einheit` AS `Einheit`,`BenutzerBestellViewUnsorted`.`Menge` AS `Menge`,`BenutzerBestellViewUnsorted`.`Woche` AS `Woche`,`BenutzerBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`BenutzerBestellViewUnsorted`.`AnzahlModul` AS `AnzahlModul`,`BenutzerBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`BenutzerBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `BenutzerBestellViewUnsorted` order by `BenutzerBestellViewUnsorted`.`Depot`,`BenutzerBestellViewUnsorted`.`Benutzer`,`BenutzerBestellViewUnsorted`.`Produkt` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellView`  AS  select `BenutzerBestellViewUnsorted`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerBestellViewUnsorted`.`Benutzer` AS `Benutzer`,`BenutzerBestellViewUnsorted`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellViewUnsorted`.`Depot` AS `Depot`,`BenutzerBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellViewUnsorted`.`Produkt` AS `Produkt`,`BenutzerBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellViewUnsorted`.`Einheit` AS `Einheit`,`BenutzerBestellViewUnsorted`.`Menge` AS `Menge`,`BenutzerBestellViewUnsorted`.`Woche` AS `Woche`,`BenutzerBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`BenutzerBestellViewUnsorted`.`AnzahlModul` AS `AnzahlModul`,`BenutzerBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`BenutzerBestellViewUnsorted`.`Urlaub` AS `Urlaub`,`BenutzerBestellViewUnsorted`.`Kommentar` AS `Kommentar` from `BenutzerBestellViewUnsorted` order by `BenutzerBestellViewUnsorted`.`Depot`,`BenutzerBestellViewUnsorted`.`Benutzer`,`BenutzerBestellViewUnsorted`.`Produkt` ;
 
 -- --------------------------------------------------------
 
@@ -889,7 +1138,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `BenutzerBestellViewUnsorted`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellViewUnsorted`  AS  select `u`.`Benutzer_ID` AS `Benutzer_ID`,`Benutzer`.`Name` AS `Benutzer`,`Depot`.`ID` AS `Depot_ID`,`Depot`.`Name` AS `Depot`,`u`.`Produkt_ID` AS `Produkt_ID`,`Produkt`.`Name` AS `Produkt`,`Produkt`.`Beschreibung` AS `Beschreibung`,`Produkt`.`Einheit` AS `Einheit`,`Produkt`.`Menge` AS `Menge`,`u`.`Woche` AS `Woche`,(case when isnull(`BenutzerUrlaub`.`ID`) then sum(`u`.`Anzahl`) else 0 end) AS `Anzahl`,sum((case when (`u`.`Quelle` = 1) then `u`.`Anzahl` else 0 end)) AS `AnzahlModul`,sum((case when (`u`.`Quelle` = 2) then `u`.`Anzahl` else 0 end)) AS `AnzahlZusatz`,(`BenutzerUrlaub`.`ID` is not null) AS `Urlaub` from ((((((select 1 AS `Quelle`,`BenutzerModulAbo`.`Benutzer_ID` AS `Benutzer_ID`,`ModulInhalt`.`Produkt_ID` AS `Produkt_ID`,(`ModulInhalt`.`Anzahl` * `BenutzerModulAbo`.`Anzahl`) AS `Anzahl`,`ModulInhaltWoche`.`Woche` AS `Woche` from ((`ModulInhalt` join `ModulInhaltWoche` on((`ModulInhaltWoche`.`ModulInhalt_ID` = `ModulInhalt`.`ID`))) join `BenutzerModulAbo` on(((`BenutzerModulAbo`.`Modul_ID` = `ModulInhalt`.`Modul_ID`) and (isnull(`BenutzerModulAbo`.`StartWoche`) or (`ModulInhaltWoche`.`Woche` >= `BenutzerModulAbo`.`StartWoche`)) and (isnull(`BenutzerModulAbo`.`EndWoche`) or (`ModulInhaltWoche`.`Woche` <= `BenutzerModulAbo`.`EndWoche`)))))) union all (select 2 AS `Quelle`,`BenutzerZusatzBestellung`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerZusatzBestellung`.`Produkt_ID` AS `Produkt_ID`,`BenutzerZusatzBestellung`.`Anzahl` AS `Anzahl`,`BenutzerZusatzBestellung`.`Woche` AS `Woche` from `BenutzerZusatzBestellung`)) `u` join `Produkt` on((`u`.`Produkt_ID` = `Produkt`.`ID`))) join `Benutzer` on((`u`.`Benutzer_ID` = `Benutzer`.`ID`))) join `Depot` on((`Benutzer`.`Depot_ID` = `Depot`.`ID`))) left join `BenutzerUrlaub` on(((`BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`) and (`BenutzerUrlaub`.`Woche` = `u`.`Woche`)))) group by `u`.`Benutzer_ID`,`Benutzer`.`Name`,`Depot`.`ID`,`Depot`.`Name`,`u`.`Produkt_ID`,`Produkt`.`Name`,`Produkt`.`Beschreibung`,`Produkt`.`Einheit`,`Produkt`.`Menge`,`u`.`Woche`,`BenutzerUrlaub`.`ID` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerBestellViewUnsorted`  AS  select `u`.`Benutzer_ID` AS `Benutzer_ID`,`Benutzer`.`Name` AS `Benutzer`,`Depot`.`ID` AS `Depot_ID`,`Depot`.`Name` AS `Depot`,`u`.`Produkt_ID` AS `Produkt_ID`,`Produkt`.`Name` AS `Produkt`,`Produkt`.`Beschreibung` AS `Beschreibung`,`Produkt`.`Einheit` AS `Einheit`,`Produkt`.`Menge` AS `Menge`,group_concat((case when (trim(`u`.`Kommentar`) = '') then NULL else `u`.`Kommentar` end) separator ', ') AS `Kommentar`,`u`.`Woche` AS `Woche`,(case when isnull(`BenutzerUrlaub`.`ID`) then sum(`u`.`Anzahl`) else 0 end) AS `Anzahl`,sum((case when (`u`.`Quelle` = 1) then `u`.`Anzahl` else 0 end)) AS `AnzahlModul`,sum((case when (`u`.`Quelle` = 2) then `u`.`Anzahl` else 0 end)) AS `AnzahlZusatz`,(`BenutzerUrlaub`.`ID` is not null) AS `Urlaub` from ((((((select 1 AS `Quelle`,`BenutzerModulAbo`.`Benutzer_ID` AS `Benutzer_ID`,`ModulInhalt`.`Produkt_ID` AS `Produkt_ID`,(`ModulInhalt`.`Anzahl` * `BenutzerModulAbo`.`Anzahl`) AS `Anzahl`,`ModulInhaltWoche`.`Woche` AS `Woche`,`BenutzerModulAbo`.`Kommentar` AS `Kommentar` from ((`ModulInhalt` join `ModulInhaltWoche` on((`ModulInhaltWoche`.`ModulInhalt_ID` = `ModulInhalt`.`ID`))) join `BenutzerModulAbo` on(((`BenutzerModulAbo`.`Modul_ID` = `ModulInhalt`.`Modul_ID`) and (isnull(`BenutzerModulAbo`.`StartWoche`) or (`ModulInhaltWoche`.`Woche` >= `BenutzerModulAbo`.`StartWoche`)) and (isnull(`BenutzerModulAbo`.`EndWoche`) or (`ModulInhaltWoche`.`Woche` <= `BenutzerModulAbo`.`EndWoche`)))))) union all (select 2 AS `Quelle`,`BenutzerZusatzBestellung`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerZusatzBestellung`.`Produkt_ID` AS `Produkt_ID`,`BenutzerZusatzBestellung`.`Anzahl` AS `Anzahl`,`BenutzerZusatzBestellung`.`Woche` AS `Woche`,`BenutzerZusatzBestellung`.`Kommentar` AS `Kommentar` from `BenutzerZusatzBestellung`)) `u` join `Produkt` on((`u`.`Produkt_ID` = `Produkt`.`ID`))) join `Benutzer` on((`u`.`Benutzer_ID` = `Benutzer`.`ID`))) join `Depot` on((`Benutzer`.`Depot_ID` = `Depot`.`ID`))) left join `BenutzerUrlaub` on(((`BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`) and (`BenutzerUrlaub`.`Woche` = `u`.`Woche`)))) group by `u`.`Benutzer_ID`,`Benutzer`.`Name`,`Depot`.`ID`,`Depot`.`Name`,`u`.`Produkt_ID`,`Produkt`.`Name`,`Produkt`.`Beschreibung`,`Produkt`.`Einheit`,`Produkt`.`Menge`,`u`.`Woche`,`BenutzerUrlaub`.`ID` ;
 
 -- --------------------------------------------------------
 
@@ -898,7 +1147,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `BenutzerView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerView`  AS  select `Benutzer`.`ID` AS `ID`,`Benutzer`.`Name` AS `Name`,`Benutzer`.`Passwort` AS `Passwort`,`Benutzer`.`Cookie` AS `Cookie`,`Benutzer`.`Role_ID` AS `Role_ID`,`Benutzer`.`Depot_ID` AS `Depot_ID`,`Benutzer`.`Anteile` AS `Anteile`,`Benutzer`.`PunkteStand` AS `PunkteStand`,`Benutzer`.`PunkteWoche` AS `PunkteWoche`,`Benutzer`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`Benutzer`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`Benutzer`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`Depot`.`Name` AS `Depot`,group_concat(concat(convert(convert((case when (`BenutzerModulAbo`.`Anzahl` <> 1) then concat(`BenutzerModulAbo`.`Anzahl`,'x ') else '' end) using latin1) using utf8),`Modul`.`Name`,convert(convert((case when isnull(`BenutzerModulAbo`.`Sorte`) then '' else concat(' ',`BenutzerModulAbo`.`Sorte`) end) using latin1) using utf8)) order by `Modul`.`ID` ASC separator ', ') AS `Modul`,`Role`.`Name` AS `Role` from ((((`Benutzer` left join `Role` on((`Benutzer`.`Role_ID` = `Role`.`ID`))) left join `Depot` on((`Depot`.`ID` = `Benutzer`.`Depot_ID`))) left join `BenutzerModulAbo` on((`BenutzerModulAbo`.`Benutzer_ID` = `Benutzer`.`ID`))) left join `Modul` on((`Modul`.`ID` = `BenutzerModulAbo`.`Modul_ID`))) where ((isnull(`BenutzerModulAbo`.`StartWoche`) or ((`BenutzerModulAbo`.`StartWoche` * 100) <= yearweek((curdate() + interval 3 day),1))) and (isnull(`BenutzerModulAbo`.`EndWoche`) or ((`BenutzerModulAbo`.`EndWoche` * 100) >= yearweek((curdate() + interval 3 day),1)))) group by `Benutzer`.`ID` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `BenutzerView`  AS  select `Benutzer`.`ID` AS `ID`,`Benutzer`.`Name` AS `Name`,`Benutzer`.`Passwort` AS `Passwort`,`Benutzer`.`Cookie` AS `Cookie`,`Benutzer`.`Role_ID` AS `Role_ID`,`Benutzer`.`Depot_ID` AS `Depot_ID`,`Benutzer`.`Anteile` AS `Anteile`,`Benutzer`.`PunkteStand` AS `PunkteStand`,`Benutzer`.`PunkteWoche` AS `PunkteWoche`,`Benutzer`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`Benutzer`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`Benutzer`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`Depot`.`Name` AS `Depot`,group_concat(concat(convert(convert((case when (`BenutzerModulAbo`.`Anzahl` <> 1) then concat(`BenutzerModulAbo`.`Anzahl`,'x ') else '' end) using latin1) using utf8),`Modul`.`Name`,convert(convert((case when (isnull(`BenutzerModulAbo`.`Kommentar`) or (`BenutzerModulAbo`.`Kommentar` = '')) then '' else concat(' ',`BenutzerModulAbo`.`Kommentar`) end) using latin1) using utf8)) order by `Modul`.`ID` ASC separator '; ') AS `Modul`,`Role`.`Name` AS `Role` from ((((`Benutzer` left join `Role` on((`Benutzer`.`Role_ID` = `Role`.`ID`))) left join `Depot` on((`Depot`.`ID` = `Benutzer`.`Depot_ID`))) left join `BenutzerModulAbo` on((`BenutzerModulAbo`.`Benutzer_ID` = `Benutzer`.`ID`))) left join `Modul` on((`Modul`.`ID` = `BenutzerModulAbo`.`Modul_ID`))) where ((isnull(`BenutzerModulAbo`.`StartWoche`) or ((`BenutzerModulAbo`.`StartWoche` * 100) <= yearweek((curdate() + interval 3 day),1))) and (isnull(`BenutzerModulAbo`.`EndWoche`) or ((`BenutzerModulAbo`.`EndWoche` * 100) >= yearweek((curdate() + interval 3 day),1)))) group by `Benutzer`.`ID` ;
 
 -- --------------------------------------------------------
 
@@ -907,7 +1156,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `DepotBestellView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `DepotBestellView`  AS  select `DepotBestellViewUnsorted`.`Depot_ID` AS `Depot_ID`,`DepotBestellViewUnsorted`.`Depot` AS `Depot`,`DepotBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`DepotBestellViewUnsorted`.`Produkt` AS `Produkt`,`DepotBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`DepotBestellViewUnsorted`.`Einheit` AS `Einheit`,`DepotBestellViewUnsorted`.`Menge` AS `Menge`,`DepotBestellViewUnsorted`.`Woche` AS `Woche`,`DepotBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`DepotBestellViewUnsorted`.`AnzahlModul` AS `AnzahlModul`,`DepotBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`DepotBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `DepotBestellViewUnsorted` order by `DepotBestellViewUnsorted`.`Depot`,`DepotBestellViewUnsorted`.`Produkt` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `DepotBestellView`  AS  select `DepotBestellViewUnsorted`.`Depot_ID` AS `Depot_ID`,`DepotBestellViewUnsorted`.`Depot` AS `Depot`,`DepotBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`DepotBestellViewUnsorted`.`Produkt` AS `Produkt`,`DepotBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`DepotBestellViewUnsorted`.`Einheit` AS `Einheit`,`DepotBestellViewUnsorted`.`Menge` AS `Menge`,`DepotBestellViewUnsorted`.`Woche` AS `Woche`,`DepotBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`DepotBestellViewUnsorted`.`AnzahlModul` AS `AnzahlModul`,`DepotBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`DepotBestellViewUnsorted`.`Kommentar` AS `Kommentar`,`DepotBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `DepotBestellViewUnsorted` order by `DepotBestellViewUnsorted`.`Depot`,`DepotBestellViewUnsorted`.`Produkt` ;
 
 -- --------------------------------------------------------
 
@@ -916,7 +1165,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `DepotBestellViewUnsorted`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `DepotBestellViewUnsorted`  AS  select `BenutzerBestellView`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellView`.`Depot` AS `Depot`,`BenutzerBestellView`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellView`.`Produkt` AS `Produkt`,`BenutzerBestellView`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellView`.`Einheit` AS `Einheit`,`BenutzerBestellView`.`Menge` AS `Menge`,`BenutzerBestellView`.`Woche` AS `Woche`,sum(`BenutzerBestellView`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellView`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellView`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellView`.`Urlaub`) AS `Urlaub` from `BenutzerBestellView` group by `BenutzerBestellView`.`Produkt_ID`,`BenutzerBestellView`.`Woche`,`BenutzerBestellView`.`Depot_ID` order by `BenutzerBestellView`.`Depot`,`BenutzerBestellView`.`Produkt` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `DepotBestellViewUnsorted`  AS  select `BenutzerBestellView`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellView`.`Depot` AS `Depot`,`BenutzerBestellView`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellView`.`Produkt` AS `Produkt`,`BenutzerBestellView`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellView`.`Einheit` AS `Einheit`,`BenutzerBestellView`.`Menge` AS `Menge`,`BenutzerBestellView`.`Woche` AS `Woche`,group_concat((case when (trim(`BenutzerBestellView`.`Kommentar`) = '') then NULL else `BenutzerBestellView`.`Kommentar` end) separator ', ') AS `Kommentar`,sum(`BenutzerBestellView`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellView`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellView`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellView`.`Urlaub`) AS `Urlaub` from `BenutzerBestellView` group by `BenutzerBestellView`.`Produkt_ID`,`BenutzerBestellView`.`Woche`,`BenutzerBestellView`.`Depot_ID` order by `BenutzerBestellView`.`Depot`,`BenutzerBestellView`.`Produkt` ;
 
 -- --------------------------------------------------------
 
@@ -925,7 +1174,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `GesamtBestellView`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `GesamtBestellView`  AS  select `GesamtBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`GesamtBestellViewUnsorted`.`Produkt` AS `Produkt`,`GesamtBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`GesamtBestellViewUnsorted`.`Einheit` AS `Einheit`,`GesamtBestellViewUnsorted`.`Menge` AS `Menge`,`GesamtBestellViewUnsorted`.`Woche` AS `Woche`,`GesamtBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`GesamtBestellViewUnsorted`.`AnzahlModul` AS `AnzahlModul`,`GesamtBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`GesamtBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `GesamtBestellViewUnsorted` order by `GesamtBestellViewUnsorted`.`Produkt` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `GesamtBestellView`  AS  select `GesamtBestellViewUnsorted`.`Produkt_ID` AS `Produkt_ID`,`GesamtBestellViewUnsorted`.`Produkt` AS `Produkt`,`GesamtBestellViewUnsorted`.`Beschreibung` AS `Beschreibung`,`GesamtBestellViewUnsorted`.`Einheit` AS `Einheit`,`GesamtBestellViewUnsorted`.`Menge` AS `Menge`,`GesamtBestellViewUnsorted`.`Woche` AS `Woche`,`GesamtBestellViewUnsorted`.`Anzahl` AS `Anzahl`,`GesamtBestellViewUnsorted`.`AnzahlModul` AS `AnzahlModul`,`GesamtBestellViewUnsorted`.`AnzahlZusatz` AS `AnzahlZusatz`,`GesamtBestellViewUnsorted`.`Kommentar` AS `Kommentar`,`GesamtBestellViewUnsorted`.`Urlaub` AS `Urlaub` from `GesamtBestellViewUnsorted` order by `GesamtBestellViewUnsorted`.`Produkt` ;
 
 -- --------------------------------------------------------
 
@@ -934,7 +1183,7 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 --
 DROP TABLE IF EXISTS `GesamtBestellViewUnsorted`;
 
-CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `GesamtBestellViewUnsorted`  AS  select `BenutzerBestellView`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellView`.`Produkt` AS `Produkt`,`BenutzerBestellView`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellView`.`Einheit` AS `Einheit`,`BenutzerBestellView`.`Menge` AS `Menge`,`BenutzerBestellView`.`Woche` AS `Woche`,sum(`BenutzerBestellView`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellView`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellView`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellView`.`Urlaub`) AS `Urlaub` from `BenutzerBestellView` group by `BenutzerBestellView`.`Produkt_ID`,`BenutzerBestellView`.`Woche` ;
+CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `GesamtBestellViewUnsorted`  AS  select `BenutzerBestellView`.`Produkt_ID` AS `Produkt_ID`,`BenutzerBestellView`.`Produkt` AS `Produkt`,`BenutzerBestellView`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellView`.`Einheit` AS `Einheit`,`BenutzerBestellView`.`Menge` AS `Menge`,`BenutzerBestellView`.`Woche` AS `Woche`,group_concat((case when (trim(`BenutzerBestellView`.`Kommentar`) = '') then NULL else `BenutzerBestellView`.`Kommentar` end) separator ', ') AS `Kommentar`,sum(`BenutzerBestellView`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellView`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellView`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellView`.`Urlaub`) AS `Urlaub` from `BenutzerBestellView` group by `BenutzerBestellView`.`Produkt_ID`,`BenutzerBestellView`.`Woche` ;
 
 -- --------------------------------------------------------
 
@@ -989,9 +1238,9 @@ ALTER TABLE `BenutzerZusatzBestellung`
 --
 ALTER TABLE `Depot`
   ADD PRIMARY KEY (`ID`),
-  ADD KEY `DepotVerantwortlicherBenutzer` (`VerantwortlicherBenutzer_ID`),
-  ADD KEY `DepotStellvertreterBenutzer` (`StellvertreterBenutzer_ID`),
-  ADD KEY `DepotAenderBenutzer` (`AenderBenutzer_ID`);
+  ADD KEY `DepotAenderBenutzer` (`AenderBenutzer_ID`),
+  ADD KEY `DepotBestellerBenutzer` (`BestellerBenutzer_ID`) USING BTREE,
+  ADD KEY `DepotVerwalterBenutzer` (`VerwalterBenutzer_ID`) USING BTREE;
 
 --
 -- Indizes für die Tabelle `Modul`
@@ -1142,8 +1391,8 @@ ALTER TABLE `BenutzerZusatzBestellung`
 -- Constraints der Tabelle `Depot`
 --
 ALTER TABLE `Depot`
-  ADD CONSTRAINT `DepotStellvertreterBenutzer` FOREIGN KEY (`StellvertreterBenutzer_ID`) REFERENCES `Benutzer` (`ID`),
-  ADD CONSTRAINT `DepotVerantwortlicherBenutzer` FOREIGN KEY (`VerantwortlicherBenutzer_ID`) REFERENCES `Benutzer` (`ID`);
+  ADD CONSTRAINT `DepotStellvertreterBenutzer` FOREIGN KEY (`BestellerBenutzer_ID`) REFERENCES `Benutzer` (`ID`),
+  ADD CONSTRAINT `DepotVerantwortlicherBenutzer` FOREIGN KEY (`VerwalterBenutzer_ID`) REFERENCES `Benutzer` (`ID`);
 
 --
 -- Constraints der Tabelle `ModulInhalt`

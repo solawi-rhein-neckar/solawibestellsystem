@@ -201,11 +201,16 @@ function downloadDepotbestellungen(response, path) {
 			function(workbook) {
 			console.log('Depotbestellungen: loaded, writing...');
 			console.log('loaded, filling...');
-
 			var columns = [];
 			var rows = {};
-
+			var lastColumn = 0;
 			var worksheet = workbook.getWorksheet(1);
+
+			worksheet.getRow(1).getCell(1).value = 'Lieferung'
+			worksheet.getRow(1).getCell(2).value = weekToDate(SBS.selectedWeek, 4).toLocaleDateString();
+			worksheet.getRow(1).getCell(4).value = 'Woche';
+			worksheet.getRow(1).getCell(5).value = SBS.selectedWeek
+
 			worksheet.eachRow(
 
 				function(row, rowNumber) {
@@ -217,6 +222,9 @@ function downloadDepotbestellungen(response, path) {
 								console.log('Depotbestellungen: Cell ' + colNumber + ' = ' + cell.value);
 								if (cell.value) {
 									columns[colNumber] = cell.value.replace(',5kg', '.5kg').replace('Quark', 'Quark, 400g').replace('Anteile', 'Saisongemüse').replace('Apfelsaft, 1L', 'Apfelsaft');
+									if (colNumber > lastColumn) {
+										lastColumn = colNumber;
+									}
 								}
 							}
 						);
@@ -227,6 +235,8 @@ function downloadDepotbestellungen(response, path) {
 					}
 				}
 			);
+
+			columns[lastColumn + 1] = 'Kommentar';
 
 			console.log(columns);
 			console.log(rows);
