@@ -47,7 +47,7 @@ function SolawiBestellSystem() {
         }
         for (var i = 0; i<response.length; i++) {
             var row = response[i];
-            if (tableCache['Produkt'] && row.Produkt_ID && tableCache['Produkt'][row.Produkt_ID]) {
+            if (tableCache['Produkt'] && (row.Produkt_ID || row.Produkt_ID === 0) && tableCache['Produkt'][row.Produkt_ID]) {
                 tableCache['Produkt'][row.Produkt_ID]['AnzahlZusatzBestellung'] = row.AnzahlZusatz;
                 tableCache['Produkt'][row.Produkt_ID]['AnzahlBestellung'] = row.Anzahl;
             }

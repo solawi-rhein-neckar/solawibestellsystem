@@ -52,7 +52,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
 
     function enhanceDataCell(div, key) {
         /* if disableUnavailableProducts ist true, only certain columns are editable, else all columns (except audit metadata) are editable. */
-        if ( ((! disableUnavailableProducts) || key == 'Kommentar' || key == 'EndWoche') && key != 'ID' && key != 'AenderBenutzer_ID' && key != 'AenderZeitpunkt' && key != 'ErstellZeitpunkt') {
+        if ( ((! disableUnavailableProducts) || (key == 'Kommentar' && (solawiTable.getTableName() != 'BenutzerZusatzBestellung' || (div.innerText && div.innerText.trim() != '' && div.innerText.trim() != '-'))) || key == 'EndWoche') && key != 'ID' && key != 'AenderBenutzer_ID' && key != 'AenderZeitpunkt' && key != 'ErstellZeitpunkt') {
             div.addEventListener('click', showEditor);
             div.style.cursor = "pointer";
             if (disableUnavailableProducts) {
@@ -167,6 +167,14 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
                         inp.value = sbs.selectedWeek;
                     }
                     edit.appendChild(inp);
+
+                    if (keys[j] == 'Kommentar' && solawiTable.getTableName() == 'BenutzerZusatzBestellung') {
+                    	inp.style.display = 'none';
+                    	inp.id='inp_kommentar_hidden';
+                    }
+                    if (keys[j] == 'Anzahl' && solawiTable.getTableName() == 'BenutzerZusatzBestellung') {
+                    	inp.id='inp_anzahl_zusatz';
+                    }
                 }
             }
             finishEditor(edit);
@@ -201,9 +209,10 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
 
     function createInputSelect(response) {
         inp = document.createElement("SELECT");
+        var lastOption = null;
         for (var k=0; k<response.length; k++) {
             var row = response[k];
-            if (row && row.ID) {
+            if (row && (row.ID || row.ID === 0)) {
                 var opt = document.createElement("OPTION");
                 opt.value=row.ID;
                 opt.innerText=row.Name;
@@ -217,8 +226,27 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
                     }
                     opt.title='Maximale Zusatz-Bestellmenge überschritten!';
                 }
-                inp.appendChild(opt);
+                if (row.ID === 0) {
+                	lastOption = opt;
+                } else {
+                	inp.appendChild(opt);
+                }
             }
+        }
+        if (lastOption) {
+        	inp.appendChild(lastOption);
+        	inp.onchange=function(event){
+        		if (document.getElementById('inp_kommentar_hidden') && document.getElementById('inp_anzahl_zusatz')) {
+        			if (event.target.value == '0') {
+        				document.getElementById('inp_kommentar_hidden').style.display='inline-block';
+        				document.getElementById('inp_anzahl_zusatz').style.display='none';
+        				document.getElementById('inp_anzahl_zusatz').value = '1';
+        			} else {
+        				document.getElementById('inp_kommentar_hidden').style.display='none';
+        				document.getElementById('inp_anzahl_zusatz').style.display='inline-block';
+        			}
+        		}
+        	};
         }
         return inp;
     }
