@@ -254,7 +254,7 @@ function downloadDepotbestellungen(response, path) {
 			       		if (columns[j]) {
 		       				var val = response[i][columns[j]];
 		       				if (val) {
-	       						row.getCell(j).value = val.replace(/^([0-9]+)[.]([05])[0]+$/, '$1,$2');
+	       						row.getCell(j).value = (isNaN(val) ? val : Number(val));
 		       				} else if (j > 1) {
 		       					row.getCell(j).value = '';
 		       				}
