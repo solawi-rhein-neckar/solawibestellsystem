@@ -31,6 +31,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
             ,'MindestAnzahl':1
             ,'MaximalAnzahl':1
             ,'Anteile':1
+            ,'FleischAnteile':1
             ,'Punkte':1
             ,'Menge':0.01
         }

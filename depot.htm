@@ -5,7 +5,9 @@
 <title></title>
     <style>
         table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
-        table.Benutzer td.col_BenutzerAbo td.col_Woche, .BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID { display:none; }
+        select.editor.inp_Depot_ID,select.editor.inp_Role_ID,input.editor.inp_Passwort,input.editor.inp_Cookie,input.editor.inp_PunkteStand,select.editor.inp_PunkteWoche,
+        table.Benutzer td.col_BenutzerAbo td.col_Woche, .BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID 
+        { display:none; }
 
 
 	
@@ -17,7 +19,7 @@
   			z-index: 222;
   			box-shadow: 0px 0px 0px 1px #999;
 		}
-		div.fixedHeaderTable > table > tr:nth-child(1n+2) > td:nth-child(2) {
+		div.fixedHeaderTable > table > tr:nth-child(1n+2) > td:first-child {
 			position: -webkit-sticky; /* for Safari */
   			position: sticky;
   			left: 0;
@@ -66,7 +68,8 @@
 
 <script>
 var SBS = SolawiBestellSystem();
-var SBTedit= SolawiTable(SBS, 'table', 'tablePath', true, false, true);
+var SBTmeta = SolawiTable(SBS, 'table', 'tablePath', true, false, true);
+var SBTedit = SolawiTable(SBS, 'table', 'tablePath', true, false);
 var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
 
 //check login status
@@ -74,10 +77,14 @@ getAjax('Benutzer/OWN', function(userResponse){
     if (userResponse.length > 0 && userResponse[0]) {
         SBS.user = userResponse[0];
         document.getElementById('logoutbtn').innerText='Logout ' + SBS.user.Name;
-        setContent('selectedWeek', SBS.selectedWeek);
+        setHtmlContent('selectedWeek', SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
+        setContent('selectedWeek2', SBS.selectedWeek);
         if (SBS.user.Role_ID != 3) {
             setContent('warning', 'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
         }
+        SBTmeta.setSortBy('Name');
+        SBTmeta.columns = ['Name','MitName','Anteile','Fleisch Anteile','PunkteStand','PunkteWoche','Depot_ID','Role_ID','Cookie','Passwort','AltName','ErstellZeitpunkt','AenderZeitpunkt','AenderBenutzer_ID'];
+        getAjax('Benutzer', SBTmeta.showTable);
     } else {
         show('loginform');
         hide('logoutbtn');
@@ -93,7 +100,8 @@ SBS.fillCache('Benutzer');
 
 function changeWeek(count) {
     SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
-    setContent('selectedWeek', SBS.selectedWeek);
+    setHtmlContent('selectedWeek', SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
+    setContent('selectedWeek2', SBS.selectedWeek);
     if (SBTview.getTableName() && SBTview.getTablePath()) {
         if (SBTview.getTablePath().match(/.*Woche.*/)) {
             getAjax(SBTview.getTableName()+'/Woche/'+SBS.selectedWeek, SBTview.showTable);
@@ -108,10 +116,12 @@ function changeWeek(count) {
                 getAjax(SBTedit.getTableName()+'/Bis/'+SBS.selectedWeek, SBTedit.showTable);
         } else if (SBTedit.getTablePath().match(/.*Pivot.*/)) {
             getAjax(SBTedit.getTableName()+'/'+SBS.selectedWeek, SBTedit.showTable);
-        } else if (SBTedit.getTablePath().match(/^Benutzer$/)) {
-            getAjax(SBTedit.getTableName(), SBTedit.showTable);
         }
     }
+    if (SBTmeta.getTableName() && SBTmeta.getTablePath()) {
+        getAjax(SBTmeta.getTableName(), SBTmeta.showTable);
+    }
+    
 }
 
 </script>
@@ -154,43 +164,16 @@ function changeWeek(count) {
 <div id="warning" style="color:red"></div>
 
 <div id="tableContainer">
-    <div style="width: 90%">
-        <span style="display:inline-block;width:45%;vertical-align: top;border-right:1px dotted black;">
-            <div style="text-align: center;padding: 5px 0 10px 0;white-space:nowrap;overflow:hidden;">
-            	Berichte  &#160;  &#160; &#160; <b>Woche: </b><button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek" style="font-weight:bold;">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>  &#160; &#160; &#160; Bearbeiten  &#160;  &#160;  &#160; &#160;  &#160; &#160;
-            </div>
-	        <span style="display:inline-block;width: 60%;vertical-align: top;border-right:1px dotted black;">
-	            <button onclick="SBTedit.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Benutzer)</button>
-	            <button onclick="SBTedit.reset();getAjax('PivotBestellungen/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Solawi)</button>
-	            <button onclick="SBTedit.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Depot)</button>
-	            <button onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Solawi</button>
-	        </span>
-	        <span style="display:inline-block;width: 38%;vertical-align: top;">
 
-	            <button onclick="SBTview.reset();getAjax('BenutzerModulAbo/Bis/'+SBS.selectedWeek, SBTedit.showTable);">ModulAbo (Zukunft)</button>
-            	<button onclick="SBTview.reset();getAjax('BenutzerZusatzBestellung/Woche/'+SBS.selectedWeek, SBTedit.showTable);">ZusatzBestellungen</button>
-            </span>
-
-        </span>
-        <span style="display:inline-block;width: 45%;vertical-align: top;">
-            <div style="text-align: center;padding: 5px 0 10px 0;white-space:nowrap;overflow:hidden;">
-            	Bearbeiten  &#160;  &#160; &#160; <b>ohne Woche</b>  &#160; &#160; &#160; Berichte
-            </div>
-	        <span style="display:inline-block;width: 48%;vertical-align: top;border-right:1px dotted black;">
-            <button onclick="SBTview.reset();SBTedit.setSortBy('Name');getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
-            <button onclick="SBTview.reset();getAjax('BenutzerModulAbo', SBTedit.showTable);">ModulAbo (Alle)</button>
-            <button onclick="SBTview.reset();getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">ZusatzBestellungen</button>
-            <button onclick="SBTview.reset();getAjax('BenutzerUrlaub', SBTedit.showTable);">Urlaube</button>
-	        </span>
-	        <span style="display:inline-block;width: 48%;vertical-align: top;">
-            	<button onclick="SBTedit.reset();getAjax('BenutzerView', SBTview.showTable);">Benutzer-Abo (Aktuell)</button>
-	            <a target="_blank" href="print.htm#PivotBestellungen">Solawi_Lieferung_Drucken</a>
-	            <a target="_blank" href="print.htm#PivotDepot">Depot_Lieferung_Drucken</a>
-            </span>
-        </span>
-    </div>
-
-    <br/>
+	<div style="text-align: center;padding: 5px 0 10px 0;white-space:nowrap;overflow:hidden;width:80%;">
+		DEPOT-VERWALTUNG &#160; - &#160; 
+		<b>Woche: </b>
+			<button onclick="changeWeek(-1)">&lt;&lt;</button>
+			<span id="selectedWeek" style="font-weight:bold;">00</span>
+		    <button onclick="changeWeek(+1)">&gt;&gt;</button>
+	 	&#160; - &#160; 
+		<a href="index.htm">zurück zur Startseite</a>
+	</div>
 
     <div id="tableEditPath"> </div>
    	<table id="tableEdit" cellspacing="0" > </table>
@@ -199,6 +182,49 @@ function changeWeek(count) {
     <div class="fixedHeaderTable">
        	<table id="table" cellspacing="0" > </table>
     </div>
+    
+    <br/>
+    <br/>
+
+    <div style="width: 90%">
+        <span style="display:inline-block;width:45%;vertical-align: top;border-right:1px dotted black;">
+            <div style="text-align: center;padding: 5px 0 10px 0;white-space:nowrap;overflow:hidden;">
+            	Berichte  &#160;  &#160; &#160; <b>Woche: </b><button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek2" style="font-weight:bold;">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>  &#160; &#160; &#160; Bearbeiten  &#160;  &#160;  &#160; &#160;  &#160; &#160;
+            </div>
+	        <span style="display:inline-block;width: 60%;vertical-align: top;border-right:1px dotted black;">
+	            <button onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Benutzer)</button>
+	            <button onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotBestellungen/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Solawi)</button>
+	            <button onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Depot)</button>
+	            <button onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Solawi</button>
+	        </span>
+	        <span style="display:inline-block;width: 38%;vertical-align: top;">
+
+	            <button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo/Bis/'+SBS.selectedWeek, SBTedit.showTable);">ModulAbo (Zukunft)</button>
+            	<button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung/Woche/'+SBS.selectedWeek, SBTedit.showTable);">ZusatzBestellungen</button>
+            </span>
+
+        </span>
+        <span style="display:inline-block;width: 45%;vertical-align: top;">
+            <div style="text-align: center;padding: 5px 0 10px 0;white-space:nowrap;overflow:hidden;">
+            	Bearbeiten  &#160;  &#160; &#160; <b>ohne Woche</b>  &#160; &#160; &#160; Berichte
+            </div>
+	        <span style="display:inline-block;width: 48%;vertical-align: top;border-right:1px dotted black;">
+            <button onclick="SBTview.reset();SBTmeta.reset();getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
+            <button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo', SBTedit.showTable);">ModulAbo (Alle)</button>
+            <button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">ZusatzBestellungen</button>
+            <button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerUrlaub', SBTedit.showTable);">Urlaube</button>
+	        </span>
+	        <span style="display:inline-block;width: 48%;vertical-align: top;">
+            	<button onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerView', SBTview.showTable);">Benutzer-Abo (Aktuell)</button>
+	            <a target="_blank" href="print.htm#PivotBestellungen">Solawi_Lieferung_Drucken</a>
+	            <a target="_blank" href="print.htm#PivotDepot">Depot_Lieferung_Drucken</a>
+            </span>
+        </span>
+    </div>
+
+    <br/>
+
+
 
 
 

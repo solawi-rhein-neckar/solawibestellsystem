@@ -14,7 +14,8 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
     		addColumnHeaders: addColumnHeaders,
     		addColumnCells: addColumnCells,
     		onEntitySaved: onEntitySaved,
-    		setResponse : function(){}
+    		setResponse : function(){},
+    		columnIndex : 4
     };
 
     /* private vars */
@@ -31,25 +32,19 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
 /**** public ****/
     function addColumnHeaders(tr) {
         if (solawiTable.getTableName() == 'Benutzer') {
-            var wtd = document.createElement("TD");
-            wtd.className='col_Lieferung';
-            wtd.innerText='Lieferung';
-            tr.insertBefore(wtd, tr.childNodes[6]);
+            var wtd = createHeaderCol('Lieferung');
+            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex]);
 
-            wtd = document.createElement("TD");
-            wtd.className='col_Bestellung';
+            wtd = createHeaderCol('Bestellung');
             wtd.innerText='Zusatzbestellung';
-            tr.insertBefore(wtd, tr.childNodes[7]);
+            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+1]);
 
-            wtd = document.createElement("TD");
-            wtd.className='col_BenutzerAbo';
+            wtd = createHeaderCol('BenutzerAbo');
             wtd.innerText='Module';
-            tr.insertBefore(wtd, tr.childNodes[8]);
+            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+2]);
 
-            wtd = document.createElement("TD");
-            wtd.className='col_Urlaub';
-            wtd.innerText='Urlaub';
-            tr.insertBefore(wtd, tr.childNodes[9]);
+            wtd = createHeaderCol('Urlaub');
+            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+3]);
 
             viewLieferungTables = {};
             editBestellungenTables = {};
@@ -60,12 +55,39 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             getAjax('BenutzerModulAbo/Bis/'+sbs.selectedWeek, createShowFilteredResultsFunction(editAboTables));
             getAjax('BenutzerUrlaub/', createShowFilteredResultsFunction(weekSelects));
     	}
+        if (solawiTable.getTableName() == 'Depot') {
+        	var wtd = document.createElement("TD");
+            wtd.className='col_Verwaltung';
+            wtd.innerText='Benutzer';
+            tr.insertBefore(wtd, tr.childNodes[1]);
+        }
+    }
+    
+    function createHeaderCol(colName) {
+    	var wtd = document.createElement("TD");
+        wtd.className='col_' + colName;
+        wtd.innerText=colName;
+        wtd.onclick = function() {
+        	var elems = document.getElementsByClassName('col_' + colName);
+        	if (elems) {
+        		elems[0].style.color = elems[0].style.color == '#999' ? 'black' : '#999';
+        		for (var i = 1; i < elems.length; i++) {
+        			if (elems[i] && elems[i].firstChild && elems[i].firstChild.style) {
+        				elems[i].firstChild.style.display = elems[i].firstChild.style.display == 'none' ? 'table' : 'none';
+        			}
+        		}
+    		}
+    	};
+        wtd.title="Klicken, um Spalte aus / einzublenden!";
+        wtd.style['text-decoration']='underline dotted';
+        wtd.style.cursor = 'pointer';
+        return wtd;
     }
 
     function addColumnCells(tr, row) {
         if (solawiTable.getTableName() == 'Benutzer') {
             var td = document.createElement("TD");
-            tr.insertBefore(td, tr.childNodes[6]);
+            tr.insertBefore(td, tr.childNodes[pub.columnIndex]);
             td.className='col_Lieferung';
             var span = document.createElement("SPAN");
             span.style.display = 'none';
@@ -83,8 +105,8 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
 
 
             td = document.createElement("TD");
-            tr.insertBefore(td, tr.childNodes[7]);
-            td.className='col_BenutzerAbo';
+            tr.insertBefore(td, tr.childNodes[pub.columnIndex+1]);
+            td.className='col_Bestellung';
             var span = document.createElement("SPAN");
             span.style.display = 'none';
             span.id='editBestellungLabel'+row['ID'];
@@ -103,7 +125,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
 
 
         	td = document.createElement("TD");
-            tr.insertBefore(td, tr.childNodes[8]);
+            tr.insertBefore(td, tr.childNodes[pub.columnIndex+2]);
             td.className='col_BenutzerAbo';
             var span = document.createElement("SPAN");
             span.style.display = 'none';
@@ -123,7 +145,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
 
             td = document.createElement("TD");
             td.className='col_Urlaub';
-            tr.insertBefore(td, tr.childNodes[9]);
+            tr.insertBefore(td, tr.childNodes[pub.columnIndex+3]);
             var weekSelect = Object.create(WeekSelect);
             weekSelect.year = Number(sbs.selectedWeek.match(/[0-9]+/)[0]);
             weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + row['ID'],
@@ -131,6 +153,15 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             weekSelect.allowMulti = false;
             weekSelect.setElem(td);
             weekSelects[row['ID']] = weekSelect;
+        }
+        if (solawiTable.getTableName() == 'Depot') {
+        	var wtd = document.createElement("TD");
+            wtd.className='col_Verwaltung';
+            var button = document.createElement("BUTTON");
+            wtd.appendChild(button);
+            button.innerText = 'verwalten';
+            button.onclick = function() {getAjax('Benutzer/Depot_ID/'+row['ID'], window.SBTmeta.showTable);};
+            tr.insertBefore(wtd, tr.childNodes[1]);
         }
     }
 
@@ -144,7 +175,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
     			if (modules[i] && modules[i].ID && (modules[i].AnzahlProAnteil || modules[i].ID == 2)) {
     	    		var anteile = modules[i].ID == 4 ? (data.FleischAnteile === '' ? 1 : data.FleischAnteile) : (data.Anteile === '' ? 1 : data.Anteile);
     	    		if (anteile) {
-    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(!modules[i].AnzahlProAnteil && modules[i].ID == 2 ? 3 : modules[i].AnzahlProAnteil), StartWoche: sbs.selectedWeek, EndWoche: '9999.99'}, createReloadFunction(userId));
+    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(!modules[i].AnzahlProAnteil && modules[i].ID == 2 ? 3 : modules[i].AnzahlProAnteil), StartWoche: data.PunkteWoche > sbs.selectedWeek ? data.PunkteWoche : sbs.selectedWeek, EndWoche: '9999.99'}, createReloadFunction(userId));
     				}
     			}
     		}

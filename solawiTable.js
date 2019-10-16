@@ -78,6 +78,11 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             if(!keys) {
                 keys = pub.columns.length ? pub.columns : Object.keys(response[i]).sort(columnSortFunc);
                 var tr = addColumnHeaderRow(table, keys);
+                if (pub.columns.length) {
+                    for (var j = 0; j < keys.length; j++) {
+                    	keys[j] = keys[j].replace(' ', '');
+                    }
+                }
                 tableExtensions.forEach(function(ext){ext.addColumnHeaders(tr, keys);});
                 /*tr.childNodes.forEach(function(child){
                 	var div = document.createElement("DIV");
