@@ -74,7 +74,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
 
     function addDeleteButtonCell(tr, dataRow) {
         var delTd = document.createElement("TD");
-        if ((!disableUnavailableProducts) || ( (! (dataRow['StartWoche'] && dataRow['StartWoche'] < sbs.week) ) && (! (dataRow['Woche'] && dataRow['Woche'] < addWeek(sbs.week, -1) ) ) )) {
+        if ((!disableUnavailableProducts) || ( (! (dataRow['StartWoche'] && dataRow['StartWoche'] < sbs.week) ) && (! (dataRow['Woche'] && (dataRow['Woche'] < addWeek(sbs.week, -1) || (sbs.week == sbs.AbgeschlosseneWoche && dataRow['Woche'] == sbs.AbgeschlosseneWoche) ) ) ) )) {
             var delBtn = document.createElement("BUTTON");
             delBtn.innerText='-';
           delBtn.className="btn_minus"
@@ -126,7 +126,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         											 	: ['Name']));
         btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'Tauschen' : '+';
         btn.className='btn_plus'
-        if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && sbs.selectedWeek < sbs.week ) {
+        if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && (sbs.selectedWeek < sbs.week ||  sbs.selectedWeek == sbs.AbgeschlosseneWoche) ) {
     		btn.disabled='disabled';
         }
     }
@@ -200,7 +200,9 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
                 inp.max=key.match(/^(.*)_ID$/) ? "99999" : "999";
             } else if (key.match(/^(Start|End|Punkte)?Woche$/)) {
             	inp.pattern="^(2019|2020|2021|2022|9999)[.](0[1-9]|[1-4][0-9]|5[0-3])$"
-            }
+	        } else if (solawiTable.getTableName() == 'Solawi' && key.match(/^Wert$/)) {
+	        	inp.pattern="^(2019|2020|2021|2022|9999)[.](0[1-9]|[1-4][0-9]|5[0-3])$"
+	        }
         }
         inp.className = 'editor inp_' + key;
         inp.dataKey = key;

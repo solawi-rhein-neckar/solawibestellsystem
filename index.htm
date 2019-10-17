@@ -51,6 +51,16 @@ getAjax('BenutzerView/MY', function(userResponse){
 
         getAjax('BenutzerModulAbo/Benutzer_ID/MY/Bis/'+SBS.week, SBTmodule.showTable);
 
+        getAjax('Solawi/Name/AbgeschlosseneWoche', function(result){
+        	if (result && result[0] && result[0]['Wert']) {SBS.AbgeschlosseneWoche = result[0]['Wert']}
+            if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
+            	document.getElementById('WocheAbgeschlossen').style.display='block';
+            } else {
+            	document.getElementById('WocheAbgeschlossen').style.display='none';
+            }
+
+        });
+
         //getAjax('BenutzerUrlaub', SBTurlaub.showTable);
          var weekSelect = Object.create(WeekSelect);
          weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
@@ -75,6 +85,11 @@ function changeWeek(count) {
     setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
     getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
     getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
+    if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
+    	document.getElementById('WocheAbgeschlossen').style.display='block';
+    } else {
+    	document.getElementById('WocheAbgeschlossen').style.display='none';
+    }
 }
 function resetWeek(){
     SBS.selectedWeek = SBS.week;
@@ -165,6 +180,11 @@ Es kann nur <strong>für zukünftige Lieferungen</strong> getauscht werden.
 Die endgültige Anzahl ist in der Liefer-Tabelle fett gedruckt.
 Änderungen für <strong>vergangene Kalenderwochen ignoriert</strong> das System.
 </div>
+
+	<div id="WocheAbgeschlossen" style="font-weight:bold;color:red;display:none;">
+		Die Bestellung für diese Woche ist abgeschlossen! Änderungen werden NICHT MEHR BERÜCKSICHTIGT.
+	</div>
+
   <div class="table_center" id="table2_center"><table id="tableEdit" cellspacing="0" > </table></div>
 
 
