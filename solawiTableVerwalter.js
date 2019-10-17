@@ -45,6 +45,12 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
 
             wtd = createHeaderCol('Urlaub');
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+3]);
+            
+        	wtd = document.createElement("TD");
+            wtd.className='col_kuendingen';
+            wtd.innerText='Kündigen';
+            wtd.title='Setzt Anteile + Fleisch-Anteile auf 0, beendet alle Abos, loescht künftige Bestellungen und verschiebt ins unsichtbare Depot "geloescht".';
+            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+4]);
 
             viewLieferungTables = {};
             editBestellungenTables = {};
@@ -153,6 +159,15 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             weekSelect.allowMulti = false;
             weekSelect.setElem(td);
             weekSelects[row['ID']] = weekSelect;
+            
+            td = document.createElement("TD");
+            td.className='col_kuendigen';
+            tr.insertBefore(td, tr.childNodes[pub.columnIndex+4]);
+        
+            var button = document.createElement("BUtton");
+            button.innerText = "kündigen";
+            button.onclick = createStornoFunction(row['ID'], sbs.selectedWeek);
+            td.appendChild(button);
         }
         if (solawiTable.getTableName() == 'Depot') {
         	var wtd = document.createElement("TD");
@@ -163,6 +178,53 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             button.onclick = function() {getAjax('Benutzer/Depot_ID/'+row['ID'], window.SBTmeta.showTable);};
             tr.insertBefore(wtd, tr.childNodes[1]);
         }
+    }
+    
+    function createStornoFunction(userId, week) {
+    	return function() {
+        	if (confirm('Benutzer wirklich kündigen? Hierdurch ENDEN alle Modul-Abos zur gewählten Woche ' + week +
+        			'(= letzte Lieferung in dieser Woche!). Außerdem werden alle Tausch-Bestellungen nach dieser Woche gelöscht. ' +
+        			'Außerdem werden die Anteile und FleischAnteile JETZT SOFORT auf 0 gesetzt. ' + 
+        			(week < sbs.week ? 'BENUTZER WIRD INS DEPOT "Geloescht" VERSCHOBEN!' : '') )) {
+        		
+        		getAjax('BenutzerModulAbo/Benutzer_ID/'+userId, function(result) {
+        			if (result) {
+        				for (var i = 0; i < result.length; i++) {
+        					if (result[i].EndWoche > week) {
+        						postAjax('BenutzerModulAbo/'+result[i].ID, {EndWoche: week}, function(){});
+        					}
+    					}
+    				}
+        		});
+        		getAjax('BenutzerZusatzBestellung/Benutzer_ID/'+userId, function(result) {
+        			if (result) {
+        				for (var i = 0; i < result.length; i++) {
+        					if (result[i].Woche > week) {
+        						deleteAjax('BenutzerZusatzBestellung/'+result[i].ID, function(){});
+        					}
+    					}
+    				}
+        		});
+        		
+        		postAjax('Benutzer/'+userId, {Anteile: 0}, function(){});
+        		postAjax('Benutzer/'+userId, {FleischAnteile: 0}, function(){});
+        		
+        		if (week < sbs.week) {
+            		postAjax('Benutzer/'+userId, {Depot_ID: 16}, function(){});
+        		}
+        		
+        		 reloadWhenReady();
+			}
+        }
+    }
+    
+    function reloadWhenReady() {
+        if (window.activeAjaxRequestCount) {
+        	window.setTimeout(reloadWhenReady, 333);
+        } else {
+        	solawiTable.reload();
+        }
+
     }
 
     function enhanceDataCell() {}
@@ -175,7 +237,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
     			if (modules[i] && modules[i].ID && (modules[i].AnzahlProAnteil || modules[i].ID == 2)) {
     	    		var anteile = modules[i].ID == 4 ? (data.FleischAnteile === '' ? 1 : data.FleischAnteile) : (data.Anteile === '' ? 1 : data.Anteile);
     	    		if (anteile) {
-    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(!modules[i].AnzahlProAnteil && modules[i].ID == 2 ? 3 : modules[i].AnzahlProAnteil), StartWoche: data.PunkteWoche > sbs.selectedWeek ? data.PunkteWoche : sbs.selectedWeek, EndWoche: '9999.99'}, createReloadFunction(userId));
+    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(!modules[i].AnzahlProAnteil && modules[i].ID == 2 ? 3 : modules[i].AnzahlProAnteil), StartWoche: data.PunkteWoche ? data.PunkteWoche : sbs.selectedWeek, EndWoche: '9999.99'}, createReloadFunction(userId));
     				}
     			}
     		}

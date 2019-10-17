@@ -164,7 +164,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
                         inp.value = solawiTable.editorDefault['Benutzer_ID'] ? solawiTable.editorDefault['Benutzer_ID'] : sbs.user.ID;
                     } else if (keys[j] == 'Depot_ID') {
                         inp.value = solawiTable.editorDefault['Depot_ID'] ? solawiTable.editorDefault['Depot_ID'] : sbs.user.Depot_ID;
-                    } else if (keys[j] == 'Woche' && sbs.selectedWeek) {
+                    } else if ((keys[j] == 'Woche' || keys[j] == 'PunkteWoche') && sbs.selectedWeek) {
                         inp.value = sbs.selectedWeek;
                     }
                     edit.appendChild(inp);

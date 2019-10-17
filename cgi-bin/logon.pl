@@ -37,16 +37,18 @@ if ( $q->request_method() =~ /^POST$/ ) {
 	my $last = $1;
 	$response->content =~ /user_login[^>]*value=\"([^\"]*)\"/;
 	my $user = $1;
-
+    my $rows = -1;
 	if ($user && ($first || $last)) {
-		my $stl = $dbh->prepare("INSERT INTO `Benutzer` (`Name`, `Cookie`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `Cookie` = ?");
-		$stl->execute($first . ' ' . $last, $sessionid, $sessionid);
+		my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE (Name is not null and TRIM(Name) <> '' AND Name = ?) OR (MitName is not null AND TRIM(MitName) <> '' AND MitName = ?)");
+		$rows = $stl->execute($sessionid, $first . ' ' . $last, $first . ' ' . $last);
+#		my $stl = $dbh->prepare("INSERT INTO `Benutzer` (`Name`, `Cookie`) VALUES (?, ?) ON DUPLICATE KEY UPDATE `Cookie` = ?");
+#		$stl->execute($first . ' ' . $last, $sessionid, $sessionid);
 	}
 	my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
 
 	# print http header with cookies
 	print $q->header( {cookie => [$cookie], "content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"} );
-	print encode_json({result => $response->status_line, first => $first, last => $last, user => $user,
+	print encode_json({result => $response->status_line, match => $rows, first => $first, last => $last, user => $user,
 		#text => $response->content,
 	location => $response->header('Location') || '-', time => time()});
 	$dbh->commit();

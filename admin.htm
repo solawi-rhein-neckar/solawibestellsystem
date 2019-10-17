@@ -105,6 +105,9 @@ function changeWeek(count) {
             getAjax(SBTview.getTableName()+'/'+SBS.selectedWeek, SBTview.showTable);
         }
     }
+    if (SBTmeta.getTableName() && SBTmeta.getTablePath()) {
+        getAjax(SBTmeta.getTablePath(), SBTmeta.showTable);
+    }
 }
 
 </script>
@@ -181,13 +184,13 @@ function changeWeek(count) {
 
     <br/>
 
-    <table id="tableEdit" cellspacing="0" > </table>
     <div id="tableEditPath"> </div>
+    <table id="tableEdit" cellspacing="0" > </table>
 
+    <div id="tablePath"> </div>
     <div class="fixedHeaderTable">
 	    <table id="table" cellspacing="0" > </table>
     </div>
-    <div id="tablePath"> </div>
 
 
     <br/>
