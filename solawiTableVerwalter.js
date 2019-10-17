@@ -36,16 +36,16 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex]);
 
             wtd = createHeaderCol('Bestellung');
-            wtd.innerText='Zusatzbestellung';
+            wtd.innerText='Tausch';
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+1]);
 
             wtd = createHeaderCol('BenutzerAbo');
-            wtd.innerText='Module';
+            wtd.innerText='Jede_Woche';
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+2]);
 
             wtd = createHeaderCol('Urlaub');
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+3]);
-            
+
         	wtd = document.createElement("TD");
             wtd.className='col_kuendingen';
             wtd.innerText='Kündigen';
@@ -68,7 +68,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             tr.insertBefore(wtd, tr.childNodes[1]);
         }
     }
-    
+
     function createHeaderCol(colName) {
     	var wtd = document.createElement("TD");
         wtd.className='col_' + colName;
@@ -159,11 +159,11 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             weekSelect.allowMulti = false;
             weekSelect.setElem(td);
             weekSelects[row['ID']] = weekSelect;
-            
+
             td = document.createElement("TD");
             td.className='col_kuendigen';
             tr.insertBefore(td, tr.childNodes[pub.columnIndex+4]);
-        
+
             var button = document.createElement("BUtton");
             button.innerText = "kündigen";
             button.onclick = createStornoFunction(row['ID'], sbs.selectedWeek);
@@ -179,14 +179,14 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             tr.insertBefore(wtd, tr.childNodes[1]);
         }
     }
-    
+
     function createStornoFunction(userId, week) {
     	return function() {
         	if (confirm('Benutzer wirklich kündigen? Hierdurch ENDEN alle Modul-Abos zur gewählten Woche ' + week +
         			'(= letzte Lieferung in dieser Woche!). Außerdem werden alle Tausch-Bestellungen nach dieser Woche gelöscht. ' +
-        			'Außerdem werden die Anteile und FleischAnteile JETZT SOFORT auf 0 gesetzt. ' + 
+        			'Außerdem werden die Anteile und FleischAnteile JETZT SOFORT auf 0 gesetzt. ' +
         			(week < sbs.week ? 'BENUTZER WIRD INS DEPOT "Geloescht" VERSCHOBEN!' : '') )) {
-        		
+
         		getAjax('BenutzerModulAbo/Benutzer_ID/'+userId, function(result) {
         			if (result) {
         				for (var i = 0; i < result.length; i++) {
@@ -205,19 +205,19 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
     					}
     				}
         		});
-        		
+
         		postAjax('Benutzer/'+userId, {Anteile: 0}, function(){});
         		postAjax('Benutzer/'+userId, {FleischAnteile: 0}, function(){});
-        		
+
         		if (week < sbs.week) {
             		postAjax('Benutzer/'+userId, {Depot_ID: 16}, function(){});
         		}
-        		
+
         		 reloadWhenReady();
 			}
         }
     }
-    
+
     function reloadWhenReady() {
         if (window.activeAjaxRequestCount) {
         	window.setTimeout(reloadWhenReady, 333);

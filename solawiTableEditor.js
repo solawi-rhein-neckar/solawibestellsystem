@@ -275,7 +275,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         var edit = document.getElementById('editor');
         var label = document.createElement("DIV");
         edit.className = 'edit' + solawiTable.getTableName();
-        label.innerText = pLabel;
+        label.innerText = pLabel.replace('BenutzerZusatzBestellung', 'Tausch').replace('BenutzerModulAbo', 'Jede_Woche');
         label.className = 'editorLabel';
         while (edit.firstChild) edit.removeChild(edit.firstChild);
         edit.appendChild(label);

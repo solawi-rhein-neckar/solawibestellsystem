@@ -67,6 +67,9 @@
 <body>
 
 <script>
+if (location.protocol && !location.protocol.match(/https/) && location.host.match(/www.solawi.fairtrademap.de/)) { location.replace('https://www.solawi.fairtrademap.de/depot.htm'); }
+else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) { location.replace('https://solawi.fairtrademap.de/depot.htm'); }
+
 var SBS = SolawiBestellSystem();
 var SBTmeta = SolawiTable(SBS, 'table', 'tablePath', true, false, true);
 var SBTedit = SolawiTable(SBS, 'table', 'tablePath', true, false);
@@ -143,7 +146,8 @@ function changeWeek(count) {
 </div>
 
 
-<div id="logoutform" style="position:fixed;right: 1px; top: 0; font-size:12px; width: 20em; height: 15em; box-shadow: inset 0 14.5em 0.5em -0.5em rgba(222,222,222, 0.6);text-align:center;z-index:9999;">
+<div id="logoutfrombg" style="box-shadow: 0em 0em 1em 1em rgba(222,222,222,0.7); background: rgba(222,222,222,0.7); position: fixed; height: 14em; width: 19em; z-index: 8888; right: 1px; top: 0; font-size: 12px;"> </div>
+<div id="logoutform" style="position:fixed;right: 1px; top: 0; font-size:12px; width: 20em; height: 15em; text-align:center;z-index:9999;">
 	Woche: <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek0" style="font-weight:bold;background-color:rgba(222,222,222);">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>
     <button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('tableContainer');" >Logout</button>
     <div id="messages" style="height:11em;overflow:hidden;position:absolute;bottom:0;width:20em;">

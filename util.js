@@ -221,7 +221,7 @@ function downloadDepotbestellungen(response, path) {
 							function(cell, colNumber) {
 								console.log('Depotbestellungen: Cell ' + colNumber + ' = ' + cell.value);
 								if (cell.value) {
-									columns[colNumber] = cell.value.replace(',5kg', '.5kg').replace('Quark', 'Quark, 400g').replace('Anteile', 'Saisongemüse').replace('Apfelsaft, 1L', 'Apfelsaft');
+									columns[colNumber] = cell.value.replace(',5kg', '.5kg').replace('Quark', 'Quark, 400g').replace('Anteile', 'Gemüse').replace('Apfelsaft, 1L', 'Apfelsaft');
 									if (colNumber > lastColumn) {
 										lastColumn = colNumber;
 									}
@@ -242,6 +242,10 @@ function downloadDepotbestellungen(response, path) {
 			console.log(rows);
 			console.log(response);
 
+			var missingRows = {};
+			for (var k in rows) {
+				missingRows[k] = rows[k];
+			}
 	        for (var i = 0; i < response.length; i++) {
 
 	        	var depot = response[i]['Depot'];
@@ -250,19 +254,29 @@ function downloadDepotbestellungen(response, path) {
 
 	        	if (depot && rows[depot]) {
 	        		var row = worksheet.getRow(rows[depot]);
-			        for (var j = 0; j < columns.length; j++) {
+			        for (var j = 2; j < columns.length; j++) {
 			       		if (columns[j]) {
 		       				var val = response[i][columns[j]];
-		       				if (val) {
-	       						row.getCell(j).value = (isNaN(val) ? val : Number(val));
-		       				} else if (j > 1) {
-		       					row.getCell(j).value = '';
+		       				if (typeof(val) != 'undefined') {
+	       						row.getCell(j).value = (isNaN(val) || val === null || val === '' ? val : val === 0 ? '' : Number(val));
+	    			       		missingRows[depot] = false;
+		       				} else {
+		       					row.getCell(j).value = 'X';
 		       				}
 			       		}
 			        }
 	        	}
 
 	        }
+
+			for (var k in missingRows) {
+				if (missingRows[k] && missingRows[k] > 3) {
+	        		var row = worksheet.getRow(missingRows[k]);
+			        for (var j = 2; j < columns.length; j++) {
+			        	row.getCell(j).value = 'x';
+			        }
+				}
+			}
 
 			console.log('Depotbestellungen: filled, writing...');
 			workbook.xlsx.writeBuffer().then(
