@@ -6,11 +6,11 @@
     <style>
         table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
         select.editor.inp_Depot_ID,select.editor.inp_Role_ID,input.editor.inp_Passwort,input.editor.inp_Cookie,input.editor.inp_PunkteStand,select.editor.inp_PunkteWoche,
-        table.Benutzer td.col_BenutzerAbo td.col_Woche, .BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID 
+        table.Benutzer td.col_BenutzerAbo td.col_Woche, .BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID
         { display:none; }
 
 
-	
+
 		div.fixedHeaderTable > table > tr:first-child > td {
 			position: -webkit-sticky; /* for Safari */
   			position: sticky;
@@ -79,6 +79,7 @@ getAjax('Benutzer/OWN', function(userResponse){
         document.getElementById('logoutbtn').innerText='Logout ' + SBS.user.Name;
         setHtmlContent('selectedWeek', SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
         setContent('selectedWeek2', SBS.selectedWeek);
+        setContent('selectedWeek0', SBS.selectedWeek);
         if (SBS.user.Role_ID != 3) {
             setContent('warning', 'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
         }
@@ -102,6 +103,7 @@ function changeWeek(count) {
     SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
     setHtmlContent('selectedWeek', SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
     setContent('selectedWeek2', SBS.selectedWeek);
+    setContent('selectedWeek0', SBS.selectedWeek);
     if (SBTview.getTableName() && SBTview.getTablePath()) {
         if (SBTview.getTablePath().match(/.*Woche.*/)) {
             getAjax(SBTview.getTableName()+'/Woche/'+SBS.selectedWeek, SBTview.showTable);
@@ -121,7 +123,7 @@ function changeWeek(count) {
     if (SBTmeta.getTableName() && SBTmeta.getTablePath()) {
         getAjax(SBTmeta.getTableName(), SBTmeta.showTable);
     }
-    
+
 }
 
 </script>
@@ -141,9 +143,10 @@ function changeWeek(count) {
 </div>
 
 
-<div id="logoutform" style="position:fixed;right: 1px; top: 0; width: 15em; height: 10em; background: rgba(222,222,222,0.6); border: 1px dotted #999;text-align:center;">
+<div id="logoutform" style="position:fixed;right: 1px; top: 0; font-size:12px; width: 20em; height: 15em; box-shadow: inset 0 14.5em 0.5em -0.5em rgba(222,222,222, 0.6);text-align:center;z-index:9999;">
+	Woche: <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek0" style="font-weight:bold;background-color:rgba(222,222,222);">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>
     <button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('tableContainer');" >Logout</button>
-    <div id="messages" style="height:8.3em; overflow:hidden;font-size=85%;box-shadow: inset 0px -9px 9px -9px black;position:absolute;bottom:0;width:15em;">
+    <div id="messages" style="height:11em;overflow:hidden;position:absolute;bottom:0;width:20em;">
     </div>
 </div>
 
@@ -169,12 +172,12 @@ function changeWeek(count) {
 <div id="tableContainer">
 
 	<div style="text-align: center;padding: 5px 0 10px 0;white-space:nowrap;overflow:hidden;width:80%;">
-		DEPOT-VERWALTUNG &#160; - &#160; 
+		DEPOT-VERWALTUNG &#160; - &#160;
 		<b>Woche: </b>
 			<button onclick="changeWeek(-1)">&lt;&lt;</button>
 			<span id="selectedWeek" style="font-weight:bold;">00</span>
 		    <button onclick="changeWeek(+1)">&gt;&gt;</button>
-	 	&#160; - &#160; 
+	 	&#160; - &#160;
 		<a href="index.htm">zurück zur Startseite</a>
 	</div>
 
@@ -185,7 +188,7 @@ function changeWeek(count) {
     <div class="fixedHeaderTable">
        	<table id="table" cellspacing="0" > </table>
     </div>
-    
+
     <br/>
     <br/>
 

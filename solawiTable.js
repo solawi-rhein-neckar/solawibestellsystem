@@ -153,9 +153,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             td.className='col_'+keys[j];
             tr.appendChild(td);
             if (keys[j].match(/^[0-9][0-9][.].*/) ) {
-                td.innerText = keys[j].substr(3);
+                td.innerText = keys[j].substr(3).replace('AnzahlModul', 'Jede_Woche').replace('AnzahlZusatz', 'Tausch');
             } else {
-                td.innerText = keys[j];
+                td.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche').replace('AnzahlZusatz', 'Tausch');
                 td.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 td.style.cursor='pointer';
             }

@@ -124,7 +124,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche']
         												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
         											 	: ['Name']));
-        btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'Änderung' : '+';
+        btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'Tauschen' : '+';
         btn.className='btn_plus'
         if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && sbs.selectedWeek < sbs.week ) {
     		btn.disabled='disabled';
@@ -276,6 +276,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         var label = document.createElement("DIV");
         edit.className = 'edit' + solawiTable.getTableName();
         label.innerText = pLabel;
+        label.className = 'editorLabel';
         while (edit.firstChild) edit.removeChild(edit.firstChild);
         edit.appendChild(label);
         setContent('editError', '');

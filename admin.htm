@@ -54,12 +54,12 @@
     <script src="solawiTableEditor.js"> </script>
     <script src="solawiTableVerwalter.js"> </script>
     <script src="solawiTable.js"> </script>
-    
+
 	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
-	<script type="text/javascript" src="FileSaver.min.js"></script> 
+	<script type="text/javascript" src="FileSaver.min.js"></script>
     <!-- add the shim first
 	<script type="text/javascript" src="shim.min.js"></script>-->
-	<!-- after the shim is referenced, add the library 
+	<!-- after the shim is referenced, add the library
 	<script type="text/javascript" src="xlsx.full.min14.js"></script>-->
 
 </head>
@@ -77,6 +77,7 @@ getAjax('Benutzer/OWN', function(userResponse){
         SBS.user = userResponse[0];
         document.getElementById('logoutbtn').innerText='Logout ' + SBS.user.Name;
         setContent('selectedWeek', SBS.selectedWeek);
+        setContent('selectedWeek0', SBS.selectedWeek);
         if (SBS.user.Role_ID != 2) {
             setContent('warning', 'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
         }
@@ -98,6 +99,7 @@ SBS.fillCache('Benutzer');
 function changeWeek(count) {
     SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
     setContent('selectedWeek', SBS.selectedWeek);
+    setContent('selectedWeek0', SBS.selectedWeek);
     if (SBTview.getTableName() && SBTview.getTablePath()) {
         if (SBTview.getTablePath().match(/.*Woche.*/)) {
             getAjax(SBTview.getTableName()+'/Woche/'+SBS.selectedWeek, SBTview.showTable);
@@ -127,9 +129,10 @@ function changeWeek(count) {
 </div>
 
 
-<div id="logoutform" style="position:fixed;right: 1px; top: 0; width: 15em; height: 10em; background: rgba(222,222,222,0.6); border: 1px dotted #999;text-align:center;">
+<div id="logoutform" style="position:fixed;right: 1px; top: 0; font-size:12px; width: 20em; height: 15em; box-shadow: inset 0 14.5em 0.5em -0.5em rgba(222,222,222, 0.6);text-align:center;z-index:9999;">
+	Woche: <button onclick="changeWeek(-1)">&lt;&lt;</button><span id="selectedWeek0" style="font-weight:bold;background-color:rgba(222,222,222);">00</span>        <button onclick="changeWeek(+1)">&gt;&gt;</button>
     <button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn'); hide('tableContainer');" >Logout</button>
-    <div id="messages" style="height:8.3em; overflow:hidden;font-size=85%;box-shadow: inset 0px -9px 9px -9px black;position:absolute;bottom:0;width:15em;">
+    <div id="messages" style="height:11em; overflow:hidden;position:absolute;bottom:0;width:20em;">
     </div>
 </div>
 
@@ -163,12 +166,12 @@ function changeWeek(count) {
             <button onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">PivotDepotBest.</button>
             <button onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotBestellungen/'+SBS.selectedWeek, SBTview.showTable);">PivotBestellungen</button>
             <button onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Bestellungen</button>
-            
+
             <a target="_blank" href="print.htm#PivotBestellungen">Bestellung_Drucken</a>
-            <a target="_blank" href="print.htm#PivotDepot">DepotBest._Drucken</a>           
+            <a target="_blank" href="print.htm#PivotDepot">DepotBest._Drucken</a>
         </span>
         <span style="display:inline-block;max-width: 42%;vertical-align: top;">
-            <b>Bearbeiten </b>  
+            <b>Bearbeiten </b>
             <br/>
             <button onclick="SBTview.reset();SBTedit.reset();getAjax('Depot', SBTmeta.showTable);">Depot</button>
             <button onclick="SBTview.reset();SBTmeta.reset();getAjax('Modul', SBTedit.showTable);">Modul</button>
