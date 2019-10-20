@@ -179,7 +179,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             var button = document.createElement("BUTTON");
             wtd.appendChild(button);
             button.innerText = 'verwalten';
-            button.onclick = function() {getAjax('Benutzer/Depot_ID/'+row['ID'], window.SBTmeta.showTable);};
+            button.onclick = function() {getAjax('Benutzer/Depot_ID/'+row['ID'], function() {window.SBTview.reset(); window.SBTmeta.showTable()});};
             tr.insertBefore(wtd, tr.childNodes[1]);
 
             wtd = document.createElement("TD");
@@ -187,7 +187,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             var button = document.createElement("BUTTON");
             wtd.appendChild(button);
             button.innerText = 'liste';
-            button.onclick = function() {getAjax('PivotDepot/Woche/'+sbs.selectedWeek+'/Depot_ID/'+row['ID'], window.SBTmeta.showTable);};
+            button.onclick = function() {getAjax('PivotDepot/Woche/'+sbs.selectedWeek+'/Depot_ID/'+row['ID'], window.SBTview.showTable);};
             tr.insertBefore(wtd, tr.childNodes[2]);
         }
     }
