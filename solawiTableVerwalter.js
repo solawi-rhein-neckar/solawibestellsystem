@@ -66,6 +66,10 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             wtd.className='col_Verwaltung';
             wtd.innerText='Benutzer';
             tr.insertBefore(wtd, tr.childNodes[1]);
+        	wtd = document.createElement("TD");
+            wtd.className='col_PivotBestell';
+            wtd.innerText='PivotBestell';
+            tr.insertBefore(wtd, tr.childNodes[2]);
         }
     }
 
@@ -164,7 +168,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             td.className='col_kuendigen';
             tr.insertBefore(td, tr.childNodes[pub.columnIndex+4]);
 
-            var button = document.createElement("BUtton");
+            var button = document.createElement("BUTTON");
             button.innerText = "kündigen";
             button.onclick = createStornoFunction(row['ID'], sbs.selectedWeek);
             td.appendChild(button);
@@ -177,6 +181,14 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             button.innerText = 'verwalten';
             button.onclick = function() {getAjax('Benutzer/Depot_ID/'+row['ID'], window.SBTmeta.showTable);};
             tr.insertBefore(wtd, tr.childNodes[1]);
+
+            wtd = document.createElement("TD");
+            wtd.className='col_PivotBestell';
+            var button = document.createElement("BUTTON");
+            wtd.appendChild(button);
+            button.innerText = 'liste';
+            button.onclick = function() {getAjax('PivotDepot/Woche/'+sbs.selectedWeek+'/Depot_ID/'+row['ID'], window.SBTmeta.showTable);};
+            tr.insertBefore(wtd, tr.childNodes[2]);
         }
     }
 

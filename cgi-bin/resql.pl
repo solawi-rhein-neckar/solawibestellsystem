@@ -212,6 +212,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Bis$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `EndWoche` >= ?");
 					$sth->execute($id, $id2);
+				} elsif ( $user->{Role_ID} > 1 && $table =~ /^PivotDepot.*/ ) {
+					$sth = $dbh->prepare("CALL $table(?,?)");
+					$sth->execute($id,$id2);					
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ?");
 					$sth->execute($id, $id2);
