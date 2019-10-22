@@ -14,6 +14,8 @@
 <script src="solawiTable.js"> </script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
 <script type="text/javascript" src="FileSaver.min.js"></script>
+    <meta name="viewport" content="width=560, initial-scale=1.0, user-scalable=yes">
+
 </head>
 
 <script>
@@ -123,8 +125,8 @@ function resetWeek(){
 <div id="loginform" style="display:none">
     LOGIN:
     <form method='post' action='/cgi-bin/query.pl/login'>
-        Name: <input type='text' id='inpName' name='name' placeholder='name'/>
-        Password: <input type='password' id='inpPass' name='password'/>
+        Name: <input type='text' id='inpName' name='name' placeholder='name'/><br/>
+        Password: <input type='password' id='inpPass' name='password'/><br/>
         <input type='submit' value='Login' onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;'/>
         <div id="loginError" style="display:none;color:red;font-weight:bold;padding-top:20px;">
         	Falscher Benutzername oder Falsches Passwort! Bitte mit den Login-Daten des <a href="https://www.solawi-rhein-neckar.org/intern/login/?redirect_to=https%3A%2F%2Fwww.solawi-rhein-neckar.org%2Fintern%2F">Mitgliederbereichs</a> anmelden!
@@ -144,7 +146,7 @@ function resetWeek(){
   <span style="display:none;" id="depotManageLink"><a href="depot.htm">Depotverwaltung</a></span>
   <a href="#Urlaub">Dein Urlaub</a>
   <!-- a href="#Module">Module</a-->
-  <a href="#Downloads">Lieferung Depot / Solawi</a>
+  <a href="#Downloads">Übersichten</a>
   </div>
 </header>
 <main>

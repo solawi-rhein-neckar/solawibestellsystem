@@ -179,7 +179,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             var button = document.createElement("BUTTON");
             wtd.appendChild(button);
             button.innerText = 'verwalten';
-            button.onclick = function() {getAjax('Benutzer/Depot_ID/'+row['ID'], function() {window.SBTview.reset(); window.SBTmeta.showTable()});};
+            button.onclick = function() {getAjax('Benutzer/Depot_ID/'+row['ID'], function(a1,a2,a3) {window.SBTview.reset(); window.SBTmeta.showTable(a1,a2,a3)});};
             tr.insertBefore(wtd, tr.childNodes[1]);
 
             wtd = document.createElement("TD");
