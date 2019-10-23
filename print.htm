@@ -1,61 +1,86 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-     <meta charset="UTF-8">
-<title></title>
-    <style>
-        table, td { border: 1px solid #999; border-collapse: collapse; padding:3px;}
-        .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID, .inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID {display: none;}
-        #table .col_Anzahl, .col_Produkt { font-weight: bold; }
-        .col_ID > div {display: none;}
-        .inp_Woche, .inp_Benutzer_ID {color:#CCC; pointer-events:none; }
-        #greeting {
-font-size: 125%;
-padding-top: 100px;
-background: url(https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png);
-   background-position: top center;
-    background-repeat: repeat;
-background-repeat: no-repeat;
+<meta charset="UTF-8">
+	<title></title>
+	<style>
+table, td {
+	border: 1px solid #999;
+	border-collapse: collapse;
+	padding: 3px;
+}
 
-        }
-        #navi { position: absolute;}
+.col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID,
+	.inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID
+	{
+	display: none;
+}
 
-    </style>
-    <script src="util.js"> </script>
-    <script src="weekSelect.js"> </script>
-    <script src="solawiBestellSystem.js"> </script>
-    <script src="solawiTableValidator.js"> </script>
-    <script src="solawiTableEditor.js"> </script>
-    <script src="solawiTable.js"> </script>
-    
+#table .col_Anzahl, .col_Produkt {
+	font-weight: bold;
+}
+
+.col_ID>div {
+	display: none;
+}
+
+.inp_Woche, .inp_Benutzer_ID {
+	color: #CCC;
+	pointer-events: none;
+}
+
+#greeting {
+	font-size: 125%;
+	padding-top: 100px;
+	background:
+		url(https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png);
+	background-position: top center;
+	background-repeat: repeat;
+	background-repeat: no-repeat;
+}
+
+#navi {
+	position: absolute;
+}
+</style>
+	<script src="util.js"></script>
+	<script src="weekSelect.js"></script>
+	<script src="solawiBestellSystem.js"></script>
+	<script src="solawiTableValidator.js"></script>
+	<script src="solawiTableEditor.js"></script>
+	<script src="solawiTable.js"></script>
 </head>
 <body>
 
-<script>
-var SBS = SolawiBestellSystem();
-var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, true);
+	<script>
+        var SBS = SolawiBestellSystem();
+        var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, true);
 
-//check login status
-getAjax('BenutzerView/MY', function(userResponse){
-    if (userResponse.length > 0) {
-        SBS.user = userResponse[0];
-        getAjax(document.location.hash.replace(/^#/, '') + "/" + SBS.selectedWeek, SBTview.showTable);
-    }
-});
-</script>
+        //check login status
+        getAjax('BenutzerView/MY', function(userResponse) {
+            if (userResponse.length > 0) {
+                SBS.user = userResponse[0];
+                getAjax(document.location.hash.replace(/^#/, '') + "/" + SBS.selectedWeek, SBTview.showTable);
+            }
+        });
+    </script>
 
-<div id="blockui_get" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:240;background-color:rgba(0,0,0,0.3);display:none;">
-    <span style="display:inline-block;padding:30px;background-color:#FFF;border:1px solid black;">EMPFANGE DATEN - BITTE WARTEN....</span>
-</div>
+	<div id="blockui_get"
+		style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 240; background-color: rgba(0, 0, 0, 0.3); display: none;">
+		<span style="display: inline-block; padding: 30px; background-color: #FFF; border: 1px solid black;">
+			EMPFANGE DATEN - BITTE WARTEN....
+		</span>
+	</div>
 
 
-<div id="tableContainer">
+	<div id="tableContainer">
 
-    <table id="table" cellspacing="0" > </table>
-</div>
-<br/><br/>
-<div id="messages"></div>
-
+		<table id="table" cellspacing="0">
+		</table>
+	</div>
+	<br />
+	<br />
+	<div id="messages"></div>
 
 </body>
 </html>
