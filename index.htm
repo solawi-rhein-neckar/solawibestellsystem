@@ -37,6 +37,7 @@ getAjax('BenutzerView/MY', function(userResponse){
         if (SBS.user['Role_ID'] == 3) {
         	showInline('depotManageLink');
           showInline('depotManageLink2');
+          show('depotManageLink3');
         }
 
         setContent('logoutbtn', 'Logout ' + SBS.user.Name);
@@ -141,23 +142,41 @@ function resetWeek(){
 
 <div id="content">
 <header>
-  <img src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png" alt="Logo Solawi">
-  <div class="header-right">
-  <span style="display:none;" id="depotManageLink"><a href="depot.htm">Depotverwaltung</a></span>
-  <a href="#Urlaub">Dein Urlaub</a>
-  <!-- a href="#Module">Module</a-->
-  <a href="#Downloads">Übersichten</a>
+  <nav id="page-nav">
+    <img id="logo" src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png" alt="Logo Solawi">
+  <label for="hamburger">&#9776;</label>
+  <input type="checkbox" id="hamburger"/>
+  <div class="desktopmenu">
+  <ul class="desktopmenu">
+        <li><span style="display:none;" id="depotManageLink"><a href="depot.htm">Depotverwaltung</a></span></li>
+        <li><a href="#Urlaub">Dein Urlaub</a></li>
+        <li><a href="#Downloads">Übersichten</a></li>
+  </ul>
+</div>
+  <div class="mobilmenu">
+  <ul>
+        <li><span style="display:none;" id="depotManageLink3"><a href="depot.htm">Depotverwaltung</a></span></li>
+        <li><a href="#Urlaub">Dein Urlaub</a></li>
+        <li><a href="#Downloads">Übersichten</a></li>
+  </ul>
   </div>
+
+
+
+  </nav>
+
+
 </header>
+
+
 <main>
 <div class="greeting">
   <p class="greeting">Nächste Lieferung: <span id="calendarWeek">00</span>
-<br>Du möchtest JEDE Woche: <span id="Modul">Vegetarisch_mit_Milch</span></p>
-  <p>
+  <br> <span style="color: white;">Änderungen bis Sonntag Abend möglich </span></p>
 </div>
 <h1>Deine Lieferübersicht</h1>
 <div id="gesamt_lieferung">
-<p><button class="pfeil_back" onclick="changeWeek(-1)">&lt;</button> KW <span id="selectedWeek" style="font-weight:bold;">00</span> <button class="pfeil_forward" onclick="changeWeek(+1)">&gt;</button></p>
+<p><button class="pfeil_back" onclick="changeWeek(-1)"><img src="pfeil.svg" alt="<" width="25" height="25"></button> KW <span id="selectedWeek">00</span> <button class="pfeil_forward" onclick="changeWeek(+1)"><img src="pfeil.svg" alt=">" width="25" height="25" ></button></p>
 <p> <button onclick="resetWeek();">zurück zur aktuellen Woche</button> </p>
 </div>
 <!--
@@ -192,7 +211,7 @@ Die endgültige Anzahl ist in der Liefer-Tabelle fett gedruckt.
 
 
 <h1 id=Urlaub>Dein Urlaub</h1>
-<div class="text_zentral">Deine geplanten <strong>Urlaube</strong>: Kalenderwoche anklicken -> in GELB markierter Kalenderwoche erfolgt KEINE LIEFERUNG, aber Du bekommst KEINE Tauschpunkte gutgeschrieben. Du kannst Deinen Anteil stattdessen auch an andere weitergeben (im Depot oder an Freunde), in diesem Fall trage KEINEN Urlaub ein, sondern informiere Dein Depot per Email.
+<div class="text_zentral">Deine geplanten <strong>Urlaube</strong>: Kalenderwoche anklicken -> in <span id=braun>BRAUN</span> markierter Kalenderwoche erfolgt KEINE LIEFERUNG, aber Du bekommst KEINE Tauschpunkte gutgeschrieben. Du kannst Deinen Anteil stattdessen auch an andere weitergeben (im Depot oder an Freunde), in diesem Fall trage KEINEN Urlaub ein, sondern informiere Dein Depot per Email.
 (Nach Urlaubs-Änderung: Bitte die Seite NEU LADEN (Taste F5), um die Lieferung für die aktuelle Woche zu aktualisieren!)</div>
 <div class="table_center" id="table3_center">
     <div id="tableUrlaub" > </div>
@@ -206,16 +225,17 @@ Die endgültige Anzahl ist in der Liefer-Tabelle fett gedruckt.
 	<div class="table_center" id="table4_center"><table id="tableModule" cellspacing="0" > </table></div>
 </div>
 
-<h1 id=Downloads>Lieferungen Depot / Solawi</h1>
-<a target="_blank" href="print.htm#PivotBestellungen">Gesamte Solawi</a> <br>
-<a href="#" onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);event.preventDefault();return false;">Download als Exceltabelle</a> <br>
-<a target="_blank" href="print.htm#PivotDepot">Lieferübersicht Depot</a>
-</br><span style="display:none;" id="depotManageLink2"><a href="depot.htm">DEPOT-VERWALTUNG</a></span>
 
-<br/>
-<br/>
-
+<div class="footer">
+<h1 id="Downloads">Übersichten</h1>
+<ul>
+<li><a target="_blank" href="print.htm#PivotBestellungen">Gesamte Solawi</a> <br>
+</li><li><a href="#" onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);event.preventDefault();return false;">Download als Exceltabelle</a> <br>
+</li><li><a target="_blank" href="print.htm#PivotDepot">Bestellübersicht Depot</a><br>
+</li><li><span style="display:none;" id="depotManageLink2"><a href="depot.htm">Depotverwaltung</a></span>
+</li></ul>
 </div>
+
 </main>
 </div>
 </body>

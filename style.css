@@ -1,5 +1,7 @@
 body {
-  font-family: Open Sans,Helvetica,Arial,Lucida,sans-serif;
+  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
   line-height: 1.45;
   color: #4d3a27;
   letter-spacing: .05em;
@@ -7,17 +9,103 @@ body {
 }
 
 header {
-  overflow: hidden;
   background-color: #f0d9b5;
   height: 110px;
   padding: 15px 35px;
 }
+ul {
+  list-style: none;
+}
 
-.header-right {
+/*Navigationsbereich - Header und Hamburger*/
+#page-nav {
+  width: 100%;
+}
+#logo {
+  float:left;
+}
+/* Desktopansicht - weg mit Hamburger */
+#page-nav label, #hamburger {
+  display: none;
+}
+
+/* Menu Items */
+ul.desktopmenu {
+  list-style-type: none;
+  margin: 0 220px 0 0;
+  padding-top: 40px;
   float: right;
-  margin-right: 13em;
-  margin-top: 45px;
-  font-size: 1.2em;
+  vertical-align: top;
+  font-size: 17px;
+  font-weight: 600;
+}
+ul.desktopmenu li {
+  display: inline-block;
+  padding-right: 10px;
+  box-sizing: border-box;
+}
+/*mobilmenu ausblenden*/
+div.mobilmenu {
+  display: none;
+}
+
+
+/* Mobilversion */
+@media screen and (max-width: 1224px){
+  header {
+    height: 110px;
+  }
+  #logo {
+    float: none;
+    display: block;
+    height: 70px;
+  }
+  /* Einblenden Hamburger */
+  #page-nav label {
+    display: inline-block;
+    color: #679b14;
+    font-style: normal;
+    font-size: 1.2em;
+    padding: 10px;
+    vertical-align: top;
+    float: none;
+  }
+
+  #page-nav label:hover {
+    background-color: #679b14;
+    color: #fff;
+  }
+ /*Ausblenden Desktopmenue*/
+ div.desktopmenu {
+    display: none;
+  }
+
+  #page-nav input:checked ~ div.mobilmenu {
+    border-top: 3px solid #679b14;
+    display:block;
+    height: max-content;
+    position: absolute;
+    background-color: #f0d9b5;
+    width: 85%;
+    visibility: visible;
+    opacity: 1;
+    -webkit-box-shadow: 0 2px 5px rgba(0,0,0,.1);
+    -moz-box-shadow: 0 2px 5px rgba(0,0,0,.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,.1);
+  }
+
+  .mobilmenu li a {
+      display: block;
+      padding: 10px 5%;
+      border-bottom: 1px solid rgba(0,0,0,.03);
+      font-size: 14px;
+      -webkit-transition: all .2s ease-in-out;
+      -moz-transition: all .2s ease-in-out;
+      transition: all .2s ease-in-out;
+      font-size: 17px;
+      font-weight: 600;
+  }
+  }
 }
 
 #header_title {
@@ -31,13 +119,8 @@ main {
 }
 
 #gesamt_lieferung{
-  font-size: 1.2em;
-}
-
-.container {
-  display: flex; /* oder inline-flex */
-  flex-direction: row;
-  flex-wrap: wrap;
+    font-size: 1.3em;
+    vertical-align: middle;
 }
 
 a {
@@ -70,6 +153,7 @@ h1 {
   padding-top: 3%;
   margin-bottom: 3%;
   font-size: 1.8em;
+  text-transform: uppercase;
 }
 h2 {
   text-align: center;
@@ -115,15 +199,27 @@ button {
     border-width: 0px;
     border-radius: 0px;
     letter-spacing: 0px;
-    padding: 0.3em 1em !important;
+    padding: 0.3em 1em;
     color: white;
-    font-size: 16px;
-    font-weight: 300;
+    font-size: 20px;
+    line-height: 1.5em;
 }
 
 button:hover {
-    background: #e07000 !important;
+    background: #e07000;
     border-radius: 8px;
+    -moz-transition: all .51s;
+    -o-transition: all .51s;
+    -webkit-transition: all .51s;
+    transition: all .51s;
+}
+
+button:disabled {
+    background-color: #dadada;
+}
+button:disabled:hover {
+    background-color: #dadada !important;
+    border-radius: 0px;
 }
 
 table, td { border: 1px solid #999;
@@ -132,10 +228,57 @@ table, td { border: 1px solid #999;
             margin-top: 1.5em;
 }
 
+
+#Downloads {
+  color: white !important;
+  text-shadow: 0 1px 3px #3d5d0a;
+  margin-left: 0;
+}
+
+.footer li::before{
+content:" ";
+height: 7px;
+width: 7px;
+    top: 9px;
+background-color: #4d3a27;
+border-radius: 50%;
+display: inline-block;
+}
+
+.footer ul {
+  font-size: 20px;
+  font-weight: 500;
+}
+.footer {
+  background-color: #679b14;
+  text-align: left;
+  margin-top: 2em;
+  padding-left: 13%;
+  padding-bottom: 2em;
+
+}
+
+
+.footer a {
+  color: white;
+  display: inline-block;
+}
+
+
+
+
+
 .pfeil_back, .pfeil_forward {
-  font-size: 1em !important;
   padding: 0.3em 0.5em !important;
   border-radius: 0px;
+  vertical-align: middle;
+}
+.pfeil_forward{
+  -webkit-transform: rotate(180deg);
+  -moz-transform: rotate(180deg);
+  -o-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
 .col_Woche, .col_Benutzer_ID, .col_Benutzer, .col_Depot, .col_Depot_ID, .col_Einheit, .col_Menge{
@@ -144,11 +287,16 @@ table, td { border: 1px solid #999;
 }
 
 button.btn_plus:hover {
-  background-color: #679b14 !important;
+  background-color: #679b14;
 }
 
 button.btn_minus {
-  background-color: #e07000 !important;
+  background-color: #e07000;
+}
+
+#braun {
+  color: #4d3b27;
+  font-weight: 600;
 }
 
 div.table_center {
@@ -179,20 +327,22 @@ div.table_center {
 }
 
   #navi { position: absolute;}
-
   .weektable {
-      font-size: 16px;
-      text-align: center;
-  }
-  .weektable td {
-      cursor:pointer;
-  }
-  .weektable td.inactive:hover, .weektable td span:hover, .weekWeek:hover, .weektable a:hover {
-      background-color:orange;
-  }
-  .weektable td.active {
-      background-color:yellow;
-  }
-  .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
-      background-color:aqua;
-  }
+        font-size: 16px;
+        text-align: center;
+    }
+    .weektable td {
+        background-color:white;
+        cursor:pointer;
+        color: black;
+    }
+    .weektable td.inactive:hover, .weektable td span:hover, .weekWeek:hover, .weektable a:hover {
+        background-color:orange;
+    }
+    .weektable td.active {
+        background-color: #4d3b27;
+        color: white;
+    }
+    .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
+        background-color: #679b14;
+    }
