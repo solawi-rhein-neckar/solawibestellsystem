@@ -123,20 +123,20 @@ function resetWeek(){
     </div>
 </div>
 
-<div id="loginform" style="display:none">
-    LOGIN:
-    <form method='post' action='/cgi-bin/query.pl/login'>
-        Name: <input type='text' id='inpName' name='name' placeholder='name'/><br/>
-        Password: <input type='password' id='inpPass' name='password'/><br/>
-        <input type='submit' value='Login' onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;'/>
-        <div id="loginError" style="display:none;color:red;font-weight:bold;padding-top:20px;">
-        	Falscher Benutzername oder Falsches Passwort! Bitte mit den Login-Daten des <a href="https://www.solawi-rhein-neckar.org/intern/login/?redirect_to=https%3A%2F%2Fwww.solawi-rhein-neckar.org%2Fintern%2F">Mitgliederbereichs</a> anmelden!
+<div class="login-page" id="loginform" style="display:none">
+    <form class="register-form" method='post' action='/cgi-bin/query.pl/login'>
+      <img style="width: 200px; margin-bottom:2em;" src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png" alt="Logo Solawi">
+        <input type='text' id='inpName' name='name' placeholder='name'/><br/>
+        <input type='password' id='inpPass' name='password' placeholder='passwort'/><br/>
+        <input class="loginbutton" type='submit' value='Login' onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;'/>
+        <div class="message" id="loginError">
+        	Falscher Benutzername<br>oder falsches Passwort!<br><br>Bitte mit den Login-Daten des <a href="https://www.solawi-rhein-neckar.org/intern/login/?redirect_to=https%3A%2F%2Fwww.solawi-rhein-neckar.org%2Fintern%2F">Mitgliederbereichs</a> anmelden!
         </div>
-        <div id="userMissing" style="display:none;color:red;font-weight:bold;padding-top:20px;">
-        	Login erfolgreich, aber Benutzer mit Name <span id="missingUser" style="color:orange;"></span> wurde im Bestellsystem nicht gefunden.<br/>Bitte Mail an Depotverwalter und <a id="missingUserEmail" href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+">solawiBestellsystem@regenduft.de</a> schreiben.
+        <div id="userMissing" class="message">Login erfolgreich, aber Benutzer mit Name <span id="missingUser" style="color:red;"></span> wurde im Bestellsystem nicht gefunden.<br/>Bitte Mail an Depotverwalter und <a id="missingUserEmail" href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+">solawiBestellsystem@regenduft.de</a> schreiben.
         </div>
+        <a href="admin.htm">Berichte und Admin-Bereich</a>
     </form>
- 	<br/><br/><a href="admin.htm">Zu den Berichten + Admin-Bereich</a><br/>
+ 	<br/><br/><br/>
  </div>
 
 

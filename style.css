@@ -1,3 +1,83 @@
+.login-page {
+  width: 360px;
+  padding: 8% 0 0;
+  margin: auto;
+}
+form {
+  position: relative;
+  z-index: 1;
+  background: #FFFFFF;
+  max-width: 360px;
+  margin: 0 auto 100px;
+  padding: 45px;
+  text-align: center;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+}
+form input {
+  outline: 0;
+  background: #f2f2f2;
+  width: 100%;
+  border: 0;
+  margin: 0 0 15px;
+  padding: 15px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+input.loginbutton {
+  text-transform: uppercase;
+  outline: 0;
+  background: #4d3b27;
+  width: 100%;
+  border: 0;
+  padding: 15px;
+  color: #FFFFFF;
+  font-size: 14px;
+  -webkit-transition: all 0.3 ease;
+  transition: all 0.3 ease;
+  cursor: pointer;
+}
+input.loginbutton:hover,.form button:active,.form button:focus {
+  background: #679b14;
+}
+form .message {
+  display:none;
+  margin: 15px 0 0;
+  color: #c31212;
+  font-size: 12px;
+  padding-bottom: 2em;
+}
+form div.message {
+  margin-bottom: 1em;
+}
+form .message a {
+  color: #c31212;
+  font-weight:600;
+  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
+  border-bottom: solid;
+  border-width: thin;
+  padding-left: 0em;
+}
+form .message a:hover {
+  color: #4d3b27;
+}
+
+
+form a {
+  font-weight:600;
+  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
+}
+form a:hover {
+  font-weight:600;
+  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
+}
+body {
+  background: #f0d9b5; /* fallback for old browsers */
+}
+
+
+
+
+
 body {
   font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
   font-weight: 500;
@@ -116,6 +196,7 @@ div.mobilmenu {
 
 main {
   text-align: center;
+  background-color: white;
 }
 
 #gesamt_lieferung{
