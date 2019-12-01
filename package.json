@@ -1,0 +1,24 @@
+{
+  "name": "solawibestellsystem",
+  "version": "1.0.0",
+  "description": "Bestellsystem der Solawi Rhein-Neckar",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/solawi-rhein-neckar/solawibestellsystem.git"
+  },
+  "keywords": [
+    "MySQL",
+    "JS",
+    "Perl-REST"
+  ],
+  "author": "Florian Jostock, Jürgen Czerny",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/solawi-rhein-neckar/solawibestellsystem/issues"
+  },
+  "homepage": "https://github.com/solawi-rhein-neckar/solawibestellsystem#readme"
+}
