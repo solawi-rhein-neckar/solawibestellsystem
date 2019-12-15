@@ -2,9 +2,13 @@
   "name": "solawibestellsystem",
   "version": "1.0.0",
   "description": "Bestellsystem der Solawi Rhein-Neckar",
-  "main": "index.html",
+  "main": "index.htm",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest",
+    "test-watch": "jest --watchAll",
+    "prepare-git-commit-template": "git config commit.template $PWD/.gitmessage",
+    "postinstall": "npm run prepare-git-commit-template",
+    "release": "standard-version"
   },
   "repository": {
     "type": "git",
@@ -15,10 +19,22 @@
     "JS",
     "Perl-REST"
   ],
-  "author": "Florian Jostock, Jürgen Czerny",
+  "contributors": [
+    { "name" : "Florian Jostock"
+    , "email" : "flo@regenduft.de"
+    },
+    { "name" : "Jürgen Czerny"
+    , "email" : "solawi@jczerny.de"
+    }
+  ],
   "license": "GPL-3.0-or-later",
   "bugs": {
     "url": "https://github.com/solawi-rhein-neckar/solawibestellsystem/issues"
   },
-  "homepage": "https://github.com/solawi-rhein-neckar/solawibestellsystem#readme"
+  "homepage": "https://github.com/solawi-rhein-neckar/solawibestellsystem#readme",
+  "devDependencies": {
+    "jest": "^24.9.0",
+    "standard-version": "^7.0.1"
+  },
+  "dependencies": {}
 }
