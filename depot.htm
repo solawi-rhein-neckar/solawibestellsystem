@@ -2,68 +2,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
-	<title></title>
+	<title>Ansicht Depot</title>
+	<link rel="stylesheet" type="text/css" href="print.css">
 	<style>
-table, td {
-	border: 1px solid #999;
-	border-collapse: collapse;
-	padding: 3px;
-}
 
-select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort,
-	input.editor.inp_Cookie, input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche,
-	table.Benutzer td.col_BenutzerAbo td.col_Woche, .BenutzerBestellView .col_Benutzer_ID,
-	.BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID,
-	.DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID,
-	.GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID,
-	.BenutzerView .col_Role_ID {
-	display: none;
-}
-
-div.fixedHeaderTable>table>tr:first-child>td {
-	position: -webkit-sticky; /* for Safari */
-	position: sticky;
-	top: 0;
-	background: #EEE;
-	z-index: 222;
-	box-shadow: 0px 0px 0px 1px #999;
-}
-
-div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:first-child {
-	position: -webkit-sticky; /* for Safari */
-	position: sticky;
-	left: 0;
-	background: #EEE;
-	z-index: 111;
-	box-shadow: 0px 0px 0px 1px #999;
-}
-
-.col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID {
-	font-size: 75%;
-	color: #999;
-}
-
-.weektable {
-	font-size: 11.8px;
-	text-align: center;
-}
-
-.weektable td {
-	cursor: pointer;
-}
-
-.weektable td.inactive:hover, .weektable td span:hover, .weekWeek:hover,
-	.weektable a:hover {
-	background-color: orange;
-}
-
-.weektable td.active {
-	background-color: yellow;
-}
-
-.weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
-	background-color: aqua;
-}
 </style>
 	<script src="util.js"></script>
 	<script src="weekSelect.js"></script>
@@ -194,12 +136,12 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:first-child {
 		LOGIN:
 		<form method='post' action='/cgi-bin/query.pl/login'>
 			Name: <input type='text' id='inpName' name='name' placeholder='name' />
-			Password: <input type='password' id='inpPass' name='password' /> 
+			Password: <input type='password' id='inpPass' name='password' />
 			<input type='submit' value='Login'
 				onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
 			<div id="loginError" style="display: none; color: red; font-weight: bold; padding-top: 20px;">
 				Falscher Benutzername oder Falsches Passwort! Bitte mit den
-				Login-Daten des 
+				Login-Daten des
 					<a href="https://www.solawi-rhein-neckar.org/intern/login/?redirect_to=https%3A%2F%2Fwww.solawi-rhein-neckar.org%2Fintern%2F">
 						Mitgliederbereichs
 					</a>
@@ -210,7 +152,7 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:first-child {
 				Login erfolgreich, aber Benutzer mit Name <span id="missingUser" style="color: orange;"></span>
 				wurde im Bestellsystem nicht gefunden.
 				<br />
-				Bitte Mail an Depotverwalter und 
+				Bitte Mail an Depotverwalter und
 					<a  id="missingUserEmail"
 						href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+">
 						solawiBestellsystem@regenduft.de
@@ -263,7 +205,7 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:first-child {
 					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotBestellungen/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Solawi)</button>
 					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Depot)</button>
 					<button	onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Solawi</button>
-				</span> 
+				</span>
 				<span style="display: inline-block; width: 38%; vertical-align: top;">
 					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo/Bis/'+SBS.selectedWeek, SBTedit.showTable);">ModulAbo
 						(Zukunft)</button>
@@ -274,13 +216,13 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:first-child {
 				<div style="text-align: center; padding: 5px 0 10px 0; white-space: nowrap; overflow: hidden;">
 					Bearbeiten &#160; &#160; &#160; <b>ohne Woche</b> &#160; &#160;
 					&#160; Berichte
-				</div> 
+				</div>
 				<span style="display: inline-block; width: 48%; vertical-align: top; border-right: 1px dotted black;">
 					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
 					<button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo', SBTedit.showTable);">ModulAbo (Alle)</button>
 					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">ZusatzBestellungen</button>
 					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerUrlaub', SBTedit.showTable);">Urlaube</button>
-				</span> 
+				</span>
 				<span style="display: inline-block; width: 48%; vertical-align: top;">
 					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerView', SBTview.showTable);">Benutzer-Abo
 						(Aktuell)</button> <a target="_blank" href="print.htm#PivotBestellungen">Solawi_Lieferung_Drucken</a>
