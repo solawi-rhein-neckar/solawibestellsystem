@@ -150,14 +150,19 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         table.appendChild(tr);
         for (var j = 0; j < keys.length; j++) {
             var td = document.createElement("TD");
-            td.className='col_'+keys[j];
+            var span = document.createElement("SPAN");
             tr.appendChild(td);
+            td.appendChild(span);
+            td.className='col_'+keys[j];
+            span.className = "TableHead";
             if (keys[j].match(/^[0-9][0-9][.].*/) ) {
-                td.innerText = keys[j].substr(3).replace('AnzahlModul', 'Jede_Woche').replace('AnzahlZusatz', 'Tausch');
+                span.innerText = keys[j].substr(3).replace('AnzahlModul', 'Jede_Woche').replace('AnzahlZusatz', 'Tausch');
+                span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
+                span.style.cursor='pointer';
             } else {
-                td.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche').replace('AnzahlZusatz', 'Tausch');
-                td.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
-                td.style.cursor='pointer';
+                span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche').replace('AnzahlZusatz', 'Tausch');
+                span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
+                span.style.cursor='pointer';
             }
         }
         return tr;
