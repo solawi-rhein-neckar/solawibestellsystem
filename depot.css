@@ -1,3 +1,10 @@
+:root {
+  --Farbe1: #ffffff;/*weiß - Kopfzeile*/
+	--Farbe2: #aed7fe; /*blau - Kopfzeile*/
+	--Farbe3: #dfeffe; /*blass*/
+  --Farbe4: #aed7fe; /*kräftig*/
+  --Farbe5: #e7e4e4; /*grau*/
+}
 table, td {
 	border: 1px solid #999;
 	border-collapse: collapse;
@@ -11,16 +18,16 @@ table, td {
 }
 
 #tableEdit>tr:first-child>td:first-child {
-  background-color: #fcffba;
+  background-color: var(--Farbe1);
   vertical-align: bottom;
   text-align: left;
 }
 #tableEdit>tr:first-child>td:nth-child(2n){
-	background-color: #dacbf2;
+	background-color: var(--Farbe2);
 }
 
 #tableEdit>tr:first-child>td {
-  background-color: #fcffba;
+  background-color: var(--Farbe1);
   vertical-align: bottom;
   text-align: center;
 }
@@ -31,13 +38,13 @@ table, td {
 }
 
 #tableEdit>tr:nth-child(2n)>td:nth-child(2n){
-	background-color: #d2f2cb;
+	background-color: var(--Farbe3);
 }
 #tableEdit>tr:nth-child(2n+3)>td:nth-child(2n){
-	background-color: #acff9c;
+	background-color: var(--Farbe4);
 }
 #tableEdit>tr:nth-child(2n)>td:nth-child(2n+1){
-	background-color: #dadada;
+	background-color: var(--Farbe5);
 }
 /*Logout */
 

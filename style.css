@@ -1,3 +1,9 @@
+
+
+
+
+
+
 /*Logout */
 #logoutfrombg {
     display: none !important;
@@ -29,7 +35,11 @@
   width: 100px;
 }
 
-
+@media screen and (max-width: 730px){
+  table {
+    font-size: 3vw;
+  }
+}
 
 
 @media screen and (max-width: 500px){
@@ -370,6 +380,11 @@ table>tr:nth-child(n+2)>td{
   vertical-align: middle;
 }
 
+td.col_Beschreibung>span, td.col_Kommentar>span, td.col_Produkt_ID>span{
+  writing-mode: horizontal-tb !important;
+}
+
+
 #Downloads {
   color: white !important;
   text-shadow: 0 1px 3px #3d5d0a;
@@ -449,6 +464,8 @@ div.table_center {
   margin-right: auto;
   text-align: left;
 }
+
+
 
 #table1_center {
   max-width: 730px;
