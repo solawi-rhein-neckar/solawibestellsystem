@@ -1,22 +1,15 @@
 /*Logout */
 #logoutfrombg {
-  box-shadow: 0em 0em 1em 1em rgba(222, 222, 222, 0.7);
-  background: rgba(222, 222, 222, 0.7);
-  position: fixed; height: 14em;
-  width: 19em;
-  z-index: 8888;
-  right: 1px;
-  top: 0;
-  font-size: 12px;
+    display: none !important;
 }
 #logoutform {
   padding-top: 5px;
-  position: fixed;
-  right: 1px;
-  top: 0;
+  position: absolute;
+  right: 0.5%;
+  margin-top: 40px;
   font-size: 12px;
   width: 10em;
-  height: 15em;
+  height: 40px;
   text-align: center;
   z-index: 9999;
 }
@@ -27,14 +20,28 @@
   background: #cd6905;
 }
 
-@media screen and (max-width: 800px){
+#messages {
+  height: 40px;
+  overflow: hidden;
+  font-size:85%;
+  position: absolute;
+  margin-top: 10px;
+  width: 100px;
+}
+
+
+
+
+@media screen and (max-width: 500px){
 
   #logoutfrombg {
     display: none !important;
   }
-
+  #logoutform {
+    left: 210px;
+    top: 45px;
   }
-
+}
 /* Login Bereich */
 .login-page {
   width: 360px;
@@ -344,13 +351,30 @@ table, td { border: 1px solid #999;
             border-collapse: collapse;
             padding: 3px;
             margin-top: 1.5em;
+            background-color: white;
+            text-align: left;
+}
+table>tr:first-child>td>span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
 }
 
+
+table>tr:first-child>td.col_Produkt>span {
+  writing-mode: horizontal-tb !important;
+}
+table>tr:first-child>td{
+  vertical-align: bottom;
+}
+table>tr:nth-child(n+2)>td{
+  vertical-align: middle;
+}
 
 #Downloads {
   color: white !important;
   text-shadow: 0 1px 3px #3d5d0a;
   margin-left: 0;
+  margin-right: 0;
 }
 
 .footer li::before{
@@ -364,16 +388,19 @@ display: inline-block;
 }
 
 .footer ul {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
+  width: 300px;
+  margin: 0 auto;
+  padding-left:0px;
 }
 .footer {
   background-color: #679b14;
   text-align: left;
   margin-top: 2em;
-  padding-left: 13%;
   padding-bottom: 2em;
-
+  padding-left: 13%;
+  padding-right: 13%;
 }
 
 
@@ -424,7 +451,7 @@ div.table_center {
 }
 
 #table1_center {
-  max-width: 1044px;
+  max-width: 730px;
 }
 #table2_center {
   max-width: 396px;
