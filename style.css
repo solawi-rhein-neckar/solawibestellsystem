@@ -1,3 +1,41 @@
+/*Logout */
+#logoutfrombg {
+  box-shadow: 0em 0em 1em 1em rgba(222, 222, 222, 0.7);
+  background: rgba(222, 222, 222, 0.7);
+  position: fixed; height: 14em;
+  width: 19em;
+  z-index: 8888;
+  right: 1px;
+  top: 0;
+  font-size: 12px;
+}
+#logoutform {
+  padding-top: 5px;
+  position: fixed;
+  right: 1px;
+  top: 0;
+  font-size: 12px;
+  width: 10em;
+  height: 15em;
+  text-align: center;
+  z-index: 9999;
+}
+#logoutbtn {
+  background: #e07000;
+}
+#logoutbtn:hover {
+  background: #cd6905;
+}
+
+@media screen and (max-width: 800px){
+
+  #logoutfrombg {
+    display: none !important;
+  }
+
+  }
+
+/* Login Bereich */
 .login-page {
   width: 360px;
   padding: 8% 0 0;
@@ -61,7 +99,6 @@ form .message a:hover {
   color: #4d3b27;
 }
 
-
 form a {
   font-weight:600;
   font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
@@ -71,31 +108,10 @@ form a:hover {
   font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
 }
 body {
-  background: #f0d9b5; /* fallback for old browsers */
+  background: #f0d9b5;
 }
+/*Ende Loginbereich*/
 
-
-
-
-
-body {
-  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
-  font-weight: 500;
-  -webkit-font-smoothing: antialiased;
-  line-height: 1.45;
-  color: #4d3a27;
-  letter-spacing: .05em;
-  margin: 0 0 0 0;
-}
-
-header {
-  background-color: #f0d9b5;
-  height: 110px;
-  padding: 15px 35px;
-}
-ul {
-  list-style: none;
-}
 
 /*Navigationsbereich - Header und Hamburger*/
 #page-nav {
@@ -112,7 +128,7 @@ ul {
 /* Menu Items */
 ul.desktopmenu {
   list-style-type: none;
-  margin: 0 220px 0 0;
+  margin: 0 100px 0 0;
   padding-top: 40px;
   float: right;
   vertical-align: top;
@@ -131,7 +147,7 @@ div.mobilmenu {
 
 
 /* Mobilversion */
-@media screen and (max-width: 1224px){
+@media screen and (max-width: 1103px){
   header {
     height: 110px;
   }
@@ -185,14 +201,35 @@ div.mobilmenu {
       font-size: 17px;
       font-weight: 600;
   }
-  }
+  .
+}
+
+
+
+
+body {
+  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.45;
+  color: #4d3a27;
+  letter-spacing: .05em;
+  margin: 0 0 0 0;
+}
+
+header {
+  background-color: #f0d9b5;
+  height: 110px;
+  padding: 15px 35px;
+}
+ul {
+  list-style: none;
 }
 
 #header_title {
   text-align: left;
   border-bottom-style: none;
 }
-
 
 main {
   text-align: center;
