@@ -4,39 +4,39 @@ table, td {
 	padding: 3px;
 }
 
-#tableEdit>tr:first-child>td:first-child>span {
+#table>tr:first-child>td:first-child>span {
 	writing-mode: horizontal-tb !important;
 	font-size: 1.1em;
 	font-weight: bold;
 }
 
-#tableEdit>tr:first-child>td:first-child {
+#table>tr:first-child>td:first-child {
   background-color: #fcffba;
   vertical-align: bottom;
   text-align: left;
 }
-#tableEdit>tr:first-child>td:nth-child(2n){
+#table>tr:first-child>td:nth-child(2n){
 	background-color: #dacbf2;
 }
 
-#tableEdit>tr:first-child>td {
+#table>tr:first-child>td {
   background-color: #fcffba;
   vertical-align: bottom;
   text-align: center;
 }
 
-#tableEdit>tr:first-child>td>span.TableHead {
+#table>tr:first-child>td>span.TableHead {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
 }
 
-#tableEdit>tr:nth-child(2n)>td:nth-child(2n){
+#table>tr:nth-child(2n)>td:nth-child(2n){
 	background-color: #d2f2cb;
 }
-#tableEdit>tr:nth-child(2n+3)>td:nth-child(2n){
+#table>tr:nth-child(2n+3)>td:nth-child(2n){
 	background-color: #acff9c;
 }
-#tableEdit>tr:nth-child(2n)>td:nth-child(2n+1){
+#table>tr:nth-child(2n)>td:nth-child(2n+1){
 	background-color: #dadada;
 }
 /*Logout */
