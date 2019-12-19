@@ -39,6 +39,18 @@
   table {
     font-size: 3vw;
   }
+  .weektable {
+    font-size: 4.5vw !important;
+  }
+  button {
+    font-size: 15px !important;
+  }
+  #gesamt_lieferung {
+    font-size: 1.1em !important;
+  }
+  .footer ul {
+    font-size: 16px;
+  }
 }
 
 
@@ -361,6 +373,8 @@ table, td { border: 1px solid #999;
             border-collapse: collapse;
             padding: 3px;
             margin-top: 1.5em;
+            margin-left: auto;
+            margin-right: auto;
             background-color: white;
             text-align: left;
 }
@@ -396,7 +410,7 @@ td.col_Beschreibung>span, td.col_Kommentar>span, td.col_Produkt_ID>span{
 content:" ";
 height: 7px;
 width: 7px;
-    top: 9px;
+top: 9px;
 background-color: #4d3a27;
 border-radius: 50%;
 display: inline-block;
