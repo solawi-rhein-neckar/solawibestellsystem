@@ -40,7 +40,7 @@
     font-size: 3vw;
   }
   .weektable {
-    font-size: 4.5vw !important;
+    font-size: 4vw !important;
   }
   button {
     font-size: 15px !important;
@@ -49,7 +49,7 @@
     font-size: 1.1em !important;
   }
   .footer ul {
-    font-size: 16px;
+    font-size: 16px !important;
   }
 }
 
@@ -438,10 +438,6 @@ display: inline-block;
   display: inline-block;
 }
 
-
-
-
-
 .pfeil_back, .pfeil_forward {
   padding: 0.3em 0.5em !important;
   border-radius: 0px;
@@ -480,7 +476,7 @@ div.table_center {
 }
 
 
-
+/*
 #table1_center {
   max-width: 730px;
 }
@@ -493,7 +489,7 @@ div.table_center {
 #table4_center {
   max-width: 603px;
 }
-
+*/
 
   div.editorLabel, .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID, .inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID {display: none;}
   #table .col_Anzahl, .col_Produkt { font-weight: bold; }
@@ -522,3 +518,37 @@ div.table_center {
     .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
         background-color: #679b14;
     }
+
+#inp_anzahl_zusatz::placeholder {
+  color: darkgrey;
+  font-size: 13px;
+}
+
+#inp_anzahl_zusatz, #inp_kommentar_hidden {
+        font-size: 16px;
+        width: 55px;
+        padding: 8px 0 8px 2px;
+        margin: 10px;
+        border: 2px solid darkgrey;
+        background-color: #679b1445 !important;
+        text-align: center;
+  }
+#inp_kommentar_hidden {
+          font-size: 12px;
+          width: 200px;
+          padding: 8px 0 8px 2px;
+          margin: 10px;
+          border: 2px solid darkgrey;
+          background-color: #679b1445 !important;
+          text-align: left;
+    }
+
+
+
+select.editor.inp_Produkt_ID {
+      font-size: 16px;
+      background-color: #679b1445;
+      border-radius: 0;
+      border: 2px solid darkgrey;
+      padding: 7px 7px;
+  }
