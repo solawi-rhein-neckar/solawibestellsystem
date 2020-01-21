@@ -211,7 +211,7 @@ SET SESSION group_concat_max_len = 32000;
 
 SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('MAX(IF(Produkt = \'', Name, '\', Anzahl, 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
 
-SET @query = CONCAT('SELECT Depot as `00.',pWoche,'`, MAX(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `00.Milch`,', @query, ' , MAX(Urlaub) as `99.',pWoche,' Urlauber`,
+SET @query = CONCAT('SELECT Depot as `00.',pWoche,'`, MAX(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `06.Milch`,', @query, ' , MAX(Urlaub) as `99.',pWoche,' Urlauber`,
 (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `97.Mitglieder`,
 (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `98.Anteile`,
 (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `98.FleischAnteileErlaubt`,
@@ -265,7 +265,7 @@ SET SESSION group_concat_max_len = 32000;
 
 SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('SUM(IF(Produkt = \'', Name, '\', Anzahl, 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
 
-SET @query = CONCAT('SELECT Benutzer as `00.',pWoche, ' ', (SELECT Name FROM Depot WHERE ID = pDepot),'`, SUM(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `00.Milch`,', @query, ' , SUM(Urlaub) as `99.',pWoche, ' Urlaub` ,  
+SET @query = CONCAT('SELECT Benutzer as `00.',pWoche, ' ', (SELECT Name FROM Depot WHERE ID = pDepot),'`, SUM(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `06.Milch`,', @query, ' , SUM(Urlaub) as `99.',pWoche, ' Urlaub` ,  
 GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`               
  FROM 
                     
