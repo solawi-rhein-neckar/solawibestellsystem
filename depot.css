@@ -1,0 +1,122 @@
+:root {
+  --Farbe1: #ffffff;/*weiß - Kopfzeile*/
+	--Farbe2: #aed7fe; /*blau - Kopfzeile*/
+	--Farbe3: #dfeffe; /*blass*/
+  --Farbe4: #aed7fe; /*kräftig*/
+  --Farbe5: #e7e4e4; /*grau*/
+}
+table, td {
+	border: 1px solid #999;
+	border-collapse: collapse;
+	padding: 3px;
+}
+
+#tableEdit>tr:first-child>td:first-child>span {
+	writing-mode: horizontal-tb !important;
+	font-size: 1.1em;
+	font-weight: bold;
+}
+
+#tableEdit>tr:first-child>td:first-child {
+  background-color: var(--Farbe1);
+  vertical-align: bottom;
+  text-align: left;
+}
+#tableEdit>tr:first-child>td:nth-child(2n){
+	background-color: var(--Farbe2);
+}
+
+#tableEdit>tr:first-child>td {
+  background-color: var(--Farbe1);
+  vertical-align: bottom;
+  text-align: center;
+}
+
+#tableEdit>tr:first-child>td>span.TableHead {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+#tableEdit>tr:nth-child(2n)>td:nth-child(2n){
+	background-color: var(--Farbe3);
+}
+#tableEdit>tr:nth-child(2n+3)>td:nth-child(2n){
+	background-color: var(--Farbe4);
+}
+#tableEdit>tr:nth-child(2n)>td:nth-child(2n+1){
+	background-color: var(--Farbe5);
+}
+/*Logout */
+
+
+#logoutfrombg {
+    display: none !important;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort,
+	input.editor.inp_Cookie, input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche,
+	table.Benutzer td.col_BenutzerAbo td.col_Woche, .BenutzerBestellView .col_Benutzer_ID,
+	.BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID,
+	.DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID,
+	.GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID,
+	.BenutzerView .col_Role_ID {
+	display: none;
+}
+
+div.fixedHeaderTable>table>tr:first-child>td {
+	position: -webkit-sticky; /* for Safari */
+	position: sticky;
+	top: 0;
+	background: #EEE;
+	z-index: 222;
+	box-shadow: 0px 0px 0px 1px #999;
+}
+
+div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:first-child {
+	position: -webkit-sticky; /* for Safari */
+	position: sticky;
+	left: 0;
+	background: #EEE;
+	z-index: 111;
+	box-shadow: 0px 0px 0px 1px #999;
+}
+
+.col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID {
+	font-size: 75%;
+	color: #999;
+}
+
+.weektable {
+	font-size: 11.8px;
+	text-align: center;
+}
+
+.weektable td {
+	cursor: pointer;
+}
+
+.weektable td.inactive:hover, .weektable td span:hover, .weekWeek:hover,
+	.weektable a:hover {
+	background-color: orange;
+}
+
+.weektable td.active {
+	background-color: yellow;
+}
+
+.weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
+	background-color: aqua;
+}

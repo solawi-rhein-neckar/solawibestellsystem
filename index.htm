@@ -1,222 +1,304 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-     <meta charset="UTF-8">
-<title>Solawi Bestellsystem</title>
-<link rel="stylesheet" type="text/css" href="style.css">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Special+Elite%3Aregular%7COpen+Sans%3A300%2C300italic%2Cregular%2Citalic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic&amp;ver=4.9.11#038;subset=latin,latin-ext" type="text/css" media="all">
+<meta charset="UTF-8">
+	<title>Solawi Bestellsystem</title>
+	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<link rel="stylesheet"
+		href="https://fonts.googleapis.com/css?family=Special+Elite%3Aregular%7COpen+Sans%3A300%2C300italic%2Cregular%2Citalic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic&amp;ver=4.9.11#038;subset=latin,latin-ext"
+		type="text/css" media="all"/>
 
-<script src="util.js"> </script>
-<script src="weekSelect.js"> </script>
-<script src="solawiBestellSystem.js"> </script>
-<script src="solawiTableValidator.js"> </script>
-<script src="solawiTableEditor.js"> </script>
-<script src="solawiTable.js"> </script>
-<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
-<script type="text/javascript" src="FileSaver.min.js"></script>
-    <meta name="viewport" content="width=560, initial-scale=1.0, user-scalable=yes">
+	<script src="util.js"></script>
+	<script src="weekSelect.js"></script>
+	<script src="solawiBestellSystem.js"></script>
+	<script src="solawiTableValidator.js"></script>
+	<script src="solawiTableEditor.js"></script>
+	<script src="solawiTable.js"></script>
 
+	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
+	<script type="text/javascript" src="FileSaver.min.js"></script>
+
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 </head>
 
 <script>
-if (location.protocol && !location.protocol.match(/https/) && location.host.match(/www.solawi.fairtrademap.de/)) { location.replace('https://www.solawi.fairtrademap.de/index.htm'); }
-else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) { location.replace('https://solawi.fairtrademap.de/index.htm'); }
+    if (location.protocol && !location.protocol.match(/https/) && location.host.match(/www.solawi.fairtrademap.de/)) {
+        location.replace('https://www.solawi.fairtrademap.de/index.htm');
+    } else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
+        location.replace('https://solawi.fairtrademap.de/index.htm');
+    }
 
-var SBS = SolawiBestellSystem();
-var SBTedit= SolawiTable(SBS, 'tableEdit', 'tableEditPath', true, true);
-var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, true);
-var SBTmodule = SolawiTable(SBS, 'tableModule', 'tableModulePath', true, true);
-var reloadEdit = SBTedit.reload;
-SBTedit.reload = function() {SBTview.reload(); reloadEdit();}
+    var SBS = SolawiBestellSystem();
+    var SBTedit = SolawiTable(SBS, 'tableEdit', 'tableEditPath', true, true);
+    var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, true);
+    var SBTmodule = SolawiTable(SBS, 'tableModule', 'tableModulePath', true, true);
+    var reloadEdit = SBTedit.reload;
+    SBTedit.reload = function() {
+        SBTview.reload();
+        reloadEdit();
+    }
 
-//check login status
-getAjax('BenutzerView/MY', function(userResponse){
-    if (userResponse.length > 0) {
-        SBS.user = userResponse[0];
+    //check login status
+    getAjax('BenutzerView/MY', function(userResponse) {
+        if (userResponse.length > 0) {
+            SBS.user = userResponse[0];
 
-        if (SBS.user['Role_ID'] == 3) {
-        	showInline('depotManageLink');
-          showInline('depotManageLink2');
-        }
-
-        setContent('logoutbtn', 'Logout ' + SBS.user.Name);
-
-        setHtmlContent('calendarWeek', weekToDate(SBS.week, 4).toLocaleDateString() + ( SBS.date.getDay() != SBS.day ? ', noch ' + ((7 + SBS.day - SBS.date.getDay()) % 7) + ' Tage' : ', heute' ));
-
-        setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
-
-        setContent('Modul', SBS.user.Modul);
-
-        getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
-
-        getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
-
-        getAjax('BenutzerModulAbo/Benutzer_ID/MY/Bis/'+SBS.week, SBTmodule.showTable);
-
-        getAjax('Solawi/Name/AbgeschlosseneWoche', function(result){
-        	if (result && result[0] && result[0]['Wert']) {SBS.AbgeschlosseneWoche = result[0]['Wert']}
-            if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
-            	document.getElementById('WocheAbgeschlossen').style.display='block';
-            } else {
-            	document.getElementById('WocheAbgeschlossen').style.display='none';
+            if (SBS.user['Role_ID'] == 3) {
+                showInline('depotManageLink');
+                showInline('depotManageLink2');
+                show('depotManageLink3');
             }
 
-        });
+            /*setContent('logoutbtn', 'Logout ' + SBS.user.Name);*/
 
-        //getAjax('BenutzerUrlaub', SBTurlaub.showTable);
-         var weekSelect = Object.create(WeekSelect);
-         weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
-         weekSelect.week = SBS.week;
-         weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + SBS.user.ID,
-         weekSelect.postData = {Benutzer_ID: SBS.user.ID, Woche: SBS.selectedWeek},
-         weekSelect.allowMulti = false;
-         weekSelect.addTo(document.getElementById('tableUrlaub'));
+            setHtmlContent('calendarWeek', weekToDate(SBS.week, 4).toLocaleDateString()
+                    + (SBS.date.getDay() != SBS.day ? ', noch ' + ((7 + SBS.day - SBS.date.getDay()) % 7) + ' Tage' : ', heute'));
 
-    } else {
-        show('loginform');
-        hide('logoutbtn');
-        hide('content');
+            setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> ('
+                    + weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
+
+            setContent('Modul', SBS.user.Modul);
+
+            getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/' + SBS.selectedWeek, SBTview.showTable);
+
+            getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/' + SBS.selectedWeek, SBTedit.showTable);
+
+            getAjax('BenutzerModulAbo/Benutzer_ID/MY/Bis/' + SBS.week, SBTmodule.showTable);
+
+            getAjax('Solawi/Name/AbgeschlosseneWoche', function(result) {
+                if (result && result[0] && result[0]['Wert']) {
+                    SBS.AbgeschlosseneWoche = result[0]['Wert']
+                }
+                if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
+                    document.getElementById('WocheAbgeschlossen').style.display = 'block';
+                } else {
+                    document.getElementById('WocheAbgeschlossen').style.display = 'none';
+                }
+
+            });
+
+            //getAjax('BenutzerUrlaub', SBTurlaub.showTable);
+            var weekSelect = Object.create(WeekSelect);
+            weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
+            weekSelect.week = SBS.week;
+            weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + SBS.user.ID, weekSelect.postData = {
+                Benutzer_ID : SBS.user.ID,
+                Woche : SBS.selectedWeek
+            }, weekSelect.allowMulti = false;
+            weekSelect.addTo(document.getElementById('tableUrlaub'));
+
+        } else {
+            show('loginform');
+            hide('logoutbtn');
+            hide('content');
+        }
+    });
+
+    SBS.fillCache('Produkt');
+    SBS.fillCache('Modul');
+
+    function changeWeek(count) {
+        SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
+        setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> ('
+                + weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
+        getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/' + SBS.selectedWeek, SBTview.showTable);
+        getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/' + SBS.selectedWeek, SBTedit.showTable);
+        if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
+            document.getElementById('WocheAbgeschlossen').style.display = 'block';
+        } else {
+            document.getElementById('WocheAbgeschlossen').style.display = 'none';
+        }
     }
-});
-
-SBS.fillCache('Produkt');
-SBS.fillCache('Modul');
-
-function changeWeek(count) {
-    SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
-    setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> (' +  weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
-    getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTview.showTable);
-    getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/'+SBS.selectedWeek, SBTedit.showTable);
-    if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
-    	document.getElementById('WocheAbgeschlossen').style.display='block';
-    } else {
-    	document.getElementById('WocheAbgeschlossen').style.display='none';
+    function resetWeek() {
+        SBS.selectedWeek = SBS.week;
+        changeWeek(0);
     }
-}
-function resetWeek(){
-    SBS.selectedWeek = SBS.week;
-    changeWeek(0);
-}
 </script>
-<div id="blockui_post" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:250;background-color:rgba(0,0,0,0.3);display:none;">
-    <span style="display:inline-block;padding:30px;background-color:#FFF;border:1px solid black;">SENDE DATEN...</span>
+<div id="blockui_post" style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 250; background-color: rgba(0, 0, 0, 0.3); display: none;">
+	<span style="display: inline-block; padding: 30px; background-color: #FFF; border: 1px solid black;">
+		SENDE DATEN...
+	</span>
 </div>
-<div id="blockui_get" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;padding-top:30%;z-index:240;background-color:rgba(0,0,0,0.3);display:none;">
-    <span style="display:inline-block;padding:30px;background-color:#FFF;border:1px solid black;">EMPFANGE DATEN - BITTE WARTEN....</span>
+<div id="blockui_get" style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 240; background-color: rgba(0, 0, 0, 0.3); display: none;">
+	<span style="display: inline-block; padding: 30px; background-color: #FFF; border: 1px solid black;">EMPFANGE
+		DATEN - BITTE WARTEN....
+	</span>
 </div>
-<div id="blockui_edit" style="position:fixed;top:0;left:0;bottom:100%;right:100%;width:100%;height:100%;text-align:center;z-index:230;background-color:rgba(0,0,0,0.3);display:none;">
-    <div style="position:absolute;left:0;right:0;top:30%;">
-        <div style="display:inline-block;padding: 6px;border:1px solid black;background-color:#FFF;">
-            <div style="font-weight:bold;padding-bottom:5px;">Produkte tauschen (negative Anzahl, wenn man WENIGER will):</div>
-            <div id="editError" style="color:red;font-weight:bold;"></div>
-            <div id="editor" style="padding: 5px;"></div>
-        </div>
-    </div>
-</div>
-
-
-<div id="logoutfrombg" style="box-shadow: 0em 0em 1em 1em rgba(222,222,222,0.7); background: rgba(222,222,222,0.7); position: fixed; height: 14em; width: 19em; z-index: 8888; right: 1px; top: 0; font-size: 12px;"> </div>
-<div id="logoutform" style="position:fixed;right: 1px; top: 0; font-size:12px; width: 20em; height: 15em; text-align:center;z-index:9999;">
-    <button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('content');" >Logout</button>
-    <div id="messages" style="height:11em; overflow:hidden;font-size=85%;position:absolute;bottom:0;width:20em;">
-    </div>
+<div id="blockui_edit" style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; z-index: 230; background-color: rgba(0, 0, 0, 0.3); display: none;">
+	<div style="position: absolute; left: 0; right: 0; top: 30%;">
+		<div style="display: inline-block; padding: 6px; border: 1px solid black; background-color: #FFF;">
+			<div style="font-weight: bold; padding-bottom: 5px;">Produkte tauschen (negative Anzahl, wenn man WENIGER will):</div>
+			<div id="editError" style="color: red; font-weight: bold;"></div>
+			<div id="editor" style="padding: 5px;"></div>
+		</div>
+	</div>
 </div>
 
-<div id="loginform" style="display:none">
-    LOGIN:
-    <form method='post' action='/cgi-bin/query.pl/login'>
-        Name: <input type='text' id='inpName' name='name' placeholder='name'/><br/>
-        Password: <input type='password' id='inpPass' name='password'/><br/>
-        <input type='submit' value='Login' onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;'/>
-        <div id="loginError" style="display:none;color:red;font-weight:bold;padding-top:20px;">
-        	Falscher Benutzername oder Falsches Passwort! Bitte mit den Login-Daten des <a href="https://www.solawi-rhein-neckar.org/intern/login/?redirect_to=https%3A%2F%2Fwww.solawi-rhein-neckar.org%2Fintern%2F">Mitgliederbereichs</a> anmelden!
-        </div>
-        <div id="userMissing" style="display:none;color:red;font-weight:bold;padding-top:20px;">
-        	Login erfolgreich, aber Benutzer mit Name <span id="missingUser" style="color:orange;"></span> wurde im Bestellsystem nicht gefunden.<br/>Bitte Mail an Depotverwalter und <a id="missingUserEmail" href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+">solawiBestellsystem@regenduft.de</a> schreiben.
-        </div>
-    </form>
- 	<br/><br/><a href="admin.htm">Zu den Berichten + Admin-Bereich</a><br/>
- </div>
+
+<div id="logoutfrombg" ></div>
+<div id="logoutform">
+	<button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('content');">Logout</button>
+	<div id="messages"></div>
+</div>
+
+<div class="login-page" id="loginform" style="display: none">
+	<form class="register-form" method='post'
+		action='/cgi-bin/query.pl/login'>
+		<img style="width: 200px; margin-bottom: 2em;"
+			src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png"
+			alt="Logo Solawi"> <input type='text' id='inpName' name='name' placeholder='name' />
+		<br />
+		<input type='password' id='inpPass' name='password' placeholder='passwort' />
+		<br />
+		<input class="loginbutton" type='submit' value='Login'
+			onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
+		<div class="message" id="loginError">
+			Falscher Benutzername<br>oder falsches Passwort!
+			<br><br>
+			Bitte den Login-Daten des
+			<a href="https://www.solawi-rhein-neckar.org/intern/login/?redirect_to=https%3A%2F%2Fwww.solawi-rhein-neckar.org%2Fintern%2F">
+				Mitgliederbereichs
+			</a> anmelden!
+		</div>
+		<div id="userMissing" class="message">
+			Login erfolgreich, aber Benutzer mit Name
+			<span id="missingUser" style="color: red;"></span> wurde im Bestellsystem nicht gefunden.
+			<br />
+			Bitte Mail an Depotverwalter und
+			<a id="missingUserEmail"
+				href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+">
+				solawiBestellsystem@regenduft.de
+			</a> schreiben.
+		</div>
+		<a href="admin.htm">Berichte und Admin-Bereich</a>
+	</form>
+	<br />
+	<br />
+	<br />
+</div>
 
 
 <div id="content">
-<header>
-  <img src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png" alt="Logo Solawi">
-  <div class="header-right">
-  <span style="display:none;" id="depotManageLink"><a href="depot.htm">Depotverwaltung</a></span>
-  <a href="#Urlaub">Dein Urlaub</a>
-  <!-- a href="#Module">Module</a-->
-  <a href="#Downloads">Übersichten</a>
-  </div>
-</header>
-<main>
-<div class="greeting">
-  <p class="greeting">Nächste Lieferung: <span id="calendarWeek">00</span>
-<br>Du möchtest JEDE Woche: <span id="Modul">Vegetarisch_mit_Milch</span></p>
-  <p>
-</div>
-<h1>Deine Lieferübersicht</h1>
-<div id="gesamt_lieferung">
-<p><button class="pfeil_back" onclick="changeWeek(-1)">&lt;</button> KW <span id="selectedWeek" style="font-weight:bold;">00</span> <button class="pfeil_forward" onclick="changeWeek(+1)">&gt;</button></p>
-<p> <button onclick="resetWeek();">zurück zur aktuellen Woche</button> </p>
-</div>
-<!--
-    <button onclick="getAjax('Benutzer', showTable);">Benutzer</button>
-    <button onclick="getAjax('BenutzerUrlaub', showTable);">BenutzerUrlaub</button>
-    <button onclick="getAjax('Depot', showTable);">Depot</button>
-    <button onclick="getAjax('Modul', showTable);">Modul</button>
-    <button onclick="getAjax('ModulInhalt', showTable);">ModulInhalt</button>
-    <button onclick="getAjax('ModulInhaltWoche', showTable);">ModulInhaltWoche</button>
-    <button onclick="getAjax('Produkt', showTable);">Produkt</button>
-    <button onclick="getAjax('ZusatzBestellung', showTable);">ZusatzBestellung</button>-->
+	<header>
+	<nav id="page-nav">
+		<img id="logo" alt="Logo Solawi"
+			src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png"></img>
+		<label for="hamburger">&#9776;</label>
+		<input 	type="checkbox" id="hamburger" />
+		<div class="desktopmenu">
+			<ul class="desktopmenu">
+				<li><span style="display: none;" id="depotManageLink"><a href="depot.htm">Depotverwaltung</a></span></li>
+				<li><a href="#Urlaub">Dein Urlaub</a></li>
+				<li><a href="#Downloads">Übersichten</a></li>
+			</ul>
+		</div>
+		<div class="mobilmenu">
+			<ul>
+				<li><span style="display: none;" id="depotManageLink3"><a href="depot.htm">Depotverwaltung</a></span></li>
+				<li><a href="#Urlaub">Dein Urlaub</a></li>
+				<li><a href="#Downloads">Übersichten</a></li>
+			</ul>
+		</div>
+	</nav>
+	</header>
 
 
-<div class="table_center" id="table1_center"><table id="table" cellspacing="0" > </table></div>
-
-<!-- >div id="comment"><textarea id="inp_comment"></textarea><button id="btn_comment" onclick="saveComment();">Speichern</button></div -->
-
-<h2>Änderungen / Tauschen</h2>
-<div class="text_zentral">
-Es kann nur <strong>für zukünftige Lieferungen</strong> getauscht werden.
-<strong>Negative Anzahl</strong> eingeben, um in der gewählten Woche weniger zu erhalten (wegzutauschen). Positive Anzahl, um mehr zu bekommen.
-Die endgültige Anzahl ist in der Liefer-Tabelle fett gedruckt.
-Änderungen für <strong>vergangene Kalenderwochen ignoriert</strong> das System.
-</div>
-
-	<div id="WocheAbgeschlossen" style="font-weight:bold;color:red;display:none;">
-		Die Bestellung für diese Woche ist abgeschlossen! Änderungen werden NICHT MEHR BERÜCKSICHTIGT.
+	<main>
+	<div class="greeting">
+		<p class="greeting">
+			Nächste Lieferung: <span id="calendarWeek">00</span> <br> <span
+				style="color: white;">Änderungen bis Sonntag Abend möglich </span>
+		</p>
+	</div>
+	<h1>Deine Lieferübersicht</h1>
+	<div id="gesamt_lieferung">
+		<p>
+			<button class="pfeil_back" onclick="changeWeek(-1)">
+				<img src="pfeil.svg" alt="<" width="25" height="25">
+			</button>
+			KW <span id="selectedWeek">00</span>
+			<button class="pfeil_forward" onclick="changeWeek(+1)">
+				<img src="pfeil.svg" alt=">" style="transform:rotate(180)" width="25" height="25">
+			</button>
+		</p>
+		<p>
+			<button onclick="resetWeek();">zurück zur aktuellen Woche</button>
+		</p>
 	</div>
 
-  <div class="table_center" id="table2_center"><table id="tableEdit" cellspacing="0" > </table></div>
+	<div class="table_center" id="table1_center">
+		<table id="table" cellspacing="0">
+		</table>
+	</div>
+
+	<h2>Änderungen / Tauschen</h2>
+	<div class="text_zentral">
+		Es kann nur <strong>für zukünftige Lieferungen</strong> getauscht
+		werden. <strong>Negative Anzahl</strong> eingeben, um in der gewählten
+		Woche weniger zu erhalten (wegzutauschen). Positive Anzahl, um mehr zu
+		bekommen. Die endgültige Anzahl ist in der Liefer-Tabelle fett
+		gedruckt. Änderungen für <strong>vergangene Kalenderwochen
+			ignoriert</strong> das System.
+	</div>
+
+	<div id="WocheAbgeschlossen" style="font-weight: bold; color: red; display: none;">Die
+		Bestellung für diese Woche ist abgeschlossen! Änderungen werden NICHT
+		MEHR BERÜCKSICHTIGT.
+	</div>
+
+	<div class="table_center" id="table2_center">
+		<table id="tableEdit" cellspacing="0">
+		</table>
+	</div>
 
 
 
-<h1 id=Urlaub>Dein Urlaub</h1>
-<div class="text_zentral">Deine geplanten <strong>Urlaube</strong>: Kalenderwoche anklicken -> in GELB markierter Kalenderwoche erfolgt KEINE LIEFERUNG, aber Du bekommst KEINE Tauschpunkte gutgeschrieben. Du kannst Deinen Anteil stattdessen auch an andere weitergeben (im Depot oder an Freunde), in diesem Fall trage KEINEN Urlaub ein, sondern informiere Dein Depot per Email.
-(Nach Urlaubs-Änderung: Bitte die Seite NEU LADEN (Taste F5), um die Lieferung für die aktuelle Woche zu aktualisieren!)</div>
-<div class="table_center" id="table3_center">
-    <div id="tableUrlaub" > </div>
-</div>
+	<h1 id=Urlaub>Dein Urlaub</h1>
+	<div class="text_zentral">
+		Deine geplanten <strong>Urlaube</strong>: Kalenderwoche anklicken ->
+		in <span id=braun>BRAUN</span> markierter Kalenderwoche erfolgt KEINE
+		LIEFERUNG, aber Du bekommst KEINE Tauschpunkte gutgeschrieben. Du
+		kannst Deinen Anteil stattdessen auch an andere weitergeben (im Depot
+		oder an Freunde), in diesem Fall trage KEINEN Urlaub ein, sondern
+		informiere Dein Depot per Email. (Nach Urlaubs-Änderung: Bitte die
+		Seite NEU LADEN (Taste F5), um die Lieferung für die aktuelle Woche zu
+		aktualisieren!)
+	</div>
+	<div class="table_center" id="table3_center">
+		<div id="tableUrlaub"></div>
+	</div>
 
 
-<div style="display:none;">
-	<!-- TOOO complicated for end users, making it invisible for now -->
-	<h1 id="Module" >Module</h1>
-	<div class="text_zentral">Hier kannst Du Deine <strong>Module</strong> (aktuelle und auch künftige Änderungen) bearbeiten. Nach Modul-Änderung die Seite NEU LADEN (Taste F5), um die Bestellungen für die aktuelle Woche zu aktualisieren!</div>
-	<div class="table_center" id="table4_center"><table id="tableModule" cellspacing="0" > </table></div>
-</div>
+	<div style="display: none;">
+		<!-- TOOO complicated for end users, making it invisible for now -->
+		<h1 id="Module">Module</h1>
+		<div class="text_zentral">
+			Hier kannst Du Deine <strong>Module</strong> (aktuelle und auch
+			künftige Änderungen) bearbeiten. Nach Modul-Änderung die Seite NEU
+			LADEN (Taste F5), um die Bestellungen für die aktuelle Woche zu
+			aktualisieren!
+		</div>
+		<div class="table_center" id="table4_center">
+			<table id="tableModule" cellspacing="0">
+			</table>
+		</div>
+	</div>
 
-<h1 id=Downloads>Lieferungen Depot / Solawi</h1>
-<a target="_blank" href="print.htm#PivotBestellungen">Gesamte Solawi</a> <br>
-<a href="#" onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);event.preventDefault();return false;">Download als Exceltabelle</a> <br>
-<a target="_blank" href="print.htm#PivotDepot">Lieferübersicht Depot</a>
-</br><span style="display:none;" id="depotManageLink2"><a href="depot.htm">DEPOT-VERWALTUNG</a></span>
 
-<br/>
-<br/>
+	<div class="footer">
+		<h1 id="Downloads">Übersichten</h1>
+		<ul>
+			<li><a target="_blank" href="print.htm#PivotBestellungen">Gesamte Solawi</a> <br></li>
+			<li><a href="#" onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);event.preventDefault();return false;">
+				Download als Exceltabelle
+				</a> <br>
+			</li>
+			<li><a target="_blank" href="print.htm#PivotDepot">Bestellübersicht Depot</a><br></li>
+			<li style="display: none;" id="depotManageLink2"><a href="depot.htm">Depotverwaltung</a></li>
+		</ul>
+	</div>
 
-</div>
-</main>
+	</main>
 </div>
 </body>
 </html>

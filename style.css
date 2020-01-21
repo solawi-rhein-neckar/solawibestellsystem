@@ -1,5 +1,245 @@
+
+
+
+
+
+
+/*Logout */
+#logoutfrombg {
+    display: none !important;
+}
+#logoutform {
+  padding-top: 5px;
+  position: absolute;
+  right: 0.5%;
+  margin-top: 40px;
+  font-size: 12px;
+  width: 10em;
+  height: 40px;
+  text-align: center;
+  z-index: 9999;
+}
+#logoutbtn {
+  background: #e07000;
+}
+#logoutbtn:hover {
+  background: #cd6905;
+}
+
+#messages {
+  height: 40px;
+  overflow: hidden;
+  font-size:85%;
+  position: absolute;
+  margin-top: 10px;
+  width: 100px;
+}
+
+@media screen and (max-width: 730px){
+  table {
+    font-size: 3vw;
+  }
+  .weektable {
+    font-size: 4vw !important;
+  }
+  button {
+    font-size: 15px !important;
+  }
+  #gesamt_lieferung {
+    font-size: 1.1em !important;
+  }
+  .footer ul {
+    font-size: 16px !important;
+  }
+}
+
+
+@media screen and (max-width: 500px){
+
+  #logoutfrombg {
+    display: none !important;
+  }
+  #logoutform {
+    left: 210px;
+    top: 45px;
+  }
+}
+/* Login Bereich */
+.login-page {
+  width: 360px;
+  padding: 8% 0 0;
+  margin: auto;
+}
+form {
+  position: relative;
+  z-index: 1;
+  background: #FFFFFF;
+  max-width: 360px;
+  margin: 0 auto 100px;
+  padding: 45px;
+  text-align: center;
+  box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.2), 0 5px 5px 0 rgba(0, 0, 0, 0.24);
+}
+form input {
+  outline: 0;
+  background: #f2f2f2;
+  width: 100%;
+  border: 0;
+  margin: 0 0 15px;
+  padding: 15px;
+  box-sizing: border-box;
+  font-size: 14px;
+}
+input.loginbutton {
+  text-transform: uppercase;
+  outline: 0;
+  background: #4d3b27;
+  width: 100%;
+  border: 0;
+  padding: 15px;
+  color: #FFFFFF;
+  font-size: 14px;
+  -webkit-transition: all 0.3 ease;
+  transition: all 0.3 ease;
+  cursor: pointer;
+}
+input.loginbutton:hover,.form button:active,.form button:focus {
+  background: #679b14;
+}
+form .message {
+  display:none;
+  margin: 15px 0 0;
+  color: #c31212;
+  font-size: 12px;
+  padding-bottom: 2em;
+}
+form div.message {
+  margin-bottom: 1em;
+}
+form .message a {
+  color: #c31212;
+  font-weight:600;
+  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
+  border-bottom: solid;
+  border-width: thin;
+  padding-left: 0em;
+}
+form .message a:hover {
+  color: #4d3b27;
+}
+
+form a {
+  font-weight:600;
+  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
+}
+form a:hover {
+  font-weight:600;
+  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
+}
 body {
-  font-family: Open Sans,Helvetica,Arial,Lucida,sans-serif;
+  background: #f0d9b5;
+}
+/*Ende Loginbereich*/
+
+
+/*Navigationsbereich - Header und Hamburger*/
+#page-nav {
+  width: 100%;
+}
+#logo {
+  float:left;
+}
+/* Desktopansicht - weg mit Hamburger */
+#page-nav label, #hamburger {
+  display: none;
+}
+
+/* Menu Items */
+ul.desktopmenu {
+  list-style-type: none;
+  margin: 0 100px 0 0;
+  padding-top: 40px;
+  float: right;
+  vertical-align: top;
+  font-size: 17px;
+  font-weight: 600;
+}
+ul.desktopmenu li {
+  display: inline-block;
+  padding-right: 10px;
+  box-sizing: border-box;
+}
+/*mobilmenu ausblenden*/
+div.mobilmenu {
+  display: none;
+}
+
+
+/* Mobilversion */
+@media screen and (max-width: 1103px){
+  header {
+    height: 110px;
+  }
+  #logo {
+    float: none;
+    display: block;
+    height: 70px;
+  }
+  /* Einblenden Hamburger */
+  #page-nav label {
+    display: inline-block;
+    color: #679b14;
+    font-style: normal;
+    font-size: 1.2em;
+    padding: 10px;
+    vertical-align: top;
+    float: none;
+  }
+
+  #page-nav label:hover {
+    background-color: #679b14;
+    color: #fff;
+  }
+ /*Ausblenden Desktopmenue*/
+ div.desktopmenu {
+    display: none;
+  }
+
+  #page-nav input:checked ~ div.mobilmenu {
+    border-top: 3px solid #679b14;
+    display:block;
+    height: max-content;
+    position: absolute;
+    background-color: #f0d9b5;
+    width: 85%;
+    visibility: visible;
+    opacity: 1;
+    -webkit-box-shadow: 0 2px 5px rgba(0,0,0,.1);
+    -moz-box-shadow: 0 2px 5px rgba(0,0,0,.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,.1);
+  }
+
+  .mobilmenu li a {
+      display: block;
+      padding: 10px 5%;
+      border-bottom: 1px solid rgba(0,0,0,.03);
+      font-size: 14px;
+      -webkit-transition: all .2s ease-in-out;
+      -moz-transition: all .2s ease-in-out;
+      transition: all .2s ease-in-out;
+      font-size: 17px;
+      font-weight: 600;
+  }
+  .
+}
+
+
+
+
+body {
+  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
   line-height: 1.45;
   color: #4d3a27;
   letter-spacing: .05em;
@@ -7,17 +247,12 @@ body {
 }
 
 header {
-  overflow: hidden;
   background-color: #f0d9b5;
   height: 110px;
   padding: 15px 35px;
 }
-
-.header-right {
-  float: right;
-  margin-right: 13em;
-  margin-top: 45px;
-  font-size: 1.2em;
+ul {
+  list-style: none;
 }
 
 #header_title {
@@ -25,19 +260,14 @@ header {
   border-bottom-style: none;
 }
 
-
 main {
   text-align: center;
+  background-color: white;
 }
 
 #gesamt_lieferung{
-  font-size: 1.2em;
-}
-
-.container {
-  display: flex; /* oder inline-flex */
-  flex-direction: row;
-  flex-wrap: wrap;
+    font-size: 1.3em;
+    vertical-align: middle;
 }
 
 a {
@@ -70,6 +300,7 @@ h1 {
   padding-top: 3%;
   margin-bottom: 3%;
   font-size: 1.8em;
+  text-transform: uppercase;
 }
 h2 {
   text-align: center;
@@ -115,27 +346,111 @@ button {
     border-width: 0px;
     border-radius: 0px;
     letter-spacing: 0px;
-    padding: 0.3em 1em !important;
+    padding: 0.3em 1em;
     color: white;
-    font-size: 16px;
-    font-weight: 300;
+    font-size: 20px;
+    line-height: 1.5em;
 }
 
 button:hover {
-    background: #e07000 !important;
+    background: #e07000;
     border-radius: 8px;
+    -moz-transition: all .51s;
+    -o-transition: all .51s;
+    -webkit-transition: all .51s;
+    transition: all .51s;
+}
+
+button:disabled {
+    background-color: #dadada;
+}
+button:disabled:hover {
+    background-color: #dadada !important;
+    border-radius: 0px;
 }
 
 table, td { border: 1px solid #999;
             border-collapse: collapse;
             padding: 3px;
             margin-top: 1.5em;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: white;
+            text-align: left;
+}
+table>tr:first-child>td>span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  padding: 0 1px;
+  width:1.4em;
+}
+
+
+table>tr:first-child>td.col_Produkt>span {
+  writing-mode: horizontal-tb !important;
+}
+table>tr:first-child>td{
+  vertical-align: bottom;
+}
+table>tr:nth-child(n+2)>td{
+  vertical-align: middle;
+}
+
+td.col_Beschreibung>span, td.col_Kommentar>span, td.col_Produkt_ID>span{
+  writing-mode: horizontal-tb !important;
+}
+
+
+#Downloads {
+  color: white !important;
+  text-shadow: 0 1px 3px #3d5d0a;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.footer li::before{
+content:" ";
+height: 7px;
+width: 7px;
+top: 9px;
+background-color: #4d3a27;
+border-radius: 50%;
+display: inline-block;
+}
+
+.footer ul {
+  font-size: 18px;
+  font-weight: 500;
+  width: 300px;
+  margin: 0 auto;
+  padding-left:0px;
+}
+.footer {
+  background-color: #679b14;
+  text-align: left;
+  margin-top: 2em;
+  padding-bottom: 2em;
+  padding-left: 13%;
+  padding-right: 13%;
+}
+
+
+.footer a {
+  color: white;
+  display: inline-block;
 }
 
 .pfeil_back, .pfeil_forward {
-  font-size: 1em !important;
   padding: 0.3em 0.5em !important;
   border-radius: 0px;
+  vertical-align: middle;
+}
+.pfeil_forward{
+  -webkit-transform: rotate(180deg);
+  -moz-transform: rotate(180deg);
+  -o-transform: rotate(180deg);
+  -ms-transform: rotate(180deg);
+  transform: rotate(180deg);
 }
 
 .col_Woche, .col_Benutzer_ID, .col_Benutzer, .col_Depot, .col_Depot_ID, .col_Einheit, .col_Menge{
@@ -144,11 +459,16 @@ table, td { border: 1px solid #999;
 }
 
 button.btn_plus:hover {
-  background-color: #679b14 !important;
+  background-color: #679b14;
 }
 
 button.btn_minus {
-  background-color: #e07000 !important;
+  background-color: #e07000;
+}
+
+#braun {
+  color: #4d3b27;
+  font-weight: 600;
 }
 
 div.table_center {
@@ -157,8 +477,10 @@ div.table_center {
   text-align: left;
 }
 
+
+/*
 #table1_center {
-  max-width: 1044px;
+  max-width: 730px;
 }
 #table2_center {
   max-width: 396px;
@@ -169,7 +491,7 @@ div.table_center {
 #table4_center {
   max-width: 603px;
 }
-
+*/
 
   div.editorLabel, .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID, .inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID {display: none;}
   #table .col_Anzahl, .col_Produkt { font-weight: bold; }
@@ -179,20 +501,56 @@ div.table_center {
 }
 
   #navi { position: absolute;}
-
   .weektable {
+        font-size: 16px;
+        text-align: center;
+    }
+    .weektable td {
+        background-color:white;
+        cursor:pointer;
+        color: black;
+    }
+    .weektable td.inactive:hover, .weektable td span:hover, .weekWeek:hover, .weektable a:hover {
+        background-color:orange;
+    }
+    .weektable td.active {
+        background-color: #4d3b27;
+        color: white;
+    }
+    .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
+        background-color: #679b14;
+    }
+
+#inp_anzahl_zusatz::placeholder {
+  color: darkgrey;
+  font-size: 13px;
+}
+
+#inp_anzahl_zusatz, #inp_kommentar_hidden {
+        font-size: 16px;
+        width: 55px;
+        padding: 8px 0 8px 2px;
+        margin: 10px;
+        border: 2px solid darkgrey;
+        background-color: #679b1445 !important;
+        text-align: center;
+  }
+#inp_kommentar_hidden {
+          font-size: 12px;
+          width: 200px;
+          padding: 8px 0 8px 2px;
+          margin: 10px;
+          border: 2px solid darkgrey;
+          background-color: #679b1445 !important;
+          text-align: left;
+    }
+
+
+
+select.editor.inp_Produkt_ID {
       font-size: 16px;
-      text-align: center;
-  }
-  .weektable td {
-      cursor:pointer;
-  }
-  .weektable td.inactive:hover, .weektable td span:hover, .weekWeek:hover, .weektable a:hover {
-      background-color:orange;
-  }
-  .weektable td.active {
-      background-color:yellow;
-  }
-  .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
-      background-color:aqua;
+      background-color: #679b1445;
+      border-radius: 0;
+      border: 2px solid darkgrey;
+      padding: 7px 7px;
   }
