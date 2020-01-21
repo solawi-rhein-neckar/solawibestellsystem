@@ -381,6 +381,8 @@ table, td { border: 1px solid #999;
 table>tr:first-child>td>span {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
+  padding: 0 1px;
+  width:1.4em;
 }
 
 
