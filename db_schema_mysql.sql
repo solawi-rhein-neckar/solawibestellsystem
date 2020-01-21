@@ -1,11 +1,11 @@
 -- phpMyAdmin SQL Dump
--- version 4.9.0.1
+-- version 4.9.2
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Erstellungszeit: 20. Okt 2019 um 17:34
--- Server-Version: 5.7.26-nmm1-log
--- PHP-Version: 7.2.19-nmm1
+-- Erstellungszeit: 21. Jan 2020 um 22:22
+-- Server-Version: 5.7.28-nmm1-log
+-- PHP-Version: 7.2.24-nmm1
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 SET AUTOCOMMIT = 0;
@@ -15,6 +15,8 @@ SET time_zone = "+00:00";
 --
 -- Datenbank: `d02dbcf8`
 --
+CREATE DATABASE IF NOT EXISTS `d02dbcf8` DEFAULT CHARACTER SET utf8 COLLATE utf8_german2_ci;
+USE `d02dbcf8`;
 
 DELIMITER $$
 --
@@ -261,9 +263,9 @@ BEGIN
 
 SET SESSION group_concat_max_len = 32000;
 
-SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('MAX(IF(Produkt = \'', Name, '\', Anzahl, 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
+SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('SUM(IF(Produkt = \'', Name, '\', Anzahl, 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
 
-SET @query = CONCAT('SELECT Benutzer as `00.',pWoche, ' ', (SELECT Name FROM Depot WHERE ID = pDepot),'`, MAX(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `00.Milch`,', @query, ' , MAX(Urlaub) as `99.',pWoche, ' Urlaub` ,  
+SET @query = CONCAT('SELECT Benutzer as `00.',pWoche, ' ', (SELECT Name FROM Depot WHERE ID = pDepot),'`, SUM(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `00.Milch`,', @query, ' , SUM(Urlaub) as `99.',pWoche, ' Urlaub` ,  
 GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`               
  FROM 
                     
@@ -277,7 +279,7 @@ GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`
                     
                     from `d02dbcf8`.`BenutzerBestellungenTemp` group by `BenutzerBestellungenTemp`.`Produkt`,`BenutzerBestellungenTemp`.`Woche`,`BenutzerBestellungenTemp`.`Benutzer_ID`,`BenutzerBestellungenTemp`.`Depot_ID` order by `BenutzerBestellungenTemp`.`Benutzer_ID`,`BenutzerBestellungenTemp`.`Depot`,`BenutzerBestellungenTemp`.`Produkt`) subq
                     
-                    WHERE Woche = ', pWoche ,' AND Depot_ID = ',pDepot,' GROUP BY Benutzer_ID');
+                    WHERE Woche = ', pWoche ,' AND Depot_ID = ',pDepot,' GROUP BY Benutzer WITH ROLLUP');
 
 CALL BenutzerBestellungen(pWoche);
 
@@ -768,8 +770,8 @@ DELIMITER ;
 -- Tabellenstruktur für Tabelle `Benutzer`
 --
 
-CREATE TABLE `Benutzer` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `Benutzer` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `MitName` varchar(255) COLLATE utf8_german2_ci DEFAULT NULL,
   `AltName` varchar(255) COLLATE utf8_german2_ci DEFAULT NULL,
@@ -783,7 +785,12 @@ CREATE TABLE `Benutzer` (
   `PunkteWoche` decimal(6,2) NOT NULL DEFAULT '2019.01',
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `AenderBenutzer_ID` int(11) DEFAULT NULL
+  `AenderBenutzer_ID` int(11) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `Name_Unique` (`Name`),
+  KEY `Role_ID` (`Role_ID`),
+  KEY `Depot_ID` (`Depot_ID`),
+  KEY `BenutzerAender_Benutzer` (`AenderBenutzer_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -792,7 +799,7 @@ CREATE TABLE `Benutzer` (
 -- Stellvertreter-Struktur des Views `BenutzerBestellView`
 -- (Siehe unten für die tatsächliche Ansicht)
 --
-CREATE TABLE `BenutzerBestellView` (
+CREATE TABLE IF NOT EXISTS `BenutzerBestellView` (
 `Benutzer_ID` int(11)
 ,`Benutzer` varchar(255)
 ,`Depot_ID` int(11)
@@ -816,7 +823,7 @@ CREATE TABLE `BenutzerBestellView` (
 -- Stellvertreter-Struktur des Views `BenutzerBestellViewUnsorted`
 -- (Siehe unten für die tatsächliche Ansicht)
 --
-CREATE TABLE `BenutzerBestellViewUnsorted` (
+CREATE TABLE IF NOT EXISTS `BenutzerBestellViewUnsorted` (
 `Benutzer_ID` int(11)
 ,`Benutzer` varchar(255)
 ,`Depot_ID` int(11)
@@ -840,8 +847,8 @@ CREATE TABLE `BenutzerBestellViewUnsorted` (
 -- Tabellenstruktur für Tabelle `BenutzerModulAbo`
 --
 
-CREATE TABLE `BenutzerModulAbo` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `BenutzerModulAbo` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Benutzer_ID` int(11) NOT NULL,
   `Modul_ID` int(11) NOT NULL,
   `StartWoche` decimal(6,2) NOT NULL DEFAULT '2019.01',
@@ -850,7 +857,10 @@ CREATE TABLE `BenutzerModulAbo` (
   `Kommentar` varchar(31) COLLATE utf8_german2_ci DEFAULT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `AenderBenutzer_ID` int(11) DEFAULT NULL
+  `AenderBenutzer_ID` int(11) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `BenutzerModulAboModul` (`Modul_ID`) USING BTREE,
+  KEY `BenutzerModulAboBenutzer` (`Benutzer_ID`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -859,13 +869,16 @@ CREATE TABLE `BenutzerModulAbo` (
 -- Tabellenstruktur für Tabelle `BenutzerUrlaub`
 --
 
-CREATE TABLE `BenutzerUrlaub` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `BenutzerUrlaub` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Benutzer_ID` int(11) NOT NULL,
   `Woche` decimal(6,2) NOT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `AenderBenutzer_ID` int(11) DEFAULT NULL
+  `AenderBenutzer_ID` int(11) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `BenutzerUrlaubAender_Benutzer` (`AenderBenutzer_ID`),
+  KEY `BenutzerUrlaub_Benutzer` (`Benutzer_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -874,7 +887,7 @@ CREATE TABLE `BenutzerUrlaub` (
 -- Stellvertreter-Struktur des Views `BenutzerView`
 -- (Siehe unten für die tatsächliche Ansicht)
 --
-CREATE TABLE `BenutzerView` (
+CREATE TABLE IF NOT EXISTS `BenutzerView` (
 `ID` int(11)
 ,`Name` varchar(255)
 ,`Passwort` varchar(255)
@@ -898,8 +911,8 @@ CREATE TABLE `BenutzerView` (
 -- Tabellenstruktur für Tabelle `BenutzerZusatzBestellung`
 --
 
-CREATE TABLE `BenutzerZusatzBestellung` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `BenutzerZusatzBestellung` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Benutzer_ID` int(11) NOT NULL,
   `Produkt_ID` int(11) NOT NULL,
   `Woche` decimal(6,2) NOT NULL,
@@ -907,7 +920,11 @@ CREATE TABLE `BenutzerZusatzBestellung` (
   `Kommentar` varchar(255) COLLATE utf8_german2_ci DEFAULT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `AenderBenutzer_ID` int(11) DEFAULT NULL
+  `AenderBenutzer_ID` int(11) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `Bestellung_Produkt` (`Produkt_ID`),
+  KEY `Bestellung_AenderBenutzer` (`AenderBenutzer_ID`),
+  KEY `Bestellung_Benutzer` (`Benutzer_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -916,8 +933,8 @@ CREATE TABLE `BenutzerZusatzBestellung` (
 -- Tabellenstruktur für Tabelle `Depot`
 --
 
-CREATE TABLE `Depot` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `Depot` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `KurzName` varchar(7) COLLATE utf8_german2_ci NOT NULL,
   `Beschreibung` varchar(2047) COLLATE utf8_german2_ci NOT NULL DEFAULT '',
@@ -925,7 +942,11 @@ CREATE TABLE `Depot` (
   `BestellerBenutzer_ID` int(11) DEFAULT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `AenderBenutzer_ID` int(11) DEFAULT NULL
+  `AenderBenutzer_ID` int(11) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `DepotAenderBenutzer` (`AenderBenutzer_ID`),
+  KEY `DepotBestellerBenutzer` (`BestellerBenutzer_ID`) USING BTREE,
+  KEY `DepotVerwalterBenutzer` (`VerwalterBenutzer_ID`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -934,7 +955,7 @@ CREATE TABLE `Depot` (
 -- Stellvertreter-Struktur des Views `DepotBestellView`
 -- (Siehe unten für die tatsächliche Ansicht)
 --
-CREATE TABLE `DepotBestellView` (
+CREATE TABLE IF NOT EXISTS `DepotBestellView` (
 `Depot_ID` int(11)
 ,`Depot` varchar(255)
 ,`Produkt_ID` int(11)
@@ -956,7 +977,7 @@ CREATE TABLE `DepotBestellView` (
 -- Stellvertreter-Struktur des Views `DepotBestellViewUnsorted`
 -- (Siehe unten für die tatsächliche Ansicht)
 --
-CREATE TABLE `DepotBestellViewUnsorted` (
+CREATE TABLE IF NOT EXISTS `DepotBestellViewUnsorted` (
 `Depot_ID` int(11)
 ,`Depot` varchar(255)
 ,`Produkt_ID` int(11)
@@ -978,7 +999,7 @@ CREATE TABLE `DepotBestellViewUnsorted` (
 -- Stellvertreter-Struktur des Views `GesamtBestellView`
 -- (Siehe unten für die tatsächliche Ansicht)
 --
-CREATE TABLE `GesamtBestellView` (
+CREATE TABLE IF NOT EXISTS `GesamtBestellView` (
 `Produkt_ID` int(11)
 ,`Produkt` varchar(511)
 ,`Beschreibung` varchar(255)
@@ -998,7 +1019,7 @@ CREATE TABLE `GesamtBestellView` (
 -- Stellvertreter-Struktur des Views `GesamtBestellViewUnsorted`
 -- (Siehe unten für die tatsächliche Ansicht)
 --
-CREATE TABLE `GesamtBestellViewUnsorted` (
+CREATE TABLE IF NOT EXISTS `GesamtBestellViewUnsorted` (
 `Produkt_ID` int(11)
 ,`Produkt` varchar(511)
 ,`Beschreibung` varchar(255)
@@ -1018,15 +1039,17 @@ CREATE TABLE `GesamtBestellViewUnsorted` (
 -- Tabellenstruktur für Tabelle `Modul`
 --
 
-CREATE TABLE `Modul` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `Modul` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `Beschreibung` varchar(255) COLLATE utf8_german2_ci NOT NULL DEFAULT '',
   `AnzahlProAnteil` int(11) NOT NULL DEFAULT '0',
   `WechselWochen` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `AenderBenutzer_ID` int(11) DEFAULT NULL
+  `AenderBenutzer_ID` int(11) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `KorbAenderBenutzer` (`AenderBenutzer_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -1035,8 +1058,8 @@ CREATE TABLE `Modul` (
 -- Tabellenstruktur für Tabelle `ModulInhalt`
 --
 
-CREATE TABLE `ModulInhalt` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `ModulInhalt` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Modul_ID` int(11) NOT NULL,
   `Produkt_ID` int(11) NOT NULL,
   `Anzahl` int(11) NOT NULL DEFAULT '1',
@@ -1044,7 +1067,11 @@ CREATE TABLE `ModulInhalt` (
   `MaximalAnzahl` int(11) NOT NULL DEFAULT '99',
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `AenderBenutzer_ID` int(11) DEFAULT NULL
+  `AenderBenutzer_ID` int(11) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `ModulInhalt_Modul` (`Modul_ID`) USING BTREE,
+  KEY `ModulInhalt_Produkt` (`Produkt_ID`) USING BTREE,
+  KEY `ModulInhalt_Benutzer` (`AenderBenutzer_ID`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -1053,7 +1080,7 @@ CREATE TABLE `ModulInhalt` (
 -- Stellvertreter-Struktur des Views `ModulInhaltView`
 -- (Siehe unten für die tatsächliche Ansicht)
 --
-CREATE TABLE `ModulInhaltView` (
+CREATE TABLE IF NOT EXISTS `ModulInhaltView` (
 `ID` int(11)
 ,`Modul_ID` int(11)
 ,`Produkt_ID` int(11)
@@ -1072,13 +1099,16 @@ CREATE TABLE `ModulInhaltView` (
 -- Tabellenstruktur für Tabelle `ModulInhaltWoche`
 --
 
-CREATE TABLE `ModulInhaltWoche` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `ModulInhaltWoche` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `ModulInhalt_ID` int(11) NOT NULL,
   `Woche` decimal(6,2) NOT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `AenderBenutzer_ID` int(11) DEFAULT NULL
+  `AenderBenutzer_ID` int(11) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE KEY `Modulwocheuniqu` (`ModulInhalt_ID`,`Woche`) USING BTREE,
+  KEY `ModulInhaltWoche_AenderBenutzer` (`AenderBenutzer_ID`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -1087,8 +1117,8 @@ CREATE TABLE `ModulInhaltWoche` (
 -- Tabellenstruktur für Tabelle `Produkt`
 --
 
-CREATE TABLE `Produkt` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `Produkt` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(511) COLLATE utf8_german2_ci GENERATED ALWAYS AS (if((`Menge` <> 1.00),concat(`Produkt`,', ',(trim(`Menge`) + 0),`Einheit`),`Produkt`)) VIRTUAL,
   `Produkt` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `Beschreibung` varchar(255) COLLATE utf8_german2_ci NOT NULL DEFAULT '',
@@ -1099,7 +1129,9 @@ CREATE TABLE `Produkt` (
   `AnzahlZusatzBestellungMax` int(11) NOT NULL DEFAULT '0',
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `AenderBenutzer_ID` int(11) DEFAULT NULL
+  `AenderBenutzer_ID` int(11) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `ProduktAenderBenutzer` (`AenderBenutzer_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -1108,8 +1140,8 @@ CREATE TABLE `Produkt` (
 -- Tabellenstruktur für Tabelle `Recht`
 --
 
-CREATE TABLE `Recht` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `Recht` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Role_ID` int(11) NOT NULL,
   `Tabelle` varchar(255) COLLATE utf8_german2_ci DEFAULT NULL,
   `Spalte` varchar(255) COLLATE utf8_german2_ci DEFAULT NULL,
@@ -1117,7 +1149,9 @@ CREATE TABLE `Recht` (
   `LeseAlle` tinyint(1) NOT NULL DEFAULT '1',
   `LeseEigene` tinyint(1) NOT NULL DEFAULT '1',
   `SchreibeAlle` tinyint(1) NOT NULL DEFAULT '0',
-  `SchreibeEigene` tinyint(1) NOT NULL DEFAULT '1'
+  `SchreibeEigene` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`ID`),
+  KEY `Role_ID` (`Role_ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -1126,11 +1160,12 @@ CREATE TABLE `Recht` (
 -- Tabellenstruktur für Tabelle `Role`
 --
 
-CREATE TABLE `Role` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `Role` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `LeseRechtDefault` tinyint(1) NOT NULL DEFAULT '1',
-  `SchreibRechtDefault` tinyint(1) NOT NULL DEFAULT '0'
+  `SchreibRechtDefault` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -1139,13 +1174,14 @@ CREATE TABLE `Role` (
 -- Tabellenstruktur für Tabelle `Solawi`
 --
 
-CREATE TABLE `Solawi` (
-  `ID` int(11) NOT NULL,
+CREATE TABLE IF NOT EXISTS `Solawi` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
   `Name` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `Wert` varchar(255) COLLATE utf8_german2_ci NOT NULL,
   `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  `AenderBenutzer_ID` int(11) DEFAULT NULL
+  `AenderBenutzer_ID` int(11) DEFAULT NULL,
+  PRIMARY KEY (`ID`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
@@ -1219,180 +1255,6 @@ CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER V
 DROP TABLE IF EXISTS `ModulInhaltView`;
 
 CREATE ALGORITHM=UNDEFINED DEFINER=`d02dbcf8`@`localhost` SQL SECURITY DEFINER VIEW `ModulInhaltView`  AS  select `ModulInhalt`.`ID` AS `ID`,`ModulInhalt`.`Modul_ID` AS `Modul_ID`,`ModulInhalt`.`Produkt_ID` AS `Produkt_ID`,`ModulInhalt`.`Anzahl` AS `Anzahl`,`ModulInhalt`.`MindestAnzahl` AS `MindestAnzahl`,`ModulInhalt`.`MaximalAnzahl` AS `MaximalAnzahl`,`ModulInhalt`.`ErstellZeitpunkt` AS `ErstellZeitpunkt`,`ModulInhalt`.`AenderZeitpunkt` AS `AenderZeitpunkt`,`ModulInhalt`.`AenderBenutzer_ID` AS `AenderBenutzer_ID`,`ModulInhaltWoche`.`Woche` AS `Woche` from (`ModulInhalt` join `ModulInhaltWoche` on((`ModulInhaltWoche`.`ModulInhalt_ID` = `ModulInhalt`.`ID`))) ;
-
---
--- Indizes der exportierten Tabellen
---
-
---
--- Indizes für die Tabelle `Benutzer`
---
-ALTER TABLE `Benutzer`
-  ADD PRIMARY KEY (`ID`),
-  ADD UNIQUE KEY `Name_Unique` (`Name`),
-  ADD KEY `Role_ID` (`Role_ID`),
-  ADD KEY `Depot_ID` (`Depot_ID`),
-  ADD KEY `BenutzerAender_Benutzer` (`AenderBenutzer_ID`);
-
---
--- Indizes für die Tabelle `BenutzerModulAbo`
---
-ALTER TABLE `BenutzerModulAbo`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `BenutzerModulAboModul` (`Modul_ID`) USING BTREE,
-  ADD KEY `BenutzerModulAboBenutzer` (`Benutzer_ID`) USING BTREE;
-
---
--- Indizes für die Tabelle `BenutzerUrlaub`
---
-ALTER TABLE `BenutzerUrlaub`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `BenutzerUrlaubAender_Benutzer` (`AenderBenutzer_ID`),
-  ADD KEY `BenutzerUrlaub_Benutzer` (`Benutzer_ID`);
-
---
--- Indizes für die Tabelle `BenutzerZusatzBestellung`
---
-ALTER TABLE `BenutzerZusatzBestellung`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `Bestellung_Produkt` (`Produkt_ID`),
-  ADD KEY `Bestellung_AenderBenutzer` (`AenderBenutzer_ID`),
-  ADD KEY `Bestellung_Benutzer` (`Benutzer_ID`);
-
---
--- Indizes für die Tabelle `Depot`
---
-ALTER TABLE `Depot`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `DepotAenderBenutzer` (`AenderBenutzer_ID`),
-  ADD KEY `DepotBestellerBenutzer` (`BestellerBenutzer_ID`) USING BTREE,
-  ADD KEY `DepotVerwalterBenutzer` (`VerwalterBenutzer_ID`) USING BTREE;
-
---
--- Indizes für die Tabelle `Modul`
---
-ALTER TABLE `Modul`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `KorbAenderBenutzer` (`AenderBenutzer_ID`);
-
---
--- Indizes für die Tabelle `ModulInhalt`
---
-ALTER TABLE `ModulInhalt`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `ModulInhalt_Modul` (`Modul_ID`) USING BTREE,
-  ADD KEY `ModulInhalt_Produkt` (`Produkt_ID`) USING BTREE,
-  ADD KEY `ModulInhalt_Benutzer` (`AenderBenutzer_ID`) USING BTREE;
-
---
--- Indizes für die Tabelle `ModulInhaltWoche`
---
-ALTER TABLE `ModulInhaltWoche`
-  ADD PRIMARY KEY (`ID`),
-  ADD UNIQUE KEY `Modulwocheuniqu` (`ModulInhalt_ID`,`Woche`) USING BTREE,
-  ADD KEY `ModulInhaltWoche_AenderBenutzer` (`AenderBenutzer_ID`) USING BTREE;
-
---
--- Indizes für die Tabelle `Produkt`
---
-ALTER TABLE `Produkt`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `ProduktAenderBenutzer` (`AenderBenutzer_ID`);
-
---
--- Indizes für die Tabelle `Recht`
---
-ALTER TABLE `Recht`
-  ADD PRIMARY KEY (`ID`),
-  ADD KEY `Role_ID` (`Role_ID`);
-
---
--- Indizes für die Tabelle `Role`
---
-ALTER TABLE `Role`
-  ADD PRIMARY KEY (`ID`);
-
---
--- Indizes für die Tabelle `Solawi`
---
-ALTER TABLE `Solawi`
-  ADD PRIMARY KEY (`ID`);
-
---
--- AUTO_INCREMENT für exportierte Tabellen
---
-
---
--- AUTO_INCREMENT für Tabelle `Benutzer`
---
-ALTER TABLE `Benutzer`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `BenutzerModulAbo`
---
-ALTER TABLE `BenutzerModulAbo`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `BenutzerUrlaub`
---
-ALTER TABLE `BenutzerUrlaub`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `BenutzerZusatzBestellung`
---
-ALTER TABLE `BenutzerZusatzBestellung`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `Depot`
---
-ALTER TABLE `Depot`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `Modul`
---
-ALTER TABLE `Modul`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `ModulInhalt`
---
-ALTER TABLE `ModulInhalt`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `ModulInhaltWoche`
---
-ALTER TABLE `ModulInhaltWoche`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `Produkt`
---
-ALTER TABLE `Produkt`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `Recht`
---
-ALTER TABLE `Recht`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `Role`
---
-ALTER TABLE `Role`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT für Tabelle `Solawi`
---
-ALTER TABLE `Solawi`
-  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Constraints der exportierten Tabellen
