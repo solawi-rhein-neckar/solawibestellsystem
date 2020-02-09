@@ -11,7 +11,8 @@
 	<script src="util.js"></script>
 	<script src="weekSelect.js"></script>
 	<script src="solawiBestellSystem.js"></script>
-	<script src="solawiTableValidator.js"></script>
+	<script src="solawiValidator.js"></script>
+	<script src="solawiEditor.js"></script>
 	<script src="solawiTableEditor.js"></script>
 	<script src="solawiTable.js"></script>
 
@@ -37,6 +38,7 @@
         SBTview.reload();
         reloadEdit();
     }
+    var solawiEditor = SolawiEditor(SBS, SBTedit.reload, true);
 
     //check login status
     getAjax('BenutzerView/MY', function(userResponse) {
@@ -81,10 +83,12 @@
             var weekSelect = Object.create(WeekSelect);
             weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
             weekSelect.week = SBS.week;
-            weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + SBS.user.ID, weekSelect.postData = {
+            weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + SBS.user.ID;
+            weekSelect.postData = {
                 Benutzer_ID : SBS.user.ID,
                 Woche : SBS.selectedWeek
-            }, weekSelect.allowMulti = false;
+            };
+            weekSelect.allowMulti = false;
             weekSelect.addTo(document.getElementById('tableUrlaub'));
 
         } else {
@@ -250,7 +254,12 @@
 		<table id="tableEdit" cellspacing="0">
 		</table>
 	</div>
-
+	
+	<br/>
+	
+	<div class="">
+		<button onclick="solawiEditor.showForBatchOrder({Benutzer_ID: SBS.user.ID})">Serien-Bestellung</button>
+	</div>
 
 
 	<h1 id=Urlaub>Dein Urlaub</h1>

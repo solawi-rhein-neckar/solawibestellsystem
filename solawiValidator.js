@@ -2,9 +2,9 @@
     Defined as (closure-)function, because we don't want to put all our private variables into the global namespace.
     The new operator is not required! (We do not use 'this' anywhere in the code).
     
-    This file is meant to be used by solawiTableEditor.
+    This file is meant to be used by solawiEditor.
 */
-function SolawiTableValidator(pSbs) {
+function SolawiValidator(pSbs) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {

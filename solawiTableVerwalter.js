@@ -28,6 +28,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
     var editBestellungenTables = {};
     var editAboTables = {};
     var weekSelects = {}
+	var solawiEditor = SolawiEditor(sbs, solawiTable.reload, false);    
 
 /**** public ****/
     function addColumnHeaders(tr) {
@@ -38,19 +39,24 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             wtd = createHeaderCol('Bestellung');
             wtd.innerText='Tausch';
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+1]);
-
+            
+            wtd = createHeaderCol('Serie');
+            wtd.className='col_serie';
+            wtd.innerText='Serie';
+            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+2]);
+            
             wtd = createHeaderCol('BenutzerAbo');
             wtd.innerText='Jede_Woche';
-            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+2]);
+            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+3]);
 
             wtd = createHeaderCol('Urlaub');
-            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+3]);
+            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+4]);
 
         	wtd = document.createElement("TD");
             wtd.className='col_kuendingen';
             wtd.innerText='Kündigen';
             wtd.title='Setzt Anteile + Fleisch-Anteile auf 0, beendet alle Abos, loescht künftige Bestellungen und verschiebt ins unsichtbare Depot "geloescht".';
-            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+4]);
+            tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+5]);
 
             viewLieferungTables = {};
             editBestellungenTables = {};
@@ -133,9 +139,17 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             var editBestellungReload = editBestellung.reload;
             editBestellung.reload = function() {editBestellungReload(); viewLieferung.reload();};
 
+            td = document.createElement("TD");
+            td.className='col_serie';
+            tr.insertBefore(td, tr.childNodes[pub.columnIndex+2]);
+
+            var button = document.createElement("BUTTON");
+            button.innerText = "serie";
+            button.onclick = function() { solawiEditor.showForBatchOrder({Benutzer_ID: row['ID']}) };
+            td.appendChild(button);
 
         	td = document.createElement("TD");
-            tr.insertBefore(td, tr.childNodes[pub.columnIndex+2]);
+            tr.insertBefore(td, tr.childNodes[pub.columnIndex+3]);
             td.className='col_BenutzerAbo';
             var span = document.createElement("SPAN");
             span.style.display = 'none';
@@ -155,7 +169,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
 
             td = document.createElement("TD");
             td.className='col_Urlaub';
-            tr.insertBefore(td, tr.childNodes[pub.columnIndex+3]);
+            tr.insertBefore(td, tr.childNodes[pub.columnIndex+4]);
             var weekSelect = Object.create(WeekSelect);
             weekSelect.year = Number(sbs.selectedWeek.match(/[0-9]+/)[0]);
             weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + row['ID'],
@@ -166,7 +180,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
 
             td = document.createElement("TD");
             td.className='col_kuendigen';
-            tr.insertBefore(td, tr.childNodes[pub.columnIndex+4]);
+            tr.insertBefore(td, tr.childNodes[pub.columnIndex+5]);
 
             var button = document.createElement("BUTTON");
             button.innerText = "kündigen";
