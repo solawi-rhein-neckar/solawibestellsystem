@@ -123,9 +123,9 @@
 	<div id="logoutform"
 		style="position: fixed; right: 1px; top: 0; font-size: 12px; width: 20em; height: 15em; text-align: center; z-index: 9999;">
 		Woche:
-		<button onclick="changeWeek(-1)">&lt;&lt;</button>
+		<button onclick="changeWeek(-1)" style="padding:3px;">&lt;&lt;</button>
 		<span id="selectedWeek0" style="font-weight: bold; background-color: rgba(222, 222, 222);">00</span>
-		<button onclick="changeWeek(+1)">&gt;&gt;</button>
+		<button onclick="changeWeek(+1)" style="padding:3px;">&gt;&gt;</button>
 		<button id="logoutbtn"
 			onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('tableContainer');">Logout</button>
 		<div id="messages"
@@ -194,11 +194,11 @@
 		<div style="width: 90%">
 			<span style="display: inline-block; width: 45%; vertical-align: top; border-right: 1px dotted black;">
 				<div style="text-align: center; padding: 5px 0 10px 0; white-space: nowrap; overflow: hidden;">
-					Berichte &#160; &#160; &#160; <b>Woche: </b>
+					<em>Berichte</em> &#160; &#160; &#160; <b>Woche: </b>
 					<button onclick="changeWeek(-1)">&lt;&lt;</button>
 					<span id="selectedWeek2" style="font-weight: bold;">00</span>
 					<button onclick="changeWeek(+1)">&gt;&gt;</button>
-					&#160; &#160; &#160; Bearbeiten &#160; &#160; &#160; &#160; &#160;
+					&#160; &#160; &#160; <em>Bearbeiten</em> &#160; &#160; &#160; &#160; &#160;
 					&#160;
 				</div>
 				<span style="display: inline-block; width: 60%; vertical-align: top; border-right: 1px dotted black;">
@@ -208,21 +208,20 @@
 					<button	onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Solawi</button>
 				</span>
 				<span style="display: inline-block; width: 38%; vertical-align: top;">
-					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo/Bis/'+SBS.selectedWeek, SBTedit.showTable);">ModulAbo
-						(Zukunft)</button>
-					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung/Woche/'+SBS.selectedWeek, SBTedit.showTable);">ZusatzBestellungen</button>
+					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo/Bis/'+SBS.selectedWeek, SBTedit.showTable);">ModulAbos <b>ab</b> gewählter Woche bearbeiten</button>
+					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung/Woche/'+SBS.selectedWeek, SBTedit.showTable);">Tausch-Bestellungen gewählte Woche bearbeiten</button>
 				</span>
 			</span>
 			<span style="display: inline-block; width: 45%; vertical-align: top;">
 				<div style="text-align: center; padding: 5px 0 10px 0; white-space: nowrap; overflow: hidden;">
-					Bearbeiten &#160; &#160; &#160; <b>ohne Woche</b> &#160; &#160;
-					&#160; Berichte
+					<span style="display: block;">Ganzes Jahr, nicht nur gewählte Woche</span>
+					<em>Bearbeiten</em>  &#160; &#160;  &#160; &#160; &#160; <b>ALLES BEARBEITEN / ANZEIGEN</b>  &#160; &#160; &#160; <em>Berichte</em>
 				</div>
 				<span style="display: inline-block; width: 48%; vertical-align: top; border-right: 1px dotted black;">
-					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
-					<button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo', SBTedit.showTable);">ModulAbo (Alle)</button>
-					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">ZusatzBestellungen</button>
-					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerUrlaub', SBTedit.showTable);">Urlaube</button>
+					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Benutzer', SBTedit.showTable);">Alle Benutzer bearbeiten</button>
+					<button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo', SBTedit.showTable);">Alle ModulAbo bearbeiten</button>
+					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung', SBTedit.showTable);"><b>Tausch-Bestellungen bearbeiten<br/>auch: Serienbestellungen löschen</b></button>
+					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerUrlaub', SBTedit.showTable);">Alle Urlaube bearbeiten</button>
 				</span>
 				<span style="display: inline-block; width: 48%; vertical-align: top;">
 					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerView', SBTview.showTable);">Benutzer-Abo
