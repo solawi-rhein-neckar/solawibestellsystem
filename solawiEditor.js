@@ -55,7 +55,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
     }   
 
     function showForBatchOrder(defaults) {
-    	finishBatchOrder(initForAdding('BenutzerZusatzBestellung', ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar', 'Woche'], defaults));
+    	finishBatchOrder(initForAdding('BenutzerZusatzBestellung', ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar'], defaults));
     }
     
     function initForAdding(pTableName, keys, defaults) {
