@@ -91,6 +91,8 @@
                 Woche : SBS.selectedWeek
             };
             weekSelect.allowMulti = false;
+            weekSelect.allowPast = false;
+            weekSelect.needsConfirm = true;
             weekSelect.addTo(document.getElementById('tableUrlaub'));
 
         } else {

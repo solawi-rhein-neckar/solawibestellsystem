@@ -14,6 +14,8 @@ The weekSelect will at itself as a child to this element, make api calls and dis
 */
 var WeekSelect = {
 	allowMulti: true,
+	needsConfirm: false,
+	allowPast: false,
     year: 2019,
     tableName: 'ModulInhaltWoche/ModulInhalt_ID/1',
     postData: {ModulInhalt_ID: 1, Woche: '2019.01'},
@@ -132,7 +134,7 @@ var WeekSelect = {
         if (event.target.dataWeek) {
         	if ((!this.allowMulti) && (this.year + '.' + (event.target.dataWeek < 10 ? '0' + event.target.dataWeek : event.target.dataWeek)) < this.week) {
         		alert('Nur zukünftige ' +  this.labels  + ' können eingetragen werden.');
-        	} else if (this.allowMulti || confirm('Wirklich ' + this.label +' für ' + this.getTitle(event.target.dataWeek) + ' umschalten?')) {
+        	} else if ((!this.needsConfirm) || confirm('Wirklich ' + this.label +' für ' + this.getTitle(event.target.dataWeek) + ' umschalten?')) {
         		this.toggleSingle(event.target);
         	}
         } else if (event.target.dataYear) {
@@ -172,7 +174,7 @@ var WeekSelect = {
             var row = this.htmlTable.children[i];
             for (var j = 0; j < row.children.length; j++) {
                 var cell = row.children[j];
-                if ( cell.dataWeek && ((!weeks) || weeks[cell.dataWeek] == 1) ) {
+                if ( cell.dataWeek && (this.allowPast || (this.year + '.' + (cell.dataWeek < 10 ? '0' + cell.dataWeek : cell.dataWeek)) >= this.week) && ((!weeks) || weeks[cell.dataWeek] == 1) ) {
                     if (cell.className.match(/inactive/)) {
                         if (mode == 'activate' || mode == '') {
                             mode = 'activate';

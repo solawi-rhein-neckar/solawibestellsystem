@@ -307,6 +307,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
                 Woche : SBS.selectedWeek
             };
             weekSelect.allowMulti = !disableUnavailableProducts;
+            weekSelect.allowPast = false;
             weekSelect.addTo(editor);
 
         });
