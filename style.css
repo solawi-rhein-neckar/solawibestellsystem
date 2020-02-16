@@ -1,3 +1,70 @@
+
+
+
+
+
+
+/*Logout */
+#logoutfrombg {
+    display: none !important;
+}
+#logoutform {
+  padding-top: 5px;
+  position: absolute;
+  right: 0.5%;
+  margin-top: 40px;
+  font-size: 12px;
+  width: 10em;
+  height: 40px;
+  text-align: center;
+  z-index: 9999;
+}
+#logoutbtn {
+  background: #e07000;
+}
+#logoutbtn:hover {
+  background: #cd6905;
+}
+
+#messages {
+  height: 40px;
+  overflow: hidden;
+  font-size:85%;
+  position: absolute;
+  margin-top: 10px;
+  width: 100px;
+}
+
+@media screen and (max-width: 730px){
+  table {
+    font-size: 3vw;
+  }
+  .weektable {
+    font-size: 4vw !important;
+  }
+  button {
+    font-size: 15px !important;
+  }
+  #gesamt_lieferung {
+    font-size: 1.1em !important;
+  }
+  .footer ul {
+    font-size: 16px !important;
+  }
+}
+
+
+@media screen and (max-width: 500px){
+
+  #logoutfrombg {
+    display: none !important;
+  }
+  #logoutform {
+    left: 210px;
+    top: 45px;
+  }
+}
+/* Login Bereich */
 .login-page {
   width: 360px;
   padding: 8% 0 0;
@@ -61,7 +128,6 @@ form .message a:hover {
   color: #4d3b27;
 }
 
-
 form a {
   font-weight:600;
   font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
@@ -71,31 +137,10 @@ form a:hover {
   font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
 }
 body {
-  background: #f0d9b5; /* fallback for old browsers */
+  background: #f0d9b5;
 }
+/*Ende Loginbereich*/
 
-
-
-
-
-body {
-  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
-  font-weight: 500;
-  -webkit-font-smoothing: antialiased;
-  line-height: 1.45;
-  color: #4d3a27;
-  letter-spacing: .05em;
-  margin: 0 0 0 0;
-}
-
-header {
-  background-color: #f0d9b5;
-  height: 110px;
-  padding: 15px 35px;
-}
-ul {
-  list-style: none;
-}
 
 /*Navigationsbereich - Header und Hamburger*/
 #page-nav {
@@ -112,7 +157,7 @@ ul {
 /* Menu Items */
 ul.desktopmenu {
   list-style-type: none;
-  margin: 0 220px 0 0;
+  margin: 0 100px 0 0;
   padding-top: 40px;
   float: right;
   vertical-align: top;
@@ -131,7 +176,7 @@ div.mobilmenu {
 
 
 /* Mobilversion */
-@media screen and (max-width: 1224px){
+@media screen and (max-width: 1103px){
   header {
     height: 110px;
   }
@@ -185,13 +230,35 @@ div.mobilmenu {
       font-size: 17px;
       font-weight: 600;
   }
+  .
+}
+
+
+
+
+body {
+  font-family: 'Open Sans',Helvetica,Arial,Lucida,sans-serif;
+  font-weight: 500;
+  -webkit-font-smoothing: antialiased;
+  line-height: 1.45;
+  color: #4d3a27;
+  letter-spacing: .05em;
+  margin: 0 0 0 0;
+}
+
+header {
+  background-color: #f0d9b5;
+  height: 110px;
+  padding: 15px 35px;
+}
+ul {
+  list-style: none;
 }
 
 #header_title {
   text-align: left;
   border-bottom-style: none;
 }
-
 
 main {
   text-align: center;
@@ -306,6 +373,29 @@ table, td { border: 1px solid #999;
             border-collapse: collapse;
             padding: 3px;
             margin-top: 1.5em;
+            margin-left: auto;
+            margin-right: auto;
+            background-color: white;
+            text-align: left;
+}
+table>tr:first-child>td>span {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+
+table>tr:first-child>td.col_Produkt>span {
+  writing-mode: horizontal-tb !important;
+}
+table>tr:first-child>td{
+  vertical-align: bottom;
+}
+table>tr:nth-child(n+2)>td{
+  vertical-align: middle;
+}
+
+td.col_Beschreibung>span, td.col_Kommentar>span, td.col_Produkt_ID>span{
+  writing-mode: horizontal-tb !important;
 }
 
 
@@ -313,29 +403,33 @@ table, td { border: 1px solid #999;
   color: white !important;
   text-shadow: 0 1px 3px #3d5d0a;
   margin-left: 0;
+  margin-right: 0;
 }
 
 .footer li::before{
 content:" ";
 height: 7px;
 width: 7px;
-    top: 9px;
+top: 9px;
 background-color: #4d3a27;
 border-radius: 50%;
 display: inline-block;
 }
 
 .footer ul {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 500;
+  width: 300px;
+  margin: 0 auto;
+  padding-left:0px;
 }
 .footer {
   background-color: #679b14;
   text-align: left;
   margin-top: 2em;
-  padding-left: 13%;
   padding-bottom: 2em;
-
+  padding-left: 13%;
+  padding-right: 13%;
 }
 
 
@@ -343,10 +437,6 @@ display: inline-block;
   color: white;
   display: inline-block;
 }
-
-
-
-
 
 .pfeil_back, .pfeil_forward {
   padding: 0.3em 0.5em !important;
@@ -385,8 +475,10 @@ div.table_center {
   text-align: left;
 }
 
+
+/*
 #table1_center {
-  max-width: 1044px;
+  max-width: 730px;
 }
 #table2_center {
   max-width: 396px;
@@ -397,7 +489,7 @@ div.table_center {
 #table4_center {
   max-width: 603px;
 }
-
+*/
 
   div.editorLabel, .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID, .inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID {display: none;}
   #table .col_Anzahl, .col_Produkt { font-weight: bold; }
@@ -426,3 +518,37 @@ div.table_center {
     .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
         background-color: #679b14;
     }
+
+#inp_anzahl_zusatz::placeholder {
+  color: darkgrey;
+  font-size: 13px;
+}
+
+#inp_anzahl_zusatz, #inp_kommentar_hidden {
+        font-size: 16px;
+        width: 55px;
+        padding: 8px 0 8px 2px;
+        margin: 10px;
+        border: 2px solid darkgrey;
+        background-color: #679b1445 !important;
+        text-align: center;
+  }
+#inp_kommentar_hidden {
+          font-size: 12px;
+          width: 200px;
+          padding: 8px 0 8px 2px;
+          margin: 10px;
+          border: 2px solid darkgrey;
+          background-color: #679b1445 !important;
+          text-align: left;
+    }
+
+
+
+select.editor.inp_Produkt_ID {
+      font-size: 16px;
+      background-color: #679b1445;
+      border-radius: 0;
+      border: 2px solid darkgrey;
+      padding: 7px 7px;
+  }

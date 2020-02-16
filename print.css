@@ -1,0 +1,115 @@
+:root {
+  --Farbe1: #ffffff;/*weiß - Kopfzeile*/
+	--Farbe2: #aed7fe; /*blau - Kopfzeile*/
+	--Farbe3: #dfeffe; /*blass*/
+  --Farbe4: #aed7fe; /*kräftig*/
+  --Farbe5: #e7e4e4; /*grau*/
+}
+body {
+-webkit-print-color-adjust:exact;
+font-family: monospace;
+font-size: smaller;
+}
+
+table, td {
+	border: 1px solid #999;
+	border-collapse: collapse;
+	padding: 3px;
+}
+table {
+  width: 28cm;
+}
+
+/*#table>tr>td:nth-child(29) {
+  font-size: smaller;
+}*/
+
+#table>tr>td:first-child {
+  max-width: 3cm;
+}
+#table>tr:first-child>td:first-child>span {
+	writing-mode: horizontal-tb !important;
+	font-size: 1.1em;
+	font-weight: bold;
+}
+
+#table>tr:first-child>td:first-child {
+  background-color: var(--Farbe1);
+  vertical-align: bottom;
+  text-align: left;
+}
+#table>tr:first-child>td:nth-child(2n){
+	background-color: var(--Farbe2);
+}
+
+#table>tr:first-child>td {
+  background-color: var(--Farbe1);
+  vertical-align: bottom;
+  text-align: left;
+}
+
+#table>tr:first-child>td>span.TableHead {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  height: 4.5cm;
+  font-weight: bold;
+}
+
+#table>tr:nth-child(2n)>td:nth-child(2n){
+	background-color: var(--Farbe3);
+}
+#table>tr:nth-child(2n+3)>td:nth-child(2n){
+	background-color: var(--Farbe4);
+}
+#table>tr:nth-child(2n+1)>td:nth-child(2n+1){
+	background-color: var(--Farbe5);
+}
+/*Logout */
+
+
+#logoutfrombg {
+    display: none !important;
+  }
+
+
+
+
+
+
+
+
+
+
+
+	.col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID,
+		.inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID
+		{
+		display: none;
+	}
+
+	#table .col_Anzahl, .col_Produkt {
+		font-weight: bold;
+	}
+
+	.col_ID>div {
+		display: none;
+	}
+
+	.inp_Woche, .inp_Benutzer_ID {
+		color: #CCC;
+		pointer-events: none;
+	}
+
+	#greeting {
+		font-size: 125%;
+		padding-top: 100px;
+		background:
+			url(https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png);
+		background-position: top center;
+		background-repeat: repeat;
+		background-repeat: no-repeat;
+	}
+
+	#navi {
+		position: absolute;
+	}

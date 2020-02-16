@@ -287,6 +287,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     }
 
     function finishEditor(edit) {
+        var linebreak = document.createElement("br")
         var btn = document.createElement("BUTTON");
         btn.innerText="Save";
         btn.style['margin-left'] = '5px';
@@ -296,6 +297,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         var btn2 = document.createElement("BUTTON");
         btn2.innerText="Cancel";
         btn2.addEventListener('click', function(){hide('blockui_edit');});
+        edit.appendChild(linebreak);
         edit.appendChild(btn);
         edit.appendChild(btn2);
     }
