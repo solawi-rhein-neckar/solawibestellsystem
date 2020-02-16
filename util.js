@@ -127,7 +127,7 @@ function addWeek(yearWeekSeparatedByDot, count) {
     return week.toFixed(2);
 }
 
-function weekCount(year) {
+export function weekCount(year) {
     var date = new Date(year, 11 /*month index 0 based - dec = 11*/, 31, 12 /*mid of day*/, 0);
     return date.getWeek() != 53 ? 52 : 53;
 }

@@ -4,6 +4,8 @@
   "description": "Bestellsystem der Solawi Rhein-Neckar",
   "main": "index.htm",
   "scripts": {
+    "build": "parcel build index.htm",
+    "start": "parcel index.htm",
     "test": "jest",
     "test-watch": "jest --watchAll",
     "prepare-git-commit-template": "git config commit.template $PWD/.gitmessage",
@@ -20,11 +22,13 @@
     "Perl-REST"
   ],
   "contributors": [
-    { "name" : "Florian Jostock"
-    , "email" : "flo@regenduft.de"
+    {
+      "name": "Florian Jostock",
+      "email": "flo@regenduft.de"
     },
-    { "name" : "Jürgen Czerny"
-    , "email" : "solawi@jczerny.de"
+    {
+      "name": "Jürgen Czerny",
+      "email": "solawi@jczerny.de"
     }
   ],
   "license": "MIT",
@@ -33,7 +37,11 @@
   },
   "homepage": "https://github.com/solawi-rhein-neckar/solawibestellsystem#readme",
   "devDependencies": {
+    "@babel/core": "^7.8.4",
+    "@babel/preset-env": "^7.8.4",
+    "babel-jest": "^25.1.0",
     "jest": "^24.9.0",
+    "parcel-bundler": "^1.12.4",
     "standard-version": "^7.0.1"
   },
   "dependencies": {}
