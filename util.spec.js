@@ -9,5 +9,6 @@ describe('first test suite' ,  () => {
 
     it('CI test', () => {
         expect(true).toBe(true);
+        expect(true).toBe(true);
     });
 });
