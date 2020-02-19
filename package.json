@@ -6,6 +6,7 @@
   "scripts": {
     "build": "parcel build index.htm",
     "start": "parcel index.htm",
+    "watch": "parcel watch index.htm",
     "test": "jest",
     "test-watch": "jest --watchAll",
     "prepare-git-commit-template": "git config commit.template $PWD/.gitmessage",
