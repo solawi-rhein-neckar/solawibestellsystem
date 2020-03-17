@@ -14,10 +14,15 @@ The weekSelect will at itself as a child to this element, make api calls and dis
 */
 var WeekSelect = {
 	allowMulti: true,
+	needsConfirm: false,
+	allowPast: false,
     year: 2019,
     tableName: 'ModulInhaltWoche/ModulInhalt_ID/1',
     postData: {ModulInhalt_ID: 1, Woche: '2019.01'},
     week: '2019.01',
+    label: 'Urlaub',
+    labels: 'Urlaube',
+    onValidate: null, /* optional callback - receives postdata and 2nd param delete = false|true */
 
     addTo: function(pElem) {
         this.elem = pElem;
@@ -128,8 +133,8 @@ var WeekSelect = {
         console.log('weekSelect click w' + event.target.dataWeek + ', c' + event.target.dataColumn + ', q' + event.target.dataQuartal + ', y' + event.target.dataYear);
         if (event.target.dataWeek) {
         	if ((!this.allowMulti) && (this.year + '.' + (event.target.dataWeek < 10 ? '0' + event.target.dataWeek : event.target.dataWeek)) < this.week) {
-        		alert('Nur zukünftiger Urlaub kann eingetragen werden.');
-        	} else if (this.allowMulti || confirm('Wirklich Urlaub für ' + this.getTitle(event.target.dataWeek) + ' umschalten?')) {
+        		alert('Nur zukünftige ' +  this.labels  + ' können eingetragen werden.');
+        	} else if ((!this.needsConfirm) || confirm('Wirklich ' + this.label +' für ' + this.getTitle(event.target.dataWeek) + ' umschalten?')) {
         		this.toggleSingle(event.target);
         	}
         } else if (event.target.dataYear) {
@@ -145,14 +150,22 @@ var WeekSelect = {
     },
 
     toggleSingle: function(elem) {
-        if (this.tableName && this.postData) {
+        if (this.tableName && this.postData ) {
             this.postData.Woche = this.year + (elem.dataWeek <= 9 ? '.0' : '.') + elem.dataWeek;
-            if (elem.className.match(/inactive/)) {
-                postAjax(this.tableName.match(/[^\/]*/)[0], this.postData, (function(result) { if (result.result) elem.className = 'active'; else this.refresh();}).bind(this) );
-            } else {
-                deleteAjax(this.tableName + '/Woche/' + this.postData.Woche, (function(result) { if (result.result) elem.className = 'inactive'; else this.refresh();}).bind(this) );
-            }
+        	if ( (this.onValidate) ) {
+            	this.onValidate(elem, this.postData, !elem.className.match(/inactive/))
+        	} else {
+        		this.doSave(elem);
+        	}
         }
+    },
+    
+    doSave: function(elem) {
+		if (elem.className.match(/inactive/)) {
+        	postAjax(this.tableName.match(/[^\/]*/)[0], this.postData, (function(result) { if (result.result) elem.className = 'active'; else this.refresh();}).bind(this) );
+        } else {
+            deleteAjax(this.tableName + '/Woche/' + this.postData.Woche, (function(result) { if (result.result) elem.className = 'inactive'; else this.refresh();}).bind(this) );
+        }    	
     },
 
     toggleMulti: function(weeks) {
@@ -161,7 +174,7 @@ var WeekSelect = {
             var row = this.htmlTable.children[i];
             for (var j = 0; j < row.children.length; j++) {
                 var cell = row.children[j];
-                if ( cell.dataWeek && ((!weeks) || weeks[cell.dataWeek] == 1) ) {
+                if ( cell.dataWeek && (this.allowPast || (this.year + '.' + (cell.dataWeek < 10 ? '0' + cell.dataWeek : cell.dataWeek)) >= this.week) && ((!weeks) || weeks[cell.dataWeek] == 1) ) {
                     if (cell.className.match(/inactive/)) {
                         if (mode == 'activate' || mode == '') {
                             mode = 'activate';

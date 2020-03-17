@@ -221,7 +221,7 @@ function downloadDepotbestellungen(response, path) {
 							function(cell, colNumber) {
 								console.log('Depotbestellungen: Cell ' + colNumber + ' = ' + cell.value);
 								if (cell.value) {
-									columns[colNumber] = cell.value.replace(',5kg', '.5kg').replace('Quark', 'Quark, 400g').replace('Anteile', 'Gemüse').replace('Apfelsaft, 1L', 'Apfelsaft');
+									columns[colNumber] = cell.value.replace(',5kg', '.5kg').replace('Quark', 'Quark, 400g').replace('Hafer fein', 'Haferflocken fein').replace('Hafer grob', 'Haferflocken grob').replace('Anteile', 'Gemüse').replace('Apfelsaft, 1L', 'Apfelsaft');
 									if (colNumber > lastColumn) {
 										lastColumn = colNumber;
 									}

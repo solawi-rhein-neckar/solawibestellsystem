@@ -11,14 +11,15 @@
 	<script src="util.js"></script>
 	<script src="weekSelect.js"></script>
 	<script src="solawiBestellSystem.js"></script>
-	<script src="solawiTableValidator.js"></script>
+	<script src="solawiValidator.js"></script>
+	<script src="solawiEditor.js"></script>
 	<script src="solawiTableEditor.js"></script>
 	<script src="solawiTable.js"></script>
 
 	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
 	<script type="text/javascript" src="FileSaver.min.js"></script>
 
-	<meta name="viewport" content="width=560, initial-scale=1.0, user-scalable=yes">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 </head>
 
 <script>
@@ -37,6 +38,9 @@
         SBTview.reload();
         reloadEdit();
     }
+    SBTedit.setSortBy('Produkt_ID');
+    SBTedit.setSortBy('Woche');
+    var solawiEditor = SolawiEditor(SBS, SBTedit.reload, true);
 
     //check login status
     getAjax('BenutzerView/MY', function(userResponse) {
@@ -49,7 +53,7 @@
                 show('depotManageLink3');
             }
 
-            setContent('logoutbtn', 'Logout ' + SBS.user.Name);
+            /*setContent('logoutbtn', 'Logout ' + SBS.user.Name);*/
 
             setHtmlContent('calendarWeek', weekToDate(SBS.week, 4).toLocaleDateString()
                     + (SBS.date.getDay() != SBS.day ? ', noch ' + ((7 + SBS.day - SBS.date.getDay()) % 7) + ' Tage' : ', heute'));
@@ -81,10 +85,14 @@
             var weekSelect = Object.create(WeekSelect);
             weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
             weekSelect.week = SBS.week;
-            weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + SBS.user.ID, weekSelect.postData = {
+            weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + SBS.user.ID;
+            weekSelect.postData = {
                 Benutzer_ID : SBS.user.ID,
                 Woche : SBS.selectedWeek
-            }, weekSelect.allowMulti = false;
+            };
+            weekSelect.allowMulti = false;
+            weekSelect.allowPast = false;
+            weekSelect.needsConfirm = true;
             weekSelect.addTo(document.getElementById('tableUrlaub'));
 
         } else {
@@ -108,11 +116,21 @@
         } else {
             document.getElementById('WocheAbgeschlossen').style.display = 'none';
         }
+        document.getElementById('tableEdit').parentNode.className = 'table_center'; /*remove ganzes_Jahr class, which enables week display*/
+        document.getElementById('btn_show_selected_week').style.display = 'none';
+        document.getElementById('btn_show_full_year').style.display = 'inline';
     }
     function resetWeek() {
         SBS.selectedWeek = SBS.week;
         changeWeek(0);
     }
+    function showFullYear() {
+    	getAjax('BenutzerZusatzBestellung/OWN', SBTedit.showTable);
+	    document.getElementById('tableEdit').parentNode.className = 'table_center full_year';
+    	document.getElementById('btn_show_selected_week').style.display = 'inline';
+    	document.getElementById('btn_show_full_year').style.display = 'none';
+	}
+
 </script>
 <div id="blockui_post" style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 250; background-color: rgba(0, 0, 0, 0.3); display: none;">
 	<span style="display: inline-block; padding: 30px; background-color: #FFF; border: 1px solid black;">
@@ -135,10 +153,10 @@
 </div>
 
 
-<div id="logoutfrombg" style="box-shadow: 0em 0em 1em 1em rgba(222, 222, 222, 0.7); background: rgba(222, 222, 222, 0.7); position: fixed; height: 14em; width: 19em; z-index: 8888; right: 1px; top: 0; font-size: 12px;"></div>
-<div id="logoutform" style="position: fixed; right: 1px; top: 0; font-size: 12px; width: 20em; height: 15em; text-align: center; z-index: 9999;">
+<div id="logoutfrombg" ></div>
+<div id="logoutform">
 	<button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('content');">Logout</button>
-	<div id="messages" style="height: 11em; overflow: hidden; font-size =85%; position: absolute; bottom: 0; width: 20em;"></div>
+	<div id="messages"></div>
 </div>
 
 <div class="login-page" id="loginform" style="display: none">
@@ -149,16 +167,16 @@
 			alt="Logo Solawi"> <input type='text' id='inpName' name='name' placeholder='name' />
 		<br />
 		<input type='password' id='inpPass' name='password' placeholder='passwort' />
-		<br /> 
+		<br />
 		<input class="loginbutton" type='submit' value='Login'
 			onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
 		<div class="message" id="loginError">
 			Falscher Benutzername<br>oder falsches Passwort!
 			<br><br>
-			Bitte den Login-Daten des 
+			Bitte den Login-Daten des
 			<a href="https://www.solawi-rhein-neckar.org/intern/login/?redirect_to=https%3A%2F%2Fwww.solawi-rhein-neckar.org%2Fintern%2F">
 				Mitgliederbereichs
-			</a> anmelden! 
+			</a> anmelden!
 		</div>
 		<div id="userMissing" class="message">
 			Login erfolgreich, aber Benutzer mit Name
@@ -179,7 +197,7 @@
 
 
 <div id="content">
-	<header> 
+	<header>
 	<nav id="page-nav">
 		<img id="logo" alt="Logo Solawi"
 			src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png"></img>
@@ -250,7 +268,17 @@
 		<table id="tableEdit" cellspacing="0">
 		</table>
 	</div>
-
+	
+	<div class="">
+		<a id="btn_show_full_year" href="#" onclick="event.preventDefault();showFullYear();"><b>Alle</b> Tausch/Änderungen anzeigen, nicht nur gewählte Woche</a>
+		<a id="btn_show_selected_week" style="display:none;" href="#" onclick="event.preventDefault();changeWeek(0);">Nur gewählte Woche anzeigen</a>
+	</div>
+	
+	<br/>
+	
+	<div class="">
+		<button onclick="solawiEditor.showForBatchOrder({Benutzer_ID: SBS.user.ID})">Serien-Bestellung</button>
+	</div>
 
 
 	<h1 id=Urlaub>Dein Urlaub</h1>
@@ -294,7 +322,7 @@
 				</a> <br>
 			</li>
 			<li><a target="_blank" href="print.htm#PivotDepot">Bestellübersicht Depot</a><br></li>
-			<li><span style="display: none;" id="depotManageLink2"><a href="depot.htm">Depotverwaltung</a></span></li>
+			<li style="display: none;" id="depotManageLink2"><a href="depot.htm">Depotverwaltung</a></li>
 		</ul>
 	</div>
 
