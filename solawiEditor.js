@@ -64,7 +64,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
 
         if (defaults['Benutzer_ID'] && !keys.includes('Benutzer_ID')) {
             var inp = createInput('Benutzer_ID');
-            inp.value = editorDefault['Benutzer_ID'];
+            inp.value = defaults['Benutzer_ID'];
             edit.appendChild(inp);
         }
 
