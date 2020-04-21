@@ -34,8 +34,8 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             ,'Punkte':1
             ,'Menge':0.01
         }
-        
-        
+
+
     function showEditorForCell(pTableName, event) {
     	tableName = pTableName;
         var edit = resetEditor("ID " + event.target.dataId + ": " + event.target.dataKey + " ");
@@ -49,15 +49,15 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         edit.appendChild(inp);
         finishEditor(edit);
     }
-    
+
     function showForAdding(pTableName, keys, defaults) {
 		finishEditor(initForAdding(pTableName, keys, defaults));
-    }   
+    }
 
     function showForBatchOrder(defaults) {
     	finishBatchOrder(initForAdding('BenutzerZusatzBestellung', ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar'], defaults));
     }
-    
+
     function initForAdding(pTableName, keys, defaults) {
     	tableName = pTableName;
         var edit = resetEditor("Neu hinzufügen: " + tableName);
@@ -92,8 +92,8 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             }
         }
         return edit;
-    }     
-        
+    }
+
     function createInput(key) {
         var inp;
 
@@ -203,13 +203,13 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
     function finishEditor(edit) {
         var linebreak = document.createElement("br")
         var btn = document.createElement("BUTTON");
-        btn.innerText="Save";
+        btn.innerText="Speichern";
         btn.style['margin-left'] = '5px';
         btn.style['margin-right'] = '10px';
         btn.addEventListener('click', saveEditorInputs);
 
         var btn2 = document.createElement("BUTTON");
-        btn2.innerText="Cancel";
+        btn2.innerText="Abbrechen";
         btn2.addEventListener('click', function(){hide('blockui_edit');});
         edit.appendChild(linebreak);
         edit.appendChild(btn);
@@ -246,7 +246,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             	onSuccessCallback(id, sendData);
             }
         }
-		
+
 	}
 
     function finishBatchOrder(edit) {
@@ -258,7 +258,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         btn.addEventListener('click', showBatchOrderWeekSelect);
 
         var btn2 = document.createElement("BUTTON");
-        btn2.innerText="Close";
+        btn2.innerText="Schließen";
         btn2.addEventListener('click', function(){hide('blockui_edit');onEntitySaved();});
         edit.appendChild(linebreak);
         edit.appendChild(btn);
@@ -275,12 +275,12 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
                 	inpEle.disabled='disabled';
                 }
             }
-            
+
             var div = document.createElement("DIV");
             div.style.paddingTop="10px";
             div.innerText="Nun nacheinander die Kalender-Wochen anwählen, für welche obige Bestellung gelten soll:";
             editor.appendChild(div);
-			
+
             var weekSelect = Object.create(WeekSelect);
             weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
             weekSelect.week = SBS.week;
@@ -312,6 +312,6 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
 
         });
 	}
-    
+
     return pub;
 }

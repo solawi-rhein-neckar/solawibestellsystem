@@ -155,7 +155,7 @@
 
 <div id="logoutfrombg" ></div>
 <div id="logoutform">
-	<button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('content');">Logout</button>
+	<button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('content');">Abmelden</button>
 	<div id="messages"></div>
 </div>
 
@@ -164,11 +164,11 @@
 		action='/cgi-bin/query.pl/login'>
 		<img style="width: 200px; margin-bottom: 2em;"
 			src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png"
-			alt="Logo Solawi"> <input type='text' id='inpName' name='name' placeholder='name' />
+			alt="Logo Solawi"> <input type='text' id='inpName' name='name' placeholder='Name' />
 		<br />
-		<input type='password' id='inpPass' name='password' placeholder='passwort' />
+		<input type='password' id='inpPass' name='password' placeholder='Passwort' />
 		<br />
-		<input class="loginbutton" type='submit' value='Login'
+		<input class="loginbutton" type='submit' value='Anmelden'
 			onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
 		<div class="message" id="loginError">
 			Falscher Benutzername<br>oder falsches Passwort!
@@ -268,14 +268,14 @@
 		<table id="tableEdit" cellspacing="0">
 		</table>
 	</div>
-	
+
 	<div class="">
 		<a id="btn_show_full_year" href="#" onclick="event.preventDefault();showFullYear();"><b>Alle</b> Tausch/Änderungen anzeigen, nicht nur gewählte Woche</a>
 		<a id="btn_show_selected_week" style="display:none;" href="#" onclick="event.preventDefault();changeWeek(0);">Nur gewählte Woche anzeigen</a>
 	</div>
-	
+
 	<br/>
-	
+
 	<div class="">
 		<button onclick="solawiEditor.showForBatchOrder({Benutzer_ID: SBS.user.ID})">Serien-Bestellung</button>
 	</div>
