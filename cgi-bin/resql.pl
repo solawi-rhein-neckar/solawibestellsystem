@@ -219,6 +219,49 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ?");
 					$sth->execute($id, $id2);
 				}
+			} elsif ( $q->path_info =~ /^\/([a-zA-Z]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)$/ ) {
+				my $table = $1;
+				my $column = $2;
+				my $id = $column == 'Benutzer_ID' && $3 == 'MY' ? $user->{ID} : $3;
+				my $column2 = $4;
+				my $id2 = $5;
+				my $column3 = $6;
+				my $id3 = $7;
+
+				if ( $user->{Role_ID} <= 1 && $table =~ /^Benutzer(View)?$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `ID` = ?");
+					$sth->execute($id, $id2, $id3, $user->{ID});
+				} elsif ( $user->{Role_ID} <= 1 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `StartWoche` <= ? AND `EndWoche` >= ? AND `$column3` = ? AND `Benutzer_ID` = ?");
+					$sth->execute($id, $id2, $id2, $id3, $user->{ID});
+				} elsif ( $user->{Role_ID} <= 1 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Bis$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `EndWoche` >= ? AND `$column3` = ? AND `Benutzer_ID` = ?");
+					$sth->execute($id, $id2, $id3, $user->{ID});
+				} elsif ( $user->{Role_ID} <= 1 && $table =~ /.*Benutzer.*/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `Benutzer_ID` = ?");
+					$sth->execute($id, $id2, $id3, $user->{ID});
+				} elsif ( ($user->{Role_ID} == 3) && $table =~ /^Benutzer(View)?$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $id2, $id3, $user->{Depot_ID});
+				} elsif ( $user->{Role_ID} == 3 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `StartWoche` <= ? AND `EndWoche` >= ? AND `$column3` = ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $id2, $id2, $id3, $user->{Depot_ID});
+				} elsif ( $user->{Role_ID} == 3 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Bis$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `EndWoche` >= ? AND `$column3` = ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $id2, $id3, $user->{Depot_ID});
+				} elsif ( ($user->{Role_ID} == 3) && $table =~ /.*Benutzer.*/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
+					$sth->execute($id, $id2, $id3, $user->{Depot_ID});
+				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `StartWoche` <= ? AND `EndWoche` >= ? AND `$column3` = ?");
+					$sth->execute($id, $id2, $id2, $id3);
+				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Bis$/ ) {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `EndWoche` >= ? AND `$column3` = ?");
+					$sth->execute($id, $id2,$id3);
+				} else {
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ?");
+					$sth->execute($id, $id2,$id3);
+				}
 
 			} else {
 
@@ -349,7 +392,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 							$sth = $dbh->prepare($sql);
 							$sth->execute(@values);
 							$dbh->commit();
-							print encode_json({result => 1, type => "insert", query => $sql, params => [@values], id => $sth->{'mysql_insertid'});
+							print encode_json({result => 1, type => "insert", query => $sql, params => [@values], id => $sth->{'mysql_insertid'}});
 						};
 						if ($@) {
 							print encode_json({result => 0, type => "insert", reason => $@, query => $sql, params => [@values]});
@@ -414,6 +457,62 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					@preValues = ($user->{ID}, $id, $id2);
 					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ?";
 					@values = ($id, $id2);
+				} else {
+					print encode_json({result => 0, reason => "no delete right for role " . $user->{Role_ID} . " on table $table"});
+				}
+			} elsif ( $q->path_info =~ /^\/([a-zA-Z]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)$/ ) {
+				my $table = $1;
+				my $column = $2;
+				my $id = $column == 'Benutzer_ID' && $3 == 'MY' ? $user->{ID} : $3;
+				my $column2 = $4;
+				my $id2 = $5;
+				my $column3 = $6;
+				my $id3 = $7;
+
+				if ( $user->{Role_ID} <= 1 && $table =~ /^BenutzerModulAbo$/ ) {
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `Benutzer_ID` = ? AND `StartWoche` >= ? AND `EndWoche` >= ?";
+					@preValues = ($user->{ID}, $id, $id2, $id3, $user->{ID}, $cur_week, $cur_week);
+					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `Benutzer_ID` = ? AND `StartWoche` >= ? AND `EndWoche` >= ?";
+					@values = ($id, $id2, $id3, $user->{ID}, $cur_week, $cur_week);
+				} elsif ( $user->{Role_ID} <= 1 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
+					@preValues = ($user->{ID}, $id, $id2, $id3, $user->{ID}, $last_week);
+					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
+					@values = ($id, $id2, $id3, $user->{ID}, $last_week);
+				} elsif ( $user->{Role_ID} == 2 || ($user->{Role_ID} == 3 && $table =~ /^.*Benutzer.*$/) || ($user->{Role_ID} == 0 && (! ($table =~ /^.*Benutzer.*$/) ))   ) {
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ?";
+					@preValues = ($user->{ID}, $id, $id2, $id3);
+					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ?";
+					@values = ($id, $id2, $id3);
+				} else {
+					print encode_json({result => 0, reason => "no delete right for role " . $user->{Role_ID} . " on table $table"});
+				}
+			} elsif ( $q->path_info =~ /^\/([a-zA-Z]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)$/ ) {
+				my $table = $1;
+				my $column = $2;
+				my $id = $column == 'Benutzer_ID' && $3 == 'MY' ? $user->{ID} : $3;
+				my $column2 = $4;
+				my $id2 = $5;
+				my $column3 = $6;
+				my $id3 = $7;
+				my $column4 = $8;
+				my $id4 = $9;
+
+				if ( $user->{Role_ID} <= 1 && $table =~ /^BenutzerModulAbo$/ ) {
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `$column4` = ? AND `Benutzer_ID` = ? AND `StartWoche` >= ? AND `EndWoche` >= ?";
+					@preValues = ($user->{ID}, $id, $id2, $id3, $id4, $user->{ID}, $cur_week, $cur_week);
+					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `$column4` = ? AND `Benutzer_ID` = ? AND `StartWoche` >= ? AND `EndWoche` >= ?";
+					@values = ($id, $id2, $id3, $id4, $user->{ID}, $cur_week, $cur_week);
+				} elsif ( $user->{Role_ID} <= 1 && ( $table =~ /.+Benutzer.*/ || $table =~ /^Benutzer.+/ ) ) {
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `$column4` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
+					@preValues = ($user->{ID}, $id, $id2, $id3, $id4, $user->{ID}, $last_week);
+					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `$column4` = ? AND `Benutzer_ID` = ? AND `Woche` >= ?";
+					@values = ($id, $id2, $id3, $id4, $user->{ID}, $last_week);
+				} elsif ( $user->{Role_ID} == 2 || ($user->{Role_ID} == 3 && $table =~ /^.*Benutzer.*$/) || ($user->{Role_ID} == 0 && (! ($table =~ /^.*Benutzer.*$/) ))   ) {
+					$preSql = "UPDATE `$table` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `$column4` = ?";
+					@preValues = ($user->{ID}, $id, $id2, $id3, $id4);
+					$sql = "DELETE FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `$column3` = ? AND `$column4` = ?";
+					@values = ($id, $id2, $id3, $id4);
 				} else {
 					print encode_json({result => 0, reason => "no delete right for role " . $user->{Role_ID} . " on table $table"});
 				}

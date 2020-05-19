@@ -52,7 +52,9 @@ table {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   height: 4.5cm;
+  width:1.2em;
   font-weight: bold;
+  padding: 0 1px;
 }
 
 #table>tr:nth-child(2n)>td:nth-child(2n){
@@ -113,3 +115,21 @@ table {
 	#navi {
 		position: absolute;
 	}
+	
+div.fixedHeaderTable>table>tr:first-child>td {
+	position: -webkit-sticky; /* for Safari */
+	position: sticky;
+	top: 0;
+	background: #EEE;
+	z-index: 222;
+	box-shadow: 0px 0px 0px 1px #999;
+}
+
+div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:first-child {
+	position: -webkit-sticky; /* for Safari */
+	position: sticky;
+	left: 0;
+	background: #EEE;
+	z-index: 111;
+	box-shadow: 0px 0px 0px 1px #999;
+}

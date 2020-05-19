@@ -11,7 +11,8 @@
 	<script src="util.js"></script>
 	<script src="weekSelect.js"></script>
 	<script src="solawiBestellSystem.js"></script>
-	<script src="solawiTableValidator.js"></script>
+	<script src="solawiValidator.js"></script>
+	<script src="solawiEditor.js"></script>
 	<script src="solawiTableEditor.js"></script>
 	<script src="solawiTable.js"></script>
 
@@ -37,6 +38,9 @@
         SBTview.reload();
         reloadEdit();
     }
+    SBTedit.setSortBy('Produkt_ID');
+    SBTedit.setSortBy('Woche');
+    var solawiEditor = SolawiEditor(SBS, SBTedit.reload, true);
 
     //check login status
     getAjax('BenutzerView/MY', function(userResponse) {
@@ -81,10 +85,14 @@
             var weekSelect = Object.create(WeekSelect);
             weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
             weekSelect.week = SBS.week;
-            weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + SBS.user.ID, weekSelect.postData = {
+            weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + SBS.user.ID;
+            weekSelect.postData = {
                 Benutzer_ID : SBS.user.ID,
                 Woche : SBS.selectedWeek
-            }, weekSelect.allowMulti = false;
+            };
+            weekSelect.allowMulti = false;
+            weekSelect.allowPast = false;
+            weekSelect.needsConfirm = true;
             weekSelect.addTo(document.getElementById('tableUrlaub'));
 
         } else {
@@ -108,11 +116,21 @@
         } else {
             document.getElementById('WocheAbgeschlossen').style.display = 'none';
         }
+        document.getElementById('tableEdit').parentNode.className = 'table_center'; /*remove ganzes_Jahr class, which enables week display*/
+        document.getElementById('btn_show_selected_week').style.display = 'none';
+        document.getElementById('btn_show_full_year').style.display = 'inline';
     }
     function resetWeek() {
         SBS.selectedWeek = SBS.week;
         changeWeek(0);
     }
+    function showFullYear() {
+    	getAjax('BenutzerZusatzBestellung/OWN', SBTedit.showTable);
+	    document.getElementById('tableEdit').parentNode.className = 'table_center full_year';
+    	document.getElementById('btn_show_selected_week').style.display = 'inline';
+    	document.getElementById('btn_show_full_year').style.display = 'none';
+	}
+
 </script>
 <div id="blockui_post" style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 250; background-color: rgba(0, 0, 0, 0.3); display: none;">
 	<span style="display: inline-block; padding: 30px; background-color: #FFF; border: 1px solid black;">
@@ -137,7 +155,7 @@
 
 <div id="logoutfrombg" ></div>
 <div id="logoutform">
-	<button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('content');">Logout</button>
+	<button id="logoutbtn" onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('content');">Abmelden</button>
 	<div id="messages"></div>
 </div>
 
@@ -146,11 +164,11 @@
 		action='/cgi-bin/query.pl/login'>
 		<img style="width: 200px; margin-bottom: 2em;"
 			src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png"
-			alt="Logo Solawi"> <input type='text' id='inpName' name='name' placeholder='name' />
+			alt="Logo Solawi"> <input type='text' id='inpName' name='name' placeholder='Name' />
 		<br />
-		<input type='password' id='inpPass' name='password' placeholder='passwort' />
+		<input type='password' id='inpPass' name='password' placeholder='Passwort' />
 		<br />
-		<input class="loginbutton" type='submit' value='Login'
+		<input class="loginbutton" type='submit' value='Anmelden'
 			onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
 		<div class="message" id="loginError">
 			Falscher Benutzername<br>oder falsches Passwort!
@@ -251,6 +269,16 @@
 		</table>
 	</div>
 
+	<div class="">
+		<a id="btn_show_full_year" href="#" onclick="event.preventDefault();showFullYear();"><b>Alle</b> Tausch/Änderungen anzeigen, nicht nur gewählte Woche</a>
+		<a id="btn_show_selected_week" style="display:none;" href="#" onclick="event.preventDefault();changeWeek(0);">Nur gewählte Woche anzeigen</a>
+	</div>
+
+	<br/>
+
+	<div class="">
+		<button onclick="solawiEditor.showForBatchOrder({Benutzer_ID: SBS.user.ID})">Serien-Bestellung</button>
+	</div>
 
 
 	<h1 id=Urlaub>Dein Urlaub</h1>

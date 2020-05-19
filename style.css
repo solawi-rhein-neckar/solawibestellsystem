@@ -380,6 +380,8 @@ table, td { border: 1px solid #999;
 table>tr:first-child>td>span {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
+  padding: 0 1px;
+  width:1.4em;
 }
 
 
@@ -453,6 +455,10 @@ display: inline-block;
 .col_Woche, .col_Benutzer_ID, .col_Benutzer, .col_Depot, .col_Depot_ID, .col_Einheit, .col_Menge{
   display: none;
 
+}
+
+div.full_year td.col_Woche {
+	display: table-cell !important;
 }
 
 button.btn_plus:hover {
