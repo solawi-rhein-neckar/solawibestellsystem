@@ -66,7 +66,8 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 	<script src="util.js"></script>
 	<script src="weekSelect.js"></script>
 	<script src="solawiBestellSystem.js"></script>
-	<script src="solawiTableValidator.js"></script>
+	<script src="solawiValidator.js"></script>
+	<script src="solawiEditor.js"></script>
 	<script src="solawiTableEditor.js"></script>
 	<script src="solawiTableVerwalter.js"></script>
 	<script src="solawiTable.js"></script>
@@ -162,10 +163,10 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 	<div id="logoutform"
 		style="position: fixed; right: 1px; top: 0; font-size: 12px; width: 20em; height: 15em; text-align: center; z-index: 9999;">
 		Woche:
-		<button onclick="changeWeek(-1)">&lt;&lt;</button>
+		<button onclick="changeWeek(-1)" style="padding:3px;">&lt;&lt;</button>
 		<span id="selectedWeek0"
 			style="font-weight: bold; background-color: rgba(222, 222, 222);">00</span>
-		<button onclick="changeWeek(+1)">&gt;&gt;</button>
+		<button onclick="changeWeek(+1)" style="padding:3px;">&gt;&gt;</button>
 		<button id="logoutbtn"
 			onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn'); hide('tableContainer');">Logout</button>
 		<div id="messages"

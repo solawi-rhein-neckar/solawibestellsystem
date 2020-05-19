@@ -458,6 +458,10 @@ display: inline-block;
 
 }
 
+div.full_year td.col_Woche {
+	display: table-cell !important;
+}
+
 button.btn_plus:hover {
   background-color: #679b14;
 }
