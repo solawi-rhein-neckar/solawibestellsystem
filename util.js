@@ -290,3 +290,6 @@ function downloadDepotbestellungen(response, path) {
 	};
 	req.send();
 }
+
+export {weekCount, weekToDate, clearContent, addWeek, deleteAjax, downloadDepotbestellungen, downloadWithSheetJs,
+	getAjax};
