@@ -1,6 +1,6 @@
 {
   "name": "solawibestellsystem",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Bestellsystem der Solawi Rhein-Neckar",
   "main": "index.htm",
   "scripts": {
