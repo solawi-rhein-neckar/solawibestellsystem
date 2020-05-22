@@ -28,7 +28,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
     var editBestellungenTables = {};
     var editAboTables = {};
     var weekSelects = {}
-	var solawiEditor = SolawiEditor(sbs, solawiTable.reload, false);    
+	var solawiEditor = SolawiEditor(sbs, solawiTable.reload, false);
 
 /**** public ****/
     function addColumnHeaders(tr) {
@@ -39,12 +39,12 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             wtd = createHeaderCol('Bestellung');
             wtd.innerText='Tausch';
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+1]);
-            
+
             wtd = createHeaderCol('Serie');
             wtd.className='col_serie';
             wtd.innerText='Serie';
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+2]);
-            
+
             wtd = createHeaderCol('BenutzerAbo');
             wtd.innerText='Jede_Woche';
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+3]);
@@ -162,7 +162,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             editAbo.setSortBy('StartWoche');
             editAbo.setSortBy('Modul_ID');
             editAbo.editorDefault['Benutzer_ID'] = row['ID'];
-            editAbo.columns = ['Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche'];
+            editAbo.columns = ['Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche', 'BezahltesModul'];
             editAboTables[row['ID']] = editAbo;
             var editAboReload = editAbo.reload;
             editAbo.reload = function() {editAboReload(); viewLieferung.reload();};

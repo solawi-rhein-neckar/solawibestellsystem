@@ -205,7 +205,7 @@
 					<button onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Benutzer)</button>
 					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotBestellungen/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Solawi)</button>
 					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Depot)</button>
-					<button	onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Solawi</button>
+					<button	onclick="getAjax('PivotBestellungX/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Solawi</button>
 				</span>
 				<span style="display: inline-block; width: 38%; vertical-align: top;">
 					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo/Bis/'+SBS.selectedWeek, SBTedit.showTable);">ModulAbos <b>ab</b> gewählter Woche bearbeiten</button>

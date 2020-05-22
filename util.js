@@ -132,6 +132,7 @@ function weekCount(year) {
     return date.getWeek() != 53 ? 52 : 53;
 }
 
+/* the function dowloadWithSheetJs is CURRENTLY NOT USED!! as SheetJs does NOT support styles in XLS / XLSX correctly */
 function downloadWithSheetJs() { if (false) {
 	  /* convert data to binary string */
 	  var data = new Uint8Array(arraybuffer);
@@ -180,6 +181,7 @@ function downloadWithSheetJs() { if (false) {
 	req.send();
 }
 
+/* this function (using excelJS - https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js) is currenlty used to fill in xlsx templates */
 function downloadDepotbestellungen(response, path) {
 	console.log('downloading...');
 	var responseCache = response;
@@ -221,7 +223,7 @@ function downloadDepotbestellungen(response, path) {
 							function(cell, colNumber) {
 								console.log('Depotbestellungen: Cell ' + colNumber + ' = ' + cell.value);
 								if (cell.value) {
-									columns[colNumber] = cell.value.replace(',5kg', '.5kg').replace('Quark', 'Quark, 400g').replace('Hafer fein', 'Haferflocken fein').replace('Hafer grob', 'Haferflocken grob').replace('Anteile', 'Gemüse').replace('Apfelsaft, 1L', 'Apfelsaft');
+									columns[colNumber] = cell.value.replace('Anteile', 'Gemüse');
 									if (colNumber > lastColumn) {
 										lastColumn = colNumber;
 									}
@@ -291,5 +293,4 @@ function downloadDepotbestellungen(response, path) {
 	req.send();
 }
 
-export {weekCount, weekToDate, clearContent, addWeek, deleteAjax, downloadDepotbestellungen, downloadWithSheetJs,
-	getAjax};
+
