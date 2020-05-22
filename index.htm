@@ -69,17 +69,12 @@
 
             getAjax('BenutzerModulAbo/Benutzer_ID/MY/Bis/' + SBS.week, SBTmodule.showTable);
 
-            getAjax('Solawi/Name/AbgeschlosseneWoche', function(result) {
-                if (result && result[0] && result[0]['Wert']) {
-                    SBS.AbgeschlosseneWoche = result[0]['Wert']
-                }
-                if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
-                    document.getElementById('WocheAbgeschlossen').style.display = 'block';
-                } else {
-                    document.getElementById('WocheAbgeschlossen').style.display = 'none';
-                }
-
-            });
+            SBS.AbgeschlosseneWoche = addWeek(SBS.date.getWeekYear() + '.' + SBS.date.getWeek(), 1);
+            if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
+                document.getElementById('WocheAbgeschlossen').style.display = 'block';
+            } else {
+                document.getElementById('WocheAbgeschlossen').style.display = 'none';
+            }
 
             //getAjax('BenutzerUrlaub', SBTurlaub.showTable);
             var weekSelect = Object.create(WeekSelect);
@@ -317,7 +312,7 @@
 		<h1 id="Downloads">Übersichten</h1>
 		<ul>
 			<li><a target="_blank" href="print.htm#PivotBestellungen">Gesamte Solawi</a> <br></li>
-			<li><a href="#" onclick="getAjax('PivotBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);event.preventDefault();return false;">
+			<li><a href="#" onclick="getAjax('PivotBestellungX/'+SBS.selectedWeek, downloadDepotbestellungen);event.preventDefault();return false;">
 				Download als Exceltabelle
 				</a> <br>
 			</li>

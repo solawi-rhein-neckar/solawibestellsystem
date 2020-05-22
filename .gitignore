@@ -1,4 +1,13 @@
 #################
+## Compilation Results
+#################
+
+
+node_modules/
+.cache/
+
+#################
+
 ## IntelliJ
 #################
 
@@ -34,6 +43,11 @@ local.properties
 # PDT-specific
 .buildpath
 
+#################
+## VS-Code
+#################
+
+.vscode/
 
 #################
 ## Visual Studio
