@@ -158,7 +158,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             table.id='editAboTable'+row['ID'];
             td.appendChild(table);
             td.appendChild(span);
-            var editAbo = SolawiTable(sbs, 'editAboTable'+row['ID'], 'editAboLabel'+row['ID'], true, false);
+            var editAbo = SolawiTable(sbs, 'editAboTable'+row['ID'], 'editAboLabel'+row['ID'], true, true);
             editAbo.setSortBy('StartWoche');
             editAbo.setSortBy('Modul_ID');
             editAbo.editorDefault['Benutzer_ID'] = row['ID'];
