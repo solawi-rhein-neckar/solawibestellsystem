@@ -69,7 +69,7 @@
 
             getAjax('BenutzerModulAbo/Benutzer_ID/MY/Bis/' + SBS.week, SBTmodule.showTable);
 
-            SBS.AbgeschlosseneWoche = addWeek(SBS.date.getWeekYear() + '.' + SBS.date.getWeek(), 1);
+            SBS.AbgeschlosseneWoche = SBS.date.getWeekYear() + '.' + SBS.date.getWeek();
             if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
                 document.getElementById('WocheAbgeschlossen').style.display = 'block';
             } else {
