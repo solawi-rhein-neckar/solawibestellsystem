@@ -3,31 +3,31 @@
 <head>
 <meta charset="UTF-8">
 	<title>Solawi Bestellsystem</title>
-	<link rel="stylesheet" type="text/css" href="style.css"/>
+	<link rel="stylesheet" type="text/css" href="css/style.css"/>
 	<link rel="stylesheet"
 		href="https://fonts.googleapis.com/css?family=Special+Elite%3Aregular%7COpen+Sans%3A300%2C300italic%2Cregular%2Citalic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic&amp;ver=4.9.11#038;subset=latin,latin-ext"
 		type="text/css" media="all"/>
 
-	<script src="util.js"></script>
-	<script src="weekSelect.js"></script>
-	<script src="solawiBestellSystem.js"></script>
-	<script src="solawiValidator.js"></script>
-	<script src="solawiEditor.js"></script>
-	<script src="solawiTableEditor.js"></script>
-	<script src="solawiTable.js"></script>
+	<script src="js/util.js"></script>
+	<script src="js/weekSelect.js"></script>
+	<script src="js/solawiBestellSystem.js"></script>
+	<script src="js/solawiValidator.js"></script>
+	<script src="js/solawiEditor.js"></script>
+	<script src="js/solawiTableEditor.js"></script>
+	<script src="js/solawiTable.js"></script>
 
 	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
-	<script type="text/javascript" src="FileSaver.min.js"></script>
+	<script type="text/javascript" src="lib/FileSaver.min.js"></script>
 
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 </head>
 
 <script>
-    if (location.protocol && !location.protocol.match(/https/) && location.host.match(/www.solawi.fairtrademap.de/)) {
-        location.replace('https://www.solawi.fairtrademap.de/index.htm');
-    } else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
-        location.replace('https://solawi.fairtrademap.de/index.htm');
-    }
+	if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
+	    location.replace('https://bestellung.solawi.fairtrademap.de/admin.htm');
+	} else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi-rhein-neckar.org/)) {
+	    location.replace('https://www.solawi-rhein-neckar.org/bestellung/index.htm');
+	}
 
     var SBS = SolawiBestellSystem();
     var SBTedit = SolawiTable(SBS, 'tableEdit', 'tableEditPath', true, true);

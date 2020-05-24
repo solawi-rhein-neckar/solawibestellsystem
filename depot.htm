@@ -3,29 +3,29 @@
 <head>
 <meta charset="UTF-8">
 	<title>Ansicht Depot</title>
-	<link rel="stylesheet" type="text/css" href="depot.css">
+	<link rel="stylesheet" type="text/css" href="css/depot.css">
 	<style>
 
 </style>
-	<script src="util.js"></script>
-	<script src="weekSelect.js"></script>
-	<script src="solawiBestellSystem.js"></script>
-	<script src="solawiValidator.js"></script>
-	<script src="solawiEditor.js"></script>
-	<script src="solawiTableEditor.js"></script>
-	<script src="solawiTableVerwalter.js"></script>
-	<script src="solawiTable.js"></script>
+	<script src="js/util.js"></script>
+	<script src="js/weekSelect.js"></script>
+	<script src="js/solawiBestellSystem.js"></script>
+	<script src="js/solawiValidator.js"></script>
+	<script src="js/solawiEditor.js"></script>
+	<script src="js/solawiTableEditor.js"></script>
+	<script src="js/solawiTableVerwalter.js"></script>
+	<script src="js/solawiTable.js"></script>
 
 	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
-	<script type="text/javascript" src="FileSaver.min.js"></script>
+	<script type="text/javascript" src="lib/FileSaver.min.js"></script>
 </head>
 <body>
 
 	<script>
-        if (location.protocol && !location.protocol.match(/https/) && location.host.match(/www.solawi.fairtrademap.de/)) {
-            location.replace('https://www.solawi.fairtrademap.de/depot.htm');
-        } else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
-            location.replace('https://solawi.fairtrademap.de/depot.htm');
+        if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
+            location.replace('https://bestellung.solawi.fairtrademap.de/depot.htm');
+        } else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi-rhein-neckar.org/)) {
+            location.replace('https://www.solawi-rhein-neckar.org/bestellung/depot.htm');
         }
 
         var SBS = SolawiBestellSystem();
@@ -165,6 +165,8 @@
 		<br />
 		<a style="padding-left: 20px;" href="index.htm">Zurück zur Startseite</a><br />
 	</div>
+
+
 
 
 	<div id="warning" style="color: red"></div>

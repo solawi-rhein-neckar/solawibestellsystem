@@ -5,6 +5,14 @@
   --Farbe4: #aed7fe; /*kräftig*/
   --Farbe5: #e7e4e4; /*grau*/
 }
+td.col_BenutzerAbo td.col_Anzahl:hover div:before {
+	padding:10px;border:1px solid black;position:fixed;right:0;top:0;
+	content:" ";
+	background:url(../img/solawi_jede_woche_abo.png);
+	z-index: 9999;
+	width: 660px;
+	height: 600px;
+}
 table, td {
 	border: 1px solid #999;
 	border-collapse: collapse;
