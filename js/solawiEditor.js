@@ -191,7 +191,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         var edit = document.getElementById('editor');
         var label = document.createElement("DIV");
         edit.className = 'edit' + tableName;
-        label.innerText = pLabel.replace('BenutzerZusatzBestellung', 'Tausch').replace('BenutzerModulAbo', 'Jede_Woche');
+        label.innerText = pLabel.replace('BenutzerZusatzBestellung', 'Tausch').replace('BenutzerModulAbo', 'Jede_Woche-Abo');
         label.className = 'editorLabel';
         while (edit.firstChild) edit.removeChild(edit.firstChild);
         edit.appendChild(label);
@@ -263,6 +263,12 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         edit.appendChild(linebreak);
         edit.appendChild(btn);
         edit.appendChild(btn2);
+
+        var dv = document.createElement("DIV");
+        dv.innerHTML="Hinweis: Für mehr/weniger Brot, Milch, Käse, Kartoffeln in JEDER Woche -> fragt euren Depot-Besteller!<br/>"
+        			+"Serienbestellung nur verwenden, wenn NICHT jede Woche (z.Bsp. alle 2 Wochen) oder für andere Produkte.";
+        dv.style['margin-top'] = '10px';
+        edit.appendChild(dv);
     }
 
 	function showBatchOrderWeekSelect(event2) {

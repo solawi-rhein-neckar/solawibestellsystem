@@ -156,11 +156,11 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             td.className='col_'+keys[j];
             span.className = "TableHead";
             if (keys[j].match(/^[0-9][0-9][.].*/) ) {
-                span.innerText = keys[j].substr(3).replace('AnzahlModul', 'Jede_Woche').replace('AnzahlZusatz', 'Tausch');
+                span.innerText = keys[j].substr(3).replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
             } else {
-                span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche').replace('AnzahlZusatz', 'Tausch');
+                span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
             }

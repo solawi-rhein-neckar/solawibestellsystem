@@ -121,6 +121,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				if ( $user->{Role_ID} <= 1 && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ? AND `ID` = ?");
 					$sth->execute($id, $user->{ID});
+				} elsif ( $table =~ /^BenutzerBestellView$/ ) {
+					$sth = $dbh->prepare("CALL $table(?,?,?)");
+					$sth->execute($id,$user->{ID},undef);
 				} elsif ( $user->{Role_ID} <= 1 && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $user->{ID});
@@ -185,6 +188,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				if ( $user->{Role_ID} <= 1 && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `ID` = ?");
 					$sth->execute($id, $id2, $user->{ID});
+				} elsif ( $user->{Role_ID} <= 1 && $table =~ /^BenutzerBestellView$/ && $column2 == 'Woche' && $column == 'Benutzer_ID') {
+					$sth = $dbh->prepare("CALL $table(?,?,?)");
+					$sth->execute($id2,$user->{ID},undef);
 				} elsif ( $user->{Role_ID} <= 1 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `StartWoche` <= ? AND `EndWoche` >= ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $id2, $id2, $user->{ID});
@@ -197,6 +203,12 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( ($user->{Role_ID} == 3) && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
 					$sth->execute($id, $id2, $user->{Depot_ID});
+				} elsif ( $user->{Role_ID} >= 2 && $table =~ /^BenutzerBestellView$/ && $column2 == 'Woche' && $column == 'Benutzer_ID') {
+					$sth = $dbh->prepare("CALL $table(?,?,?)");
+					$sth->execute($id2,$id,undef);
+				} elsif ( $user->{Role_ID} >= 2 && $table =~ /^BenutzerBestellView$/ && $column2 == 'Woche' && $column == 'Depot_ID') {
+					$sth = $dbh->prepare("CALL $table(?,?,?)");
+					$sth->execute($id2,undef,$id);
 				} elsif ( $user->{Role_ID} == 3 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `StartWoche` <= ? AND `EndWoche` >= ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
 					$sth->execute($id, $id2, $id2, $user->{Depot_ID});
@@ -214,7 +226,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					$sth->execute($id, $id2);
 				} elsif ( $user->{Role_ID} > 1 && $table =~ /^PivotDepot.*/ ) {
 					$sth = $dbh->prepare("CALL $table(?,?)");
-					$sth->execute($id,$id2);					
+					$sth->execute($id,$id2);
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ?");
 					$sth->execute($id, $id2);
