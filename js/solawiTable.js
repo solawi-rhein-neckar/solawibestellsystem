@@ -129,7 +129,10 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         tr.appendChild(td);
 
         var div = document.createElement("DIV");
-        div.innerText = value === undefined || value === null || value === '' ? '-' : value;
+        div.innerText = value === undefined || value === null || value === '' ? '-' : pub.hideZeros && (value === 0 || value === '0' || value === '0.0' || value === '0.000'|| value === '0.0000') ? '' : pub.hideZeros ? (String(value).replace(/^([0-9]+(.0|.5)?)[.]?00[01]$/, '$1')) : value;
+
+	    div.className = String(value).match(/^([0-9]+(.0|.5)?)[.]?001$/) ? 'hat_tausch' : '';
+
 
         /* foreign key lookup in sbs.tableCache */
         var relation = key.match(/^(?:Besteller|Verwalter)?(.*)_ID$/);

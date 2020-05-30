@@ -287,6 +287,9 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             div.innerText="Nun nacheinander die Kalender-Wochen anwählen, für welche obige Bestellung gelten soll:";
             editor.appendChild(div);
 
+	    div = document.createElement("DIV");
+            editor.appendChild(div);
+
             var weekSelect = Object.create(WeekSelect);
             weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
             weekSelect.week = SBS.week;
@@ -314,8 +317,12 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             };
             weekSelect.allowMulti = !disableUnavailableProducts;
             weekSelect.allowPast = false;
-            weekSelect.addTo(editor);
+            weekSelect.addTo(div);
 
+            div = document.createElement("DIV");
+            div.style.paddingTop="10px";
+            div.innerHTML="Hinweis: schon vorhandene (Serien-)-Bestellungen werden hier nur angezeigt,<br/>wenn exakt die selbe Anzahl haben: Sind in einer Woche schon 2 Stück bestellt,<br/>sieht man dies hier nicht, falls hier 3 als Anzahl ausgewählt wurde.";
+            editor.appendChild(div);
         });
 	}
 

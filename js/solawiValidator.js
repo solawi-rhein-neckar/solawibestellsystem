@@ -76,7 +76,7 @@ function SolawiValidator(pSbs) {
 	                setContent('editError', 'Ungültige Start/EndWoche für ' + row.Name + ', erlaubte StartWochen: ' + row.WechselWochen + ', EndWoche jeweils eins weniger.' );
 	                return false;
 	        	}
-	        	if (row.AnzahlProAnteil != 0 && responseCache) {
+	        	/*if (row.AnzahlProAnteil != 0 && responseCache) {
 	        		max = row.AnzahlProAnteil * sbs.user.Anteile;
 	        		for (var a = 0; a < responseCache.length; a++) {
 	        			var abo = responseCache[a];
@@ -84,7 +84,7 @@ function SolawiValidator(pSbs) {
 	        				max -= abo['Anzahl'];
 	        			}
 	        		}
-	        	}
+	        	}*/
 	        }
 	    	return validateEditorAnzahl(data['Anzahl'], min, max, row ? row.Name : '');
     	}

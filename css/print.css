@@ -133,3 +133,7 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:first-child {
 	z-index: 111;
 	box-shadow: 0px 0px 0px 1px #999;
 }
+
+div.hat_tausch {
+  font-weight:bolder;
+}
