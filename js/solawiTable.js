@@ -54,7 +54,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     function showTable(response, path) {
     	console.log('show table ' + path);
 
-    	if (path.match(/^BenutzerBestellView.*$/)) {
+    	if (path.match(/^BenutzerBestellView.*$/) || path.match(/^BenutzerBestellungView.*$/)) {
     		sbs.saveOrdersIntoProductCache(response);
     	}
 

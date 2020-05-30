@@ -62,7 +62,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             editBestellungenTables = {};
             editAboTables = {};
 
-            getAjax('BenutzerBestellungView/Woche/'+sbs.selectedWeek, createShowFilteredResultsFunction(viewLieferungTables));
+            getAjax('BenutzerBestellView/Woche/'+sbs.selectedWeek, createShowFilteredResultsFunction(viewLieferungTables));
             getAjax('BenutzerZusatzBestellung/Woche/'+sbs.selectedWeek, createShowFilteredResultsFunction(editBestellungenTables));
             getAjax('BenutzerModulAbo/Bis/'+sbs.selectedWeek, createShowFilteredResultsFunction(editAboTables));
             getAjax('BenutzerUrlaub/', createShowFilteredResultsFunction(weekSelects));
@@ -201,7 +201,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             var button = document.createElement("BUTTON");
             wtd.appendChild(button);
             button.innerText = 'liste';
-            button.onclick = function() {getAjax('PivotDepotBestellung/Woche/'+sbs.selectedWeek+'/Depot_ID/'+row['ID'], window.SBTview.showTable);};
+            button.onclick = function() {getAjax('PivotDepot/Woche/'+sbs.selectedWeek+'/Depot_ID/'+row['ID'], window.SBTview.showTable);};
             tr.insertBefore(wtd, tr.childNodes[2]);
         }
     }

@@ -56,7 +56,7 @@ use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!
 my $q = CGI::Simple->new;
 
 # get database handle
-my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=127.0.0.3", "db208674_361", "nGvx-93Wv5",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => ($q->request_method() =~ /^POST$/) });
+my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=127.0.0.3", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => ($q->request_method() =~ /^POST$/) });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
 	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
@@ -121,7 +121,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				if ( $user->{Role_ID} <= 1 && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ? AND `ID` = ?");
 					$sth->execute($id, $user->{ID});
-				} elsif ( $table =~ /^BenutzerBestellView$/ ) {
+				} elsif ( $table =~ /^BenutzerBestellungView$/ ) {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id,$user->{ID},undef);
 				} elsif ( $user->{Role_ID} <= 1 && $table =~ /.*Benutzer.*/ ) {
@@ -188,7 +188,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				if ( $user->{Role_ID} <= 1 && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `ID` = ?");
 					$sth->execute($id, $id2, $user->{ID});
-				} elsif ( $user->{Role_ID} <= 1 && $table =~ /^BenutzerBestellView$/ && $column2 == 'Woche' && $column == 'Benutzer_ID') {
+				} elsif ( $user->{Role_ID} <= 1 && $table =~ /^BenutzerBestellungView$/ && $column2 == 'Woche' && $column == 'Benutzer_ID') {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id2,$user->{ID},undef);
 				} elsif ( $user->{Role_ID} <= 1 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
@@ -203,10 +203,10 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( ($user->{Role_ID} == 3) && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
 					$sth->execute($id, $id2, $user->{Depot_ID});
-				} elsif ( $user->{Role_ID} >= 2 && $table =~ /^BenutzerBestellView$/ && $column2 == 'Woche' && $column == 'Benutzer_ID') {
+				} elsif ( $user->{Role_ID} >= 2 && $table =~ /^BenutzerBestellungView$/ && $column2 == 'Woche' && $column == 'Benutzer_ID') {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id2,$id,undef);
-				} elsif ( $user->{Role_ID} >= 2 && $table =~ /^BenutzerBestellView$/ && $column2 == 'Woche' && $column == 'Depot_ID') {
+				} elsif ( $user->{Role_ID} >= 2 && $table =~ /^BenutzerBestellungView$/ && $column2 == 'Woche' && $column == 'Depot_ID') {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id2,undef,$id);
 				} elsif ( $user->{Role_ID} == 3 && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {

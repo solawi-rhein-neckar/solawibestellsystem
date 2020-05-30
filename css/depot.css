@@ -57,9 +57,6 @@ table, td {
 /*Logout */
 
 
-#logoutfrombg {
-    display: none !important;
-  }
 
 
 
@@ -80,7 +77,8 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 	.BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID,
 	.DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID,
 	.GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID,
-	.BenutzerView .col_Role_ID {
+	.BenutzerView .col_Role_ID, .BenutzerBestellungView .col_Benutzer_ID,
+	.BenutzerBestellungView .col_Depot_ID, .BenutzerBestellungView .col_Produkt_ID {
 	display: none;
 }
 

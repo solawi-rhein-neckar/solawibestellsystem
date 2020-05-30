@@ -298,7 +298,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             	if (willDelete || ! postData['Woche']) {
             		weekSelect.doSave(elem);
         		} else {
-	            	getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/' + postData['Woche'], function(response) {
+	            	getAjax('BenutzerBestellungView/Benutzer_ID/MY/Woche/' + postData['Woche'], function(response) {
 	            		sbs.saveOrdersIntoProductCache(response);
 	            		if (tableValidator.validateEditorInput(postData)) {
 	            			weekSelect.doSave(elem);

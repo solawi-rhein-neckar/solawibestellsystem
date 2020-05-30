@@ -14,9 +14,7 @@ input.editor.inp_Passwort, input.editor.inp_Cookie, input.editor.inp_PunkteStand
 	.BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID,
 	.BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID,
 	.DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID,
-	.BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID,
-	.BenutzerBestellungView .col_Benutzer_ID, .BenutzerBestellungView .col_Depot_ID,
-	.BenutzerBestellungView .col_Produkt_ID, {
+	.BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID {
 	display: none;
 }
 
@@ -71,7 +69,7 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 	<script src="js/solawiValidator.js"></script>
 	<script src="js/solawiEditor.js"></script>
 	<script src="js/solawiTableEditor.js"></script>
-	<script src="js/solawiTableVerwalter.js"></script>
+	<script src="js/solawiTableVerwalterOld.js"></script>
 	<script src="js/solawiTable.js"></script>
 
 	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
@@ -82,9 +80,9 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 
 	<script>
 		if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
-		    location.replace('https://bestellung.solawi.fairtrademap.de/admin.htm');
+		    location.replace('https://bestellung.solawi.fairtrademap.de/admin.html');
 		} else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi-rhein-neckar.org/)) {
-		    location.replace('https://www.solawi-rhein-neckar.org/bestellung/admin.htm');
+		    location.replace('https://www.solawi-rhein-neckar.org/bestellung/admin.html');
 		}
 
         var SBS = SolawiBestellSystem();
@@ -193,7 +191,7 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 		</form>
 		<br />
 		<br />
-		<a style="padding-left: 20px;" href="index.htm">Zurück zu
+		<a style="padding-left: 20px;" href="index.html">Zurück zu
 			Startseite</a><br />
 	</div>
 
@@ -211,14 +209,14 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerView', SBTview.showTable);">AbosNächsteLieferung</button>
 				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerModulAbo/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerModulAbo</button>
 				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('ModulInhaltView/Woche/'+SBS.selectedWeek, SBTview.showTable);">ModulInhalt</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerBestellungView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellung</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellung</button>
 				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">DepotBestellungen</button>
 				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">GesamtBestellungen</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepotBestellung/'+SBS.selectedWeek, SBTview.showTable);">PivotDepotBest.</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotSolawiBestellung/'+SBS.selectedWeek, SBTview.showTable);">PivotBestellung</button>
-				<button	onclick="getAjax('PivotExportBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD
-					Bestellungen</button> <a target="_blank" href="print.htm#PivotSolawiBestellung">Bestellung_Drucken</a>
-				<a target="_blank" href="print.htm#PivotDepotBestellung">DepotBest._Drucken</a>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">PivotDepotBest.</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotBestellungen/'+SBS.selectedWeek, SBTview.showTable);">PivotBestellungen</button>
+				<button	onclick="getAjax('PivotBestellungX/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD
+					Bestellungen</button> <a target="_blank" href="print.htm#PivotBestellungen">Bestellung_Drucken</a>
+				<a target="_blank" href="print.htm#PivotDepot">DepotBest._Drucken</a>
 			</span> <span
 				style="display: inline-block; max-width: 42%; vertical-align: top;">
 				<b>Bearbeiten </b> <br />
