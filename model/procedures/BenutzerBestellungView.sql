@@ -1,9 +1,13 @@
-DELIMITER $$
-CREATE  PROCEDURE `BenutzerBestellungView`(IN `pWoche` DECIMAL(6,2), IN `pBenutzer` INT, IN `pDepot` INT)
+DROP PROCEDURE `BenutzerBestellungView`;
+CREATE  PROCEDURE `BenutzerBestellungView` (
+	IN `pWoche` DECIMAL(6,2),
+	IN `pBenutzer` INT,
+	IN `pDepot` INT
+)
     READS SQL DATA
     SQL SECURITY INVOKER
 BEGIN
-CALL BenutzerBestellung(pWoche);
+CALL BenutzerBestellung(pWoche, TRUE);
 
 SELECT
 
@@ -40,5 +44,4 @@ GROUP BY `Benutzer_ID`,
    `Woche`,
    `Urlaub`
 order by benutzer_ID, modul, produkt;
-END$$
-DELIMITER ;
+END

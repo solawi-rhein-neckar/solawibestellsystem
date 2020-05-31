@@ -1,5 +1,8 @@
-DELIMITER $$
-CREATE PROCEDURE `PivotDepotBestellung`(IN `pWoche` DECIMAL(6,2), IN `pDepot` INT)
+DROP PROCEDURE `PivotDepotBestellung`;
+CREATE PROCEDURE `PivotDepotBestellung`(
+	IN `pWoche` DECIMAL(6,2),
+	IN `pDepot` INT
+)
     READS SQL DATA
     SQL SECURITY INVOKER
 BEGIN
@@ -26,7 +29,7 @@ SET @query = CONCAT('
 		     `BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,
 		     `BenutzerBestellungenTemp`.`Menge` AS `Menge`,
 		     `BenutzerBestellungenTemp`.`Woche` AS `Woche`,
-		     sum(IF(`BenutzerBestellungenTemp`.`Urlaub`, 0, IF(BenutzerBestellungenTemp.Modul is null, BenutzerBestellungenTemp.AnzahlZusatz, `BenutzerBestellungenTemp`.`AnzahlModul`))) AS `Anzahl`,
+			 sum(`BenutzerBestellungenTemp`.`Anzahl`) AS `Anzahl`,
 		     sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,
 		     sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,
 		     sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`,
@@ -58,7 +61,7 @@ SET @query = CONCAT('
 	GROUP BY Benutzer WITH ROLLUP
 ');
 
-CALL BenutzerBestellung(pWoche);
+CALL BenutzerBestellung(pWoche, FALSE);
 
 PREPARE stt FROM @query;
 
@@ -66,5 +69,4 @@ EXECUTE stt;
 
 DEALLOCATE PREPARE stt;
 
-END$$
-DELIMITER ;
+END

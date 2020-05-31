@@ -1,6 +1,7 @@
-DELIMITER $$
+DROP PROCEDURE `BenutzerBestellung`;
 CREATE PROCEDURE `BenutzerBestellung` (
-   IN `pWoche` DECIMAL(6,2)
+   IN `pWoche` DECIMAL(6,2),
+   IN `pInhalt` BOOLEAN
 )
 READS SQL DATA
 SQL SECURITY INVOKER
@@ -21,7 +22,7 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
    `Produkt`.`Menge`,
    `u`.`Woche` AS `Woche`,
    `u`.`Kommentar` AS `Kommentar`,
-   ( CASE WHEN ISNULL(`BenutzerUrlaub`.`ID`) THEN `u`.`Lieferzahl` ELSE 0 END ) AS `Anzahl`,
+   ( CASE WHEN NOT ISNULL(`BenutzerUrlaub`.`ID`) THEN 0 WHEN pInhalt = TRUE THEN `u`.`Lieferzahl` ELSE `u`.`Anzahl` END ) AS `Anzahl`,
    CASE WHEN(`u`.`Quelle` = 1) THEN `u`.`Anzahl` ELSE 0 END AS `AnzahlModul`,
    CASE WHEN(`u`.`Quelle` = 2) THEN `u`.`Anzahl` ELSE 0 END AS `AnzahlZusatz`,
    case when (`u`.`BezahltesModul` = 0) then (`u`.`Lieferzahl` * `Produkt`.`Punkte`) else 0 end AS `Punkte`,
@@ -46,7 +47,7 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
                  AND BenutzerModulAbo.Benutzer_ID = Benutzer.ID
                  AND ( ISNULL(`BenutzerModulAbo`.`StartWoche`) OR ( pWoche >= `BenutzerModulAbo`.`StartWoche` ) )
                  AND (  ISNULL(`BenutzerModulAbo`.`EndWoche`)  OR ( pWoche <= `BenutzerModulAbo`.`EndWoche` ) )
-             LEFT JOIN ModulInhalt ON ModulInhalt.Modul_ID = Modul.ID
+             LEFT JOIN ModulInhalt ON pInhalt = TRUE AND ModulInhalt.Modul_ID = Modul.ID
              LEFT JOIN ModulInhaltWoche
              	ON ModulInhaltWoche.Woche = pWoche
              	AND ModulInhaltWoche.ModulInhalt_ID = ModulInhalt.ID
@@ -81,5 +82,4 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
       	LEFT JOIN Produkt on u.Produkt_ID = Produkt.ID
       	WHERE Benutzer.Depot_ID <> 16
 );
-END$$
-DELIMITER ;
+END
