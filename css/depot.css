@@ -5,6 +5,9 @@
   --Farbe4: #aed7fe; /*kräftig*/
   --Farbe5: #e7e4e4; /*grau*/
 }
+body {
+	font-size:13px;
+}
 td.col_BenutzerAbo td.col_Anzahl:hover div:before {
 	padding:10px;border:1px solid black;position:absolute;margin-left:-680px;margin-top:-180px;
 	content:" ";
