@@ -205,7 +205,7 @@
 					&#160;
 				</div>
 				<span style="display: inline-block; width: 60%; vertical-align: top; border-right: 1px dotted black;">
-					<button onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerBestellungView/Depot_ID/'+SBS.user.Depot_ID+'/Woche/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Benutzer)</button>
+					<button onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerBestellungView/Woche/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Benutzer)</button>
 					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotSolawiBestellung/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Solawi)</button>
 					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepotBestellung/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Depot)</button>
 					<button	onclick="getAjax('PivotExportBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Solawi</button>
