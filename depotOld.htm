@@ -23,9 +23,9 @@
 
 	<script>
         if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
-            location.replace('https://bestellung.solawi.fairtrademap.de/depot.html');
+            location.replace('https://bestellung.solawi.fairtrademap.de/depotOld.htm');
         } else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi-rhein-neckar.org/)) {
-            location.replace('https://www.solawi-rhein-neckar.org/bestellung/depot.html');
+            location.replace('https://www.solawi-rhein-neckar.org/bestellung/depotOld.htm');
         }
 
         var SBS = SolawiBestellSystem();
@@ -163,7 +163,7 @@
 		</form>
 		<br />
 		<br />
-		<a style="padding-left: 20px;" href="index.html">Zurück zur Startseite</a><br />
+		<a style="padding-left: 20px;" href="indexOld.htm">Zurück zur Startseite</a><br />
 	</div>
 
 
@@ -178,7 +178,7 @@
 			<button onclick="changeWeek(-1)">&lt;&lt;</button>
 			<span id="selectedWeek" style="font-weight: bold;">00</span>
 			<button onclick="changeWeek(+1)">&gt;&gt;</button>
-			&#160; - &#160; <a href="index.html">zurück zur Startseite</a>
+			&#160; - &#160; <a href="indexOld.htm">zurück zur Startseite</a>
 		</div>
 
 		<div id="tableEditPath"></div>
