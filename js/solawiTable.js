@@ -54,7 +54,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     function showTable(response, path) {
     	console.log('show table ' + path);
 
-    	if (path.match(/^BenutzerBestellView.*$/)) {
+    	if (path.match(/^BenutzerBestellView.*$/) || path.match(/^BenutzerBestellungView.*$/)) {
     		sbs.saveOrdersIntoProductCache(response);
     	}
 
@@ -129,7 +129,22 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         tr.appendChild(td);
 
         var div = document.createElement("DIV");
-        div.innerText = value === undefined || value === null || value === '' ? '-' : value;
+        div.dataValue = value;
+
+        if (pub.hideZeros && value != null && value != undefined && value.match && value.match(/^-?[0-9]+[.][0459][09]([1-9]|[1-9][0-9]|[0-9][1-9]|[0-9][1-9][05]|[1-9][0-9][05])$/)) {
+             var v = value.match(/^-?[0-9]+[.][45]/) ? Math.round(value * 2) / 2 : Math.round(value);
+             var z = Math.round((value - v) * 20000)/2;
+             if (z > 0 || z < 0) {
+                 div.title = 'Tausch: ' + z;
+                 div.className = 'hat_tausch';
+             }
+             value = v < 0 ? v * -1 : v;
+        } else if (pub.hideZeros && value != null && value != undefined && value.match && value.match(/^[0-9]+[.][05]0+$/)) {
+            value = Math.round(value);
+        }
+
+        div.innerText = value === undefined || value === null || value === '' ? '-' : pub.hideZeros && (value === 0 || value === '0' || value === '0.0') ? '' : value;
+
 
         /* foreign key lookup in sbs.tableCache */
         var relation = key.match(/^(?:Besteller|Verwalter)?(.*)_ID$/);
@@ -156,11 +171,11 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             td.className='col_'+keys[j];
             span.className = "TableHead";
             if (keys[j].match(/^[0-9][0-9][.].*/) ) {
-                span.innerText = keys[j].substr(3).replace('AnzahlModul', 'Jede_Woche').replace('AnzahlZusatz', 'Tausch');
+                span.innerText = keys[j].substr(3).replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
             } else {
-                span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche').replace('AnzahlZusatz', 'Tausch');
+                span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
             }

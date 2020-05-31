@@ -5,53 +5,66 @@
   --Farbe4: #aed7fe; /*kräftig*/
   --Farbe5: #e7e4e4; /*grau*/
 }
+body {
+	font-size:13px;
+}
+td.col_BenutzerAbo td.col_Anzahl:hover div:before {
+	padding:10px;border:1px solid black;position:absolute;margin-left:-680px;margin-top:-180px;
+	content:" ";
+	background:url(../img/solawi_jede_woche_abo.png);
+	z-index: 9999;
+	width: 660px;
+	height: 600px;
+}
 table, td {
 	border: 1px solid #999;
 	border-collapse: collapse;
 	padding: 3px;
 }
 
-#tableEdit>tr:first-child>td:first-child>span {
+.PivotDepotBestellung>tr:first-child>td:first-child>span, .PivotSolawiBestellung>tr:first-child>td:first-child>span {
 	writing-mode: horizontal-tb !important;
 	font-size: 1.1em;
 	font-weight: bold;
 }
 
-#tableEdit>tr:first-child>td:first-child {
+.PivotDepotBestellung>tr:first-child>td:first-child, .PivotSolawiBestellung>tr:first-child>td:first-child {
   background-color: var(--Farbe1);
   vertical-align: bottom;
   text-align: left;
 }
-#tableEdit>tr:first-child>td:nth-child(2n){
+.PivotDepotBestellung>tr:first-child>td:nth-child(2n), .PivotSolawiBestellung>tr:first-child>td:nth-child(2n){
 	background-color: var(--Farbe2);
 }
 
-#tableEdit>tr:first-child>td {
+.PivotDepotBestellung>tr:first-child>td, .PivotSolawiBestellung>tr:first-child>td {
   background-color: var(--Farbe1);
   vertical-align: bottom;
   text-align: center;
 }
 
-#tableEdit>tr:first-child>td>span.TableHead {
+.PivotDepotBestellung>tr:first-child>td>span.TableHead, .PivotSolawiBestellung>tr:first-child>td>span.TableHead{
   writing-mode: vertical-rl;
   transform: rotate(180deg);
+  height: 6.5cm;
+  width:1.2em;
+  padding: 0 1px;
 }
 
-#tableEdit>tr:nth-child(2n)>td:nth-child(2n){
+.PivotDepotBestellung>tr:nth-child(2n)>td:nth-child(2n), .PivotSolawiBestellung>tr:nth-child(2n)>td:nth-child(2n){
 	background-color: var(--Farbe3);
 }
-#tableEdit>tr:nth-child(2n+3)>td:nth-child(2n){
+.PivotDepotBestellung>tr:nth-child(2n+3)>td:nth-child(2n), .PivotSolawiBestellung>tr:nth-child(2n+3)>td:nth-child(2n){
 	background-color: var(--Farbe4);
 }
-#tableEdit>tr:nth-child(2n)>td:nth-child(2n+1){
+.PivotDepotBestellung>tr:nth-child(2n)>td:nth-child(2n+1), .PivotSolawiBestellung>tr:nth-child(2n)>td:nth-child(2n+1){
 	background-color: var(--Farbe5);
 }
 /*Logout */
 
-
-#logoutfrombg {
-    display: none !important;
-  }
+div.hat_tausch {
+  font-weight:bolder;
+}
 
 
 
@@ -72,7 +85,8 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 	.BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID,
 	.DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID,
 	.GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID,
-	.BenutzerView .col_Role_ID {
+	.BenutzerView .col_Role_ID, .BenutzerBestellungView .col_Benutzer_ID,
+	.BenutzerBestellungView .col_Depot_ID, .BenutzerBestellungView .col_Produkt_ID {
 	display: none;
 }
 

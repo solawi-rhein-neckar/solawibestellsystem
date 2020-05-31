@@ -1,0 +1,9 @@
+RewriteEngine On 
+RewriteCond %{HTTPS} off 
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# cache static files for 2 hours
+<FilesMatch ".(js|css|pdf|txt|html|htm|xls|xlsx)$">
+Header set Cache-Control "max-age=7200, must-revalidate"
+</FilesMatch>
+

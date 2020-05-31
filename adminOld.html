@@ -4,16 +4,6 @@
 <meta charset="UTF-8">
 	<title></title>
 	<style>
-:root {
-  --Farbe1: #ffffff;/*weiß - Kopfzeile*/
-	--Farbe2: #aed7fe; /*blau - Kopfzeile*/
-	--Farbe3: #dfeffe; /*blass*/
-  --Farbe4: #aed7fe; /*kräftig*/
-  --Farbe5: #e7e4e4; /*grau*/
-}
-body {
-	font-size:13px;
-}
 table, td {
 	border: 1px solid #999;
 	border-collapse: collapse;
@@ -24,9 +14,7 @@ input.editor.inp_Passwort, input.editor.inp_Cookie, input.editor.inp_PunkteStand
 	.BenutzerBestellView .col_Benutzer_ID, .BenutzerBestellView .col_Depot_ID,
 	.BenutzerBestellView .col_Produkt_ID, .DepotBestellView .col_Depot_ID,
 	.DepotBestellView .col_Produkt_ID, .GesamtBestellView .col_Produkt_ID,
-	.BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID,
-	.BenutzerBestellungView .col_Benutzer_ID, .BenutzerBestellungView .col_Depot_ID,
-	.BenutzerBestellungView .col_Produkt_ID, {
+	.BenutzerView .col_Depot_ID, .BenutzerView .col_Role_ID {
 	display: none;
 }
 
@@ -74,48 +62,6 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
 	background-color: aqua;
 }
-div.hat_tausch {
-  font-weight:bolder;
-}
-.PivotDepotBestellung>tr:first-child>td:first-child>span, .PivotSolawiBestellung>tr:first-child>td:first-child>span {
-	writing-mode: horizontal-tb !important;
-	font-size: 1.1em;
-	font-weight: bold;
-}
-
-.PivotDepotBestellung>tr:first-child>td:first-child, .PivotSolawiBestellung>tr:first-child>td:first-child {
-  background-color: var(--Farbe1);
-  vertical-align: bottom;
-  text-align: left;
-}
-.PivotDepotBestellung>tr:first-child>td:nth-child(2n), .PivotSolawiBestellung>tr:first-child>td:nth-child(2n){
-	background-color: var(--Farbe2);
-}
-
-.PivotDepotBestellung>tr:first-child>td, .PivotSolawiBestellung>tr:first-child>td {
-  background-color: var(--Farbe1);
-  vertical-align: bottom;
-  text-align: center;
-}
-
-.PivotDepotBestellung>tr:first-child>td>span.TableHead, .PivotSolawiBestellung>tr:first-child>td>span.TableHead{
-  writing-mode: vertical-rl;
-  transform: rotate(180deg);
-  height: 6.5cm;
-  width:1.2em;
-  padding: 0 1px;
-}
-
-.PivotDepotBestellung>tr:nth-child(2n)>td:nth-child(2n), .PivotSolawiBestellung>tr:nth-child(2n)>td:nth-child(2n){
-	background-color: var(--Farbe3);
-}
-.PivotDepotBestellung>tr:nth-child(2n+3)>td:nth-child(2n), .PivotSolawiBestellung>tr:nth-child(2n+3)>td:nth-child(2n){
-	background-color: var(--Farbe4);
-}
-.PivotDepotBestellung>tr:nth-child(2n)>td:nth-child(2n+1), .PivotSolawiBestellung>tr:nth-child(2n)>td:nth-child(2n+1){
-	background-color: var(--Farbe5);
-}
-
 </style>
 	<script src="js/util.js"></script>
 	<script src="js/weekSelect.js"></script>
@@ -123,7 +69,7 @@ div.hat_tausch {
 	<script src="js/solawiValidator.js"></script>
 	<script src="js/solawiEditor.js"></script>
 	<script src="js/solawiTableEditor.js"></script>
-	<script src="js/solawiTableVerwalter.js"></script>
+	<script src="js/solawiTableVerwalterOld.js"></script>
 	<script src="js/solawiTable.js"></script>
 
 	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
@@ -134,15 +80,14 @@ div.hat_tausch {
 
 	<script>
 		if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
-		    location.replace('https://bestellung.solawi.fairtrademap.de/admin.htm');
+		    location.replace('https://bestellung.solawi.fairtrademap.de/admin.html');
 		} else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi-rhein-neckar.org/)) {
-		    location.replace('https://www.solawi-rhein-neckar.org/bestellung/admin.htm');
+		    location.replace('https://www.solawi-rhein-neckar.org/bestellung/admin.html');
 		}
 
         var SBS = SolawiBestellSystem();
         var SBTedit = SolawiTable(SBS, 'table', 'tablePath', true, false);
         var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
-        SBTview.hideZeros = true;
         var SBTmeta = SolawiTable(SBS, 'table', 'tablePath', true, false, true);
 
         //check login status
@@ -177,10 +122,8 @@ div.hat_tausch {
             setContent('selectedWeek', SBS.selectedWeek);
             setContent('selectedWeek0', SBS.selectedWeek);
             if (SBTview.getTableName() && SBTview.getTablePath()) {
-                if (SBTview.getTablePath().match(/PivotDepotBestellung.Woche.[0-9.]+.Depot_ID.[0-9]+/)) {
-                    getAjax(SBTview.getTablePath().replace(/Woche.[0-9.]+/, 'Woche/'+SBS.selectedWeek), SBTview.showTable);
-                } else if (SBTview.getTablePath().match(/.*Woche.*/)) {
-                        getAjax(SBTview.getTableName() + '/Woche/' + SBS.selectedWeek, SBTview.showTable);
+                if (SBTview.getTablePath().match(/.*Woche.*/)) {
+                    getAjax(SBTview.getTableName() + '/Woche/' + SBS.selectedWeek, SBTview.showTable);
                 } else if (SBTview.getTablePath().match(/.*Pivot.*/)) {
                     getAjax(SBTview.getTableName() + '/' + SBS.selectedWeek, SBTview.showTable);
                 }
@@ -248,7 +191,7 @@ div.hat_tausch {
 		</form>
 		<br />
 		<br />
-		<a style="padding-left: 20px;" href="index.htm">Zurück zu
+		<a style="padding-left: 20px;" href="index.html">Zurück zu
 			Startseite</a><br />
 	</div>
 
@@ -266,14 +209,14 @@ div.hat_tausch {
 				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerView', SBTview.showTable);">AbosNächsteLieferung</button>
 				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerModulAbo/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerModulAbo</button>
 				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('ModulInhaltView/Woche/'+SBS.selectedWeek, SBTview.showTable);">ModulInhalt</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerBestellungView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellung</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellung</button>
 				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">DepotBestellungen</button>
 				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">GesamtBestellungen</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepotBestellung/'+SBS.selectedWeek, SBTview.showTable);">PivotDepotBest.</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotSolawiBestellung/'+SBS.selectedWeek, SBTview.showTable);">PivotBestellung</button>
-				<button	onclick="getAjax('PivotExportBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD
-					Bestellungen</button> <a target="_blank" href="print.htm#PivotSolawiBestellung">Bestellung_Drucken</a>
-				<a target="_blank" href="print.htm#PivotDepotBestellung">DepotBest._Drucken</a>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepot/'+SBS.selectedWeek, SBTview.showTable);">PivotDepotBest.</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotBestellungen/'+SBS.selectedWeek, SBTview.showTable);">PivotBestellungen</button>
+				<button	onclick="getAjax('PivotBestellungX/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD
+					Bestellungen</button> <a target="_blank" href="print.htm#PivotBestellungen">Bestellung_Drucken</a>
+				<a target="_blank" href="print.htm#PivotDepot">DepotBest._Drucken</a>
 			</span> <span
 				style="display: inline-block; max-width: 42%; vertical-align: top;">
 				<b>Bearbeiten </b> <br />

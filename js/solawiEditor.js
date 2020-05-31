@@ -191,7 +191,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         var edit = document.getElementById('editor');
         var label = document.createElement("DIV");
         edit.className = 'edit' + tableName;
-        label.innerText = pLabel.replace('BenutzerZusatzBestellung', 'Tausch').replace('BenutzerModulAbo', 'Jede_Woche');
+        label.innerText = pLabel.replace('BenutzerZusatzBestellung', 'Tausch').replace('BenutzerModulAbo', 'Jede_Woche-Abo');
         label.className = 'editorLabel';
         while (edit.firstChild) edit.removeChild(edit.firstChild);
         edit.appendChild(label);
@@ -263,6 +263,12 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         edit.appendChild(linebreak);
         edit.appendChild(btn);
         edit.appendChild(btn2);
+
+        var dv = document.createElement("DIV");
+        dv.innerHTML="Hinweis: Für mehr/weniger Brot, Milch, Käse, Kartoffeln in JEDER Woche -> fragt euren Depot-Besteller!<br/>"
+        			+"Serienbestellung nur verwenden, wenn NICHT jede Woche (z.Bsp. alle 2 Wochen) oder für andere Produkte.";
+        dv.style['margin-top'] = '10px';
+        edit.appendChild(dv);
     }
 
 	function showBatchOrderWeekSelect(event2) {
@@ -281,6 +287,9 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             div.innerText="Nun nacheinander die Kalender-Wochen anwählen, für welche obige Bestellung gelten soll:";
             editor.appendChild(div);
 
+	    div = document.createElement("DIV");
+            editor.appendChild(div);
+
             var weekSelect = Object.create(WeekSelect);
             weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
             weekSelect.week = SBS.week;
@@ -292,7 +301,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             	if (willDelete || ! postData['Woche']) {
             		weekSelect.doSave(elem);
         		} else {
-	            	getAjax('BenutzerBestellView/Benutzer_ID/MY/Woche/' + postData['Woche'], function(response) {
+	            	getAjax('BenutzerBestellungView/Benutzer_ID/MY/Woche/' + postData['Woche'], function(response) {
 	            		sbs.saveOrdersIntoProductCache(response);
 	            		if (tableValidator.validateEditorInput(postData)) {
 	            			weekSelect.doSave(elem);
@@ -308,8 +317,12 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             };
             weekSelect.allowMulti = !disableUnavailableProducts;
             weekSelect.allowPast = false;
-            weekSelect.addTo(editor);
+            weekSelect.addTo(div);
 
+            div = document.createElement("DIV");
+            div.style.paddingTop="10px";
+            div.innerHTML="Hinweis: schon vorhandene (Serien-)-Bestellungen werden hier nur angezeigt,<br/>wenn exakt die selbe Anzahl haben: Sind in einer Woche schon 2 Stück bestellt,<br/>sieht man dies hier nicht, falls hier 3 als Anzahl ausgewählt wurde.";
+            editor.appendChild(div);
         });
 	}
 

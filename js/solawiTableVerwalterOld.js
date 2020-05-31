@@ -46,7 +46,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+2]);
 
             wtd = createHeaderCol('BenutzerAbo');
-            wtd.innerText='Jede_Woche';
+            wtd.innerText='Jede_Woche-Abo';
             tr.insertBefore(wtd, tr.childNodes[pub.columnIndex+3]);
 
             wtd = createHeaderCol('Urlaub');

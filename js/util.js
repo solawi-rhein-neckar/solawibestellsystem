@@ -2,7 +2,7 @@ window.activeAjaxRequestCount = 0;
 
 function postAjax(path, data, success, method) {
     var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-    xhr.open(method || (data ? 'POST' : 'GET'), 'https://' + (document.location.host || 'www.solawi.fairtrademap.de') + (path.match(/^\//) ? path : ('/cgi-bin/resql.pl/' + path)) );
+    xhr.open(method || (data ? 'POST' : 'GET'), 'https://' + (document.location.host || 'bestellung.solawi.fairtrademap.de') + (path.match(/^\//) ? path : ('/cgi-bin/resql.pl/' + path)) );
     xhr.onreadystatechange = function() {
     	if (xhr.readyState>3) {
 	        window.activeAjaxRequestCount--;
@@ -186,7 +186,7 @@ function downloadDepotbestellungen(response, path) {
 	console.log('downloading...');
 	var responseCache = response;
 
-	var url = "Depotbestellungen.xlsx";
+	var url = "xls/Depotbestellungen.xlsx";
 
 	/* set up async GET request */
 	var req = new XMLHttpRequest();
