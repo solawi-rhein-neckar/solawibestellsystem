@@ -33,8 +33,8 @@ SELECT
 
 FROM `BenutzerBestellungenTemp`
 
-WHERE (pBenutzer is null) or (Benutzer_ID = pBenutzer)
-AND (pDepot is null) or (Depot_ID = pDepot)
+WHERE ((pBenutzer is null) or (Benutzer_ID = pBenutzer))
+AND ((pDepot is null) or (Depot_ID = pDepot))
 
 GROUP BY `Benutzer_ID`,
    `Benutzer`,

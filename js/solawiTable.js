@@ -129,9 +129,21 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         tr.appendChild(td);
 
         var div = document.createElement("DIV");
-        div.innerText = value === undefined || value === null || value === '' ? '-' : pub.hideZeros && (value === 0 || value === '0' || value === '0.0' || value === '0.000'|| value === '0.0000') ? '' : pub.hideZeros ? (String(value).replace(/^([0-9]+(.0|.5)?)[.]?00[01]$/, '$1')) : value;
+        div.dataValue = value;
 
-	    div.className = String(value).match(/^([0-9]+(.0|.5)?)[.]?001$/) ? 'hat_tausch' : '';
+        if (pub.hideZeros && value != null && value != undefined && value.match && value.match(/^-?[0-9]+[.][0459][09]([1-9]|[1-9][0-9]|[0-9][1-9]|[0-9][1-9][05]|[1-9][0-9][05])$/)) {
+             var v = value.match(/^-?[0-9]+[.][45]/) ? Math.round(value * 2) / 2 : Math.round(value);
+             var z = Math.round((value - v) * 20000)/2;
+             if (z > 0 || z < 0) {
+                 div.title = 'Tausch: ' + z;
+                 div.className = 'hat_tausch';
+             }
+             value = v < 0 ? v * -1 : v;
+        } else if (pub.hideZeros && value != null && value != undefined && value.match && value.match(/^[0-9]+[.][05]0+$/)) {
+            value = Math.round(value);
+        }
+
+        div.innerText = value === undefined || value === null || value === '' ? '-' : pub.hideZeros && (value === 0 || value === '0' || value === '0.0') ? '' : value;
 
 
         /* foreign key lookup in sbs.tableCache */

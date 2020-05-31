@@ -164,6 +164,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( $user->{Role_ID} == 3 && $table =~ /^BenutzerModulAbo$/ && $column =~ /^Bis$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `EndWoche` >= ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
 					$sth->execute($id, $user->{Depot_ID});
+				} elsif ( ($user->{Role_ID} == 3) && $table =~ /^BenutzerBestellungView$/ && $column =~ /^Woche$/) {
+					$sth = $dbh->prepare("CALL $table(?,?,?)");
+					$sth->execute($id,undef,$user->{Depot_ID});
 				} elsif ( ($user->{Role_ID} == 3) && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
 					$sth->execute($id, $user->{Depot_ID});

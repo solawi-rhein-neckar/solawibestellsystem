@@ -9,13 +9,13 @@ BEGIN
 
 SET SESSION group_concat_max_len = 32000;
 
-SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('SUM(IF(Produkt = \'', Name, '\', IF(AnzahlZusatz is not null AND AnzahlZusatz <> 0, Anzahl + 0.001, Anzahl), 0)) AS `', IF((Nr*2) < 10,'0', ''), Nr*2, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
+SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('SUM(IF(Produkt = \'', Name, '\', IF(AnzahlZusatz is not null, Anzahl + (AnzahlZusatz * 0.0001), Anzahl), 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
 
 SET @query = CONCAT('
 	SELECT Benutzer as `00.',
 		   pWoche, ' ',
 		   (SELECT Name FROM Depot WHERE ID = pDepot),'`,
-		   SUM( IF(Produkt = \'Milch, 0.5L\', cast(IF(AnzahlZusatz is not null AND AnzahlZusatz <> 0, Anzahl/2 + 0.0001, Anzahl/2) as decimal(9,4)), 0) ) AS `12.Milch`,',
+		   SUM( IF(Produkt = \'Milch, 0.5L\', cast(IF(AnzahlZusatz is not null, Anzahl/2 + (AnzahlZusatz/2 * 0.0001), Anzahl/2) as decimal(10,5)), 0) ) AS `06.Milch`,',
 		   @query, ',
 		   SUM(Urlaub) as `99.',pWoche, ' Urlaub`,
 		   GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`
