@@ -115,7 +115,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             var viewLieferung = SolawiTable(sbs, 'editLieferungTable'+row['ID'], 'editLieferungLabel'+row['ID'], false, false);
             viewLieferung.setSortBy('Anzahl');
             viewLieferung.setSortBy('Produkt_ID');
-            viewLieferung.columns = ['Produkt', 'Anzahl', 'Kommentar'];
+            viewLieferung.columns = ['Produkt', 'Anzahl', 'Kommentar', 'Punkte', 'Gutschrift'];
             viewLieferungTables[row['ID']] = viewLieferung;
 
 
