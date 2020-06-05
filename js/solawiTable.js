@@ -141,6 +141,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
              value = v < 0 ? v * -1 : v;
         } else if (pub.hideZeros && value != null && value != undefined && value.match && value.match(/^[0-9]+[.][05]0+$/)) {
             value = value.match(/^[0-9]+[.][5]0+$/) ? Math.round(value * 2) / 2 : Math.round(value);
+
         }
 
         div.innerText = value === undefined || value === null || value === '' ? '-' : pub.hideZeros && (value === 0 || value === '0' || value === '0.0') ? '' : value;
@@ -175,7 +176,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
             } else {
-                span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
+                span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch').replace('Punkte', 'Punkte-Abzug*');
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
             }
@@ -265,3 +266,4 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     initColumnWeight();
     return pub;
 }
+
