@@ -15,10 +15,10 @@ SET @query = CONCAT('
 		   SUM( IF(Produkt = \'Milch, 0.5L\', cast(Anzahl/2 as decimal(5,1)), 0) ) AS `06.Milch`,',
 		   @query, ',
 		   SUM(IF(Produkt <> \'Gemüse\',0, Urlaub)) as `99.', pWoche,' Urlauber`,
-		  SUM(IF(Produkt <> \'Gemüse\',0, (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `97.Mitglieder`,
-		  SUM(IF(Produkt <> \'Gemüse\',0, (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.Anteile`,
-		  SUM(IF(Produkt <> \'Gemüse\',0, (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.FleischAnteileErlaubt`,
-		  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`
+		  SUM(IF(Produkt <> \'Gemüse\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `97.Mitglieder`,
+		  SUM(IF(Produkt <> \'Gemüse\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.Anteile`,
+		  SUM(IF(Produkt <> \'Gemüse\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.FleischAnteileErlaubt`,
+		  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \', \') as `96.Kommentar`
 	FROM
 		(Select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,
 			 `BenutzerBestellungenTemp`.`Depot` AS `Depot`,
@@ -27,10 +27,11 @@ SET @query = CONCAT('
 			 `BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,
 			 `BenutzerBestellungenTemp`.`Menge` AS `Menge`,
 			 `BenutzerBestellungenTemp`.`Woche` AS `Woche`,
-			 sum(`BenutzerBestellungenTemp`.`Anzahl`) AS `Anzahl`,
+			 GREATEST(0, sum(`BenutzerBestellungenTemp`.`Anzahl`)) AS `Anzahl`,
 			 sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,
 			 sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,
 			 sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`,
+			 BenutzerBestellungenTemp.Benutzer_ID as BenutzerId,
  			 GROUP_CONCAT( (
 	         	CASE WHEN(`BenutzerBestellungenTemp`.`Kommentar` is NULL
 						or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'\'
@@ -49,7 +50,8 @@ SET @query = CONCAT('
 	    Group By
 			IFNULL(BenutzerBestellungenTemp.Modul,`BenutzerBestellungenTemp`.`Produkt`),
 	   		`BenutzerBestellungenTemp`.`Woche`,
-	   		`BenutzerBestellungenTemp`.`Depot_ID`
+	   		`BenutzerBestellungenTemp`.`Depot_ID`,
+	   		BenutzerId
 	    Order By
 			`BenutzerBestellungenTemp`.`Depot`, IFNULL(BenutzerBestellungenTemp.Modul,`BenutzerBestellungenTemp`.`Produkt`)
 	) subq

@@ -29,7 +29,7 @@ SET @query = CONCAT('
 		     `BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,
 		     `BenutzerBestellungenTemp`.`Menge` AS `Menge`,
 		     `BenutzerBestellungenTemp`.`Woche` AS `Woche`,
-			 sum(`BenutzerBestellungenTemp`.`Anzahl`) AS `Anzahl`,
+			 GREATEST(0, sum(`BenutzerBestellungenTemp`.`Anzahl`)) AS `Anzahl`,
 		     sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,
 		     sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,
 		     sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`,
