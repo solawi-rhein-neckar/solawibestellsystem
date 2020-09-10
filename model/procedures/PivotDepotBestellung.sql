@@ -1,4 +1,4 @@
-DROP PROCEDURE `PivotDepotBestellung`;
+DROP PROCEDURE IF EXISTS `PivotDepotBestellung`;
 CREATE PROCEDURE `PivotDepotBestellung`(
 	IN `pWoche` DECIMAL(6,2),
 	IN `pDepot` INT

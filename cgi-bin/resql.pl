@@ -92,7 +92,357 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 
 			my $sth;
 
-			if ( $q->path_info =~ /^\/([a-zA-Z]+)\/?(MY|OWN)?$/ ) {
+			if ( $q->path_info =~ /^\/RECREATEPROCEDURES$/ ) {
+
+				$dbh->prepare("DROP PROCEDURE IF EXISTS `BenutzerBestellung`")->execute();
+				$dbh->prepare("
+CREATE PROCEDURE `BenutzerBestellung` (
+   IN `pWoche` DECIMAL(6,2),
+   IN `pInhalt` BOOLEAN
+)
+READS SQL DATA
+SQL SECURITY INVOKER
+BEGIN
+DROP TEMPORARY TABLE IF EXISTS BenutzerBestellungenTemp;
+CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
+   SELECT
+   `u`.`Benutzer_ID` AS `Benutzer_ID`,
+   `Benutzer`.`Name` AS `Benutzer`,
+   `Depot`.`ID` AS `Depot_ID`,
+   `Depot`.`Name` AS `Depot`,
+   `u`.Modul AS Modul,
+   `Produkt`.`ID` as Produkt_ID,
+   `Produkt`.`Produkt` as Produktname,
+   `Produkt`.`Name` as Produkt,
+   `Produkt`.`Beschreibung`,
+   `Produkt`.`Einheit`,
+   `Produkt`.`Menge`,
+   `u`.`Woche` AS `Woche`,
+   `u`.`Kommentar` AS `Kommentar`,
+   ( CASE WHEN NOT ISNULL(`BenutzerUrlaub`.`ID`) THEN 0 WHEN pInhalt = TRUE THEN `u`.`Lieferzahl` ELSE `u`.`Anzahl` END ) AS `Anzahl`,
+   CASE WHEN(`u`.`Quelle` = 1) THEN `u`.`Anzahl` ELSE 0 END AS `AnzahlModul`,
+   CASE WHEN(`u`.`Quelle` = 2) THEN `u`.`Anzahl` ELSE 0 END AS `AnzahlZusatz`,
+   case when (`u`.`BezahltesModul` = 0) then (`u`.`Lieferzahl` * `Produkt`.`Punkte`) else 0 end AS `Punkte`,
+   `u`.`Gutschrift` * `Produkt`.`Punkte` AS Gutschrift,
+   ( `BenutzerUrlaub`.`ID` IS NOT NULL ) AS `Urlaub`
+   FROM (
+           (SELECT
+                 1 AS `Quelle`,
+                 `Benutzer`.`ID` AS `Benutzer_ID`,
+                 `BenutzerModulAbo`.`Kommentar` AS `Kommentar`,
+                  Replace(Replace(`Modul`.`Name`, 'Kräutermodul', 'Kräuter'), 'Quarkmodul' , 'Quark') AS Modul,
+                 ModulInhalt.Produkt_ID,
+                 ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
+                 IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * ModulInhaltWoche.Anzahl * ModulInhalt.Anzahl AS Lieferzahl,
+                 ModulInhaltWoche.Anzahl * ModulInhalt.Anzahl * IF(Modul.ID = 4,Benutzer.FleischAnteile,Benutzer.Anteile) * IF(Modul.ID = 2,3,Modul.AnzahlProAnteil) AS Gutschrift,
+                 `BenutzerModulAbo`.BezahltesModul,
+                 pWoche AS `Woche`
+             FROM `Modul`
+             JOIN Benutzer
+             LEFT JOIN `BenutzerModulAbo`
+                 ON `BenutzerModulAbo`.`Modul_ID` = `Modul`.`ID`
+                 AND BenutzerModulAbo.Benutzer_ID = Benutzer.ID
+                 AND ( ISNULL(`BenutzerModulAbo`.`StartWoche`) OR ( pWoche >= `BenutzerModulAbo`.`StartWoche` ) )
+                 AND (  ISNULL(`BenutzerModulAbo`.`EndWoche`)  OR ( pWoche <= `BenutzerModulAbo`.`EndWoche` ) )
+             LEFT JOIN ModulInhalt ON pInhalt = TRUE AND ModulInhalt.Modul_ID = Modul.ID
+             LEFT JOIN ModulInhaltWoche
+             	ON ModulInhaltWoche.Woche = pWoche
+             	AND ModulInhaltWoche.ModulInhalt_ID = ModulInhalt.ID
+             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = Benutzer.Depot_ID )
+             WHERE
+                    ( `BenutzerModulAbo`.ID IS NOT NULL )
+                 OR ( Modul.ID <> 4 AND ((Modul.AnzahlProAnteil * Benutzer.Anteile) > 0) )
+                 OR ( Modul.ID = 4 /*Fleisch*/ AND Benutzer.FleischAnteile > 0 )
+                 OR ( Modul.ID = 2 /*Milch*/ AND Benutzer.Anteile > 0 )
+           )
+           UNION ALL
+           (SELECT
+                 2 AS `Quelle`,
+                 `BenutzerZusatzBestellung`.`Benutzer_ID` AS `Benutzer_ID`,
+                 `BenutzerZusatzBestellung`.`Kommentar` AS `Kommentar`,
+                 NULL as Modul,
+                 `BenutzerZusatzBestellung`.`Produkt_ID`,
+                 `BenutzerZusatzBestellung`.`Anzahl` AS `Anzahl`,
+                 `BenutzerZusatzBestellung`.`Anzahl` AS `Lieferzahl`,
+                 0 as Gutschrift,
+                 0 as BezahltesModul,
+                 `BenutzerZusatzBestellung`.`Woche` AS `Woche`
+             FROM `BenutzerZusatzBestellung`
+             WHERE `BenutzerZusatzBestellung`.`Woche` = pWoche
+           )
+        ) `u`
+        JOIN `Benutzer` ON ( ( `u`.`Benutzer_ID` = `Benutzer`.`ID` ) )
+        JOIN `Depot` ON ( ( `Benutzer`.`Depot_ID` = `Depot`.`ID` ) )
+	    LEFT JOIN `BenutzerUrlaub`
+	       	ON `BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`
+            AND  `BenutzerUrlaub`.`Woche` = `u`.`Woche`
+      	LEFT JOIN Produkt on u.Produkt_ID = Produkt.ID
+      	WHERE Benutzer.Depot_ID <> 16
+);
+END")->execute();
+
+$dbh->prepare("DROP PROCEDURE IF EXISTS `BenutzerBestellungView`")->execute();
+$dbh->prepare("CREATE  PROCEDURE `BenutzerBestellungView` (
+	IN `pWoche` DECIMAL(6,2),
+	IN `pBenutzer` INT,
+	IN `pDepot` INT
+)
+    READS SQL DATA
+    SQL SECURITY INVOKER
+BEGIN
+CALL BenutzerBestellung(pWoche, TRUE);
+
+SELECT
+
+   `Benutzer_ID`,
+   `Benutzer`,
+   `Depot_ID`,
+   `Depot`,
+   MAX(Modul) AS Modul,
+   `Produktname`,
+   Produkt,
+   Produkt_ID,
+   `Beschreibung`,
+   `Einheit`,
+   `Menge`,
+   `Woche`,
+   CONVERT(GROUP_CONCAT( ( CASE WHEN(TRIM(`Kommentar`) = '') THEN NULL ELSE `Kommentar` END ) SEPARATOR ', ' ),char(255)) AS `Kommentar`,
+  GREATEST(0, SUM(`Anzahl`)) AS Anzahl,
+   SUM( AnzahlModul ) AS `AnzahlModul`,
+   SUM( `AnzahlZusatz` ) AS `AnzahlZusatz`,
+   GREATEST(0, sum(Punkte)) AS `Punkte`,
+   sum(IFNULL(Gutschrift,0)) as `Gutschrift`,
+    `Urlaub`
+
+FROM `BenutzerBestellungenTemp`
+
+WHERE ((pBenutzer is null) or (Benutzer_ID = pBenutzer))
+AND ((pDepot is null) or (Depot_ID = pDepot))
+
+GROUP BY `Benutzer_ID`,
+   `Benutzer`,
+   `Depot_ID`,
+   `Depot`,
+   IFNuLL(Produkt,Modul),
+   `Woche`,
+   `Urlaub`
+order by benutzer_ID, modul, produkt;
+END")->execute();
+
+$dbh->prepare("DROP PROCEDURE IF EXISTS `PivotDepotBestellung`")->execute();
+$dbh->prepare("CREATE PROCEDURE `PivotDepotBestellung`(
+	IN `pWoche` DECIMAL(6,2),
+	IN `pDepot` INT
+)
+    READS SQL DATA
+    SQL SECURITY INVOKER
+BEGIN
+
+SET SESSION group_concat_max_len = 32000;
+
+SET \@query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('SUM(IF(Produkt = \\'', Name, '\\', IF(AnzahlZusatz is not null, Anzahl + (AnzahlZusatz * 0.0001), Anzahl), 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
+
+SET \@query = CONCAT('
+	SELECT Benutzer as `00.',
+		   pWoche, ' ',
+		   (SELECT Name FROM Depot WHERE ID = pDepot),'`,
+		   SUM( IF(Produkt = \\'Milch, 0.5L\\', cast(IF(AnzahlZusatz is not null, Anzahl/2 + (AnzahlZusatz/2 * 0.0001), Anzahl/2) as decimal(10,5)), 0) ) AS `06.Milch`,',
+		   \@query, ',
+		   SUM(Urlaub) as `99.',pWoche, ' Urlaub`,
+		   GROUP_CONCAT(`subq`.Kommentar SEPARATOR \\'; \\') as `96.Kommentar`
+	FROM
+		(Select `BenutzerBestellungenTemp`.`Benutzer` AS `Benutzer`,
+		     `BenutzerBestellungenTemp`.`Benutzer_ID` AS `Benutzer_ID`,
+		     `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,
+		     `BenutzerBestellungenTemp`.`Depot` AS `Depot`,
+		     IFNULL(BenutzerBestellungenTemp.Modul,`BenutzerBestellungenTemp`.`Produkt`) AS `Produkt`,
+		     `BenutzerBestellungenTemp`.`Beschreibung` AS `Beschreibung`,
+		     `BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,
+		     `BenutzerBestellungenTemp`.`Menge` AS `Menge`,
+		     `BenutzerBestellungenTemp`.`Woche` AS `Woche`,
+			 GREATEST(0, sum(`BenutzerBestellungenTemp`.`Anzahl`)) AS `Anzahl`,
+		     sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,
+		     sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,
+		     sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`,
+		     GROUP_CONCAT( (
+		        CASE WHEN(`BenutzerBestellungenTemp`.`Kommentar` is NULL
+						or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \\'\\'
+						or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \\'-\\'
+					    or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) like \\'Tausch\\') THEN NULL
+				ELSE concat((select name from Benutzer where Benutzer.ID = BenutzerBestellungenTemp.Benutzer_ID),
+		            		case when Produkt is null
+									or TRIM(Produkt) = \\'\\'
+									or TRIM(Produkt) = \\'-\\'
+									or TRIM(Produkt) = \\'Kommentar\\'
+							then \\'\\'
+							else concat(\\' \\',Produkt) end, \\': \\', `BenutzerBestellungenTemp`.`Kommentar`)
+		         END
+		      ) SEPARATOR \\', \\' ) AS `Kommentar`
+		From `BenutzerBestellungenTemp`
+		Group By
+		    IFNULL(BenutzerBestellungenTemp.Modul,`BenutzerBestellungenTemp`.`Produkt`),
+		    `BenutzerBestellungenTemp`.`Woche`,
+		    `BenutzerBestellungenTemp`.`Benutzer_ID`,
+		    `BenutzerBestellungenTemp`.`Depot_ID`
+		Order By
+		    `BenutzerBestellungenTemp`.`Benutzer_ID`, `BenutzerBestellungenTemp`.`Depot`, IFNULL(BenutzerBestellungenTemp.Modul,`BenutzerBestellungenTemp`.`Produkt`)
+	) subq
+	WHERE Woche = ', pWoche ,'
+	AND Depot_ID = ',pDepot,'
+	GROUP BY Benutzer WITH ROLLUP
+');
+
+CALL BenutzerBestellung(pWoche, FALSE);
+
+PREPARE stt FROM \@query;
+
+EXECUTE stt;
+
+DEALLOCATE PREPARE stt;
+
+END")->execute();
+
+$dbh->prepare("DROP PROCEDURE IF EXISTS `PivotExportBestellung`")->execute();
+$dbh->prepare("CREATE PROCEDURE `PivotExportBestellung` (
+	IN `pWoche` DECIMAL(6,2)
+)
+    READS SQL DATA
+    SQL SECURITY INVOKER
+BEGIN
+
+SET SESSION group_concat_max_len = 32000;
+
+SET \@query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('SUM(IF(Produkt = \\'', Produkt, '\\', Anzahl, 0)) AS `', Produkt, '`' ))  FROM Produkt ORDER BY Nr);
+
+SET \@query = CONCAT('
+	SELECT Depot,
+		   SUM( IF(Produkt = \\'Milch, 0.5L\\', Anzahl/2, 0) ) AS `Milch`,',
+		   \@query, ' ,
+		   SUM(IF(Produkt <> \\'Gemüse\\',0, Urlaub)) as Urlauber,
+
+		  MAX((SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`)) as `Anteile`,
+
+		  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \\', \\') as `Kommentar`
+	FROM
+		(Select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,
+			 `BenutzerBestellungenTemp`.`Depot` AS `Depot`,
+			 IFNULL(BenutzerBestellungenTemp.Modul,`BenutzerBestellungenTemp`.`Produktname`) AS `Produkt`,
+			 `BenutzerBestellungenTemp`.`Beschreibung` AS `Beschreibung`,
+			 `BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,
+			 `BenutzerBestellungenTemp`.`Menge` AS `Menge`,
+			 `BenutzerBestellungenTemp`.`Woche` AS `Woche`,
+			 GREATEST(0, sum(`BenutzerBestellungenTemp`.`Anzahl`)) AS `Anzahl`,
+			 sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,
+			 sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,
+			 sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`,
+ 			 GROUP_CONCAT( (
+             	CASE WHEN(`BenutzerBestellungenTemp`.`Kommentar` is NULL
+						or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \\'\\'
+                        or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \\'-\\'
+                        or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) like \\'Tausch\\') THEN NULL
+ 				ELSE concat((select name from Benutzer where Benutzer.ID = BenutzerBestellungenTemp.Benutzer_ID),
+			 				case when Produkt is null
+								   or TRIM(Produkt) = \\'\\'
+								   or TRIM(Produkt) = \\'-\\'
+								   or TRIM(Produkt) = \\'Kommentar\\'
+							then \\'\\'
+							else concat(\\' \\', Produkt) end, \\': \\', `BenutzerBestellungenTemp`.`Kommentar`)
+        		END
+ 			 ) SEPARATOR \\', \\') AS `Kommentar`
+		From `BenutzerBestellungenTemp`
+		Group By
+			IFNULL(BenutzerBestellungenTemp.Modul,`BenutzerBestellungenTemp`.`Produktname`),
+			`BenutzerBestellungenTemp`.`Woche`,
+			`BenutzerBestellungenTemp`.`Depot_ID`,
+			`BenutzerBestellungenTemp`.`Benutzer_ID`
+		Order By
+			`BenutzerBestellungenTemp`.`Depot`, `BenutzerBestellungenTemp`.`Produkt`
+	) subq
+	WHERE Woche = ', pWoche ,'
+	GROUP BY Depot_ID'
+);
+
+CALL BenutzerBestellung(pWoche, FALSE);
+
+PREPARE stt FROM \@query;
+
+EXECUTE stt;
+
+DEALLOCATE PREPARE stt;
+
+END")->execute();
+$dbh->prepare("DROP PROCEDURE IF EXISTS `PivotSolawiBestellung`")->execute();
+$dbh->prepare("CREATE PROCEDURE `PivotSolawiBestellung`(
+	IN `pWoche` DECIMAL(6,2)
+)
+    READS SQL DATA
+    SQL SECURITY INVOKER
+BEGIN
+
+SET SESSION group_concat_max_len = 32000;
+
+SET \@query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('SUM(IF(Produkt = \\'', Name, '\\', Anzahl, 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
+
+SET \@query = CONCAT('
+	SELECT Depot as `00.',pWoche,'`,
+		   SUM( IF(Produkt = \\'Milch, 0.5L\\', cast(Anzahl/2 as decimal(5,1)), 0) ) AS `06.Milch`,',
+		   \@query, ',
+		   SUM(IF(Produkt <> \\'Gemüse\\',0, Urlaub)) as `99.', pWoche,' Urlauber`,
+		  SUM(IF(Produkt <> \\'Gemüse\\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `97.Mitglieder`,
+		  SUM(IF(Produkt <> \\'Gemüse\\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.Anteile`,
+		  SUM(IF(Produkt <> \\'Gemüse\\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.FleischAnteileErlaubt`,
+		  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \\', \\') as `96.Kommentar`
+	FROM
+		(Select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,
+			 `BenutzerBestellungenTemp`.`Depot` AS `Depot`,
+			 IFNULL(BenutzerBestellungenTemp.Modul,`BenutzerBestellungenTemp`.`Produkt`) AS `Produkt`,
+			 `BenutzerBestellungenTemp`.`Beschreibung` AS `Beschreibung`,
+			 `BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,
+			 `BenutzerBestellungenTemp`.`Menge` AS `Menge`,
+			 `BenutzerBestellungenTemp`.`Woche` AS `Woche`,
+			 GREATEST(0, sum(`BenutzerBestellungenTemp`.`Anzahl`)) AS `Anzahl`,
+			 sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,
+			 sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,
+			 sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`,
+			 BenutzerBestellungenTemp.Benutzer_ID as BenutzerId,
+ 			 GROUP_CONCAT( (
+	         	CASE WHEN(`BenutzerBestellungenTemp`.`Kommentar` is NULL
+						or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \\'\\'
+						or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \\'-\\'
+					    or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) like \\'Tausch\\') THEN NULL
+				ELSE concat((select name from Benutzer where Benutzer.ID = BenutzerBestellungenTemp.Benutzer_ID),
+	            			case when Produkt is null
+								   or TRIM(Produkt) = \\'\\'
+								   or TRIM(Produkt) = \\'-\\'
+								   or TRIM(Produkt) = \\'Kommentar\\'
+							then \\'\\'
+							else concat(\\' \\', Produkt) end, \\': \\', `BenutzerBestellungenTemp`.`Kommentar`)
+	         	END
+	      	 ) SEPARATOR \\', \\') AS `Kommentar`
+	    From `BenutzerBestellungenTemp`
+	    Group By
+			IFNULL(BenutzerBestellungenTemp.Modul,`BenutzerBestellungenTemp`.`Produkt`),
+	   		`BenutzerBestellungenTemp`.`Woche`,
+	   		`BenutzerBestellungenTemp`.`Depot_ID`,
+	   		BenutzerId
+	    Order By
+			`BenutzerBestellungenTemp`.`Depot`, IFNULL(BenutzerBestellungenTemp.Modul,`BenutzerBestellungenTemp`.`Produkt`)
+	) subq
+	WHERE Woche = ', pWoche ,'
+	GROUP BY Depot WITH ROLLUP
+');
+
+CALL BenutzerBestellung(pWoche, FALSE);
+
+PREPARE stt FROM \@query;
+
+EXECUTE stt;
+
+DEALLOCATE PREPARE stt;
+
+END")->execute();
+
+			} elsif ( $q->path_info =~ /^\/([a-zA-Z]+)\/?(MY|OWN)?$/ ) {
 				# regex matching with perl: will put capture group in implicit variables $1, $2, ...
 				my $table = $1;
 				my $myOwn = $2;

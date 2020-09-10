@@ -1,4 +1,4 @@
-DROP PROCEDURE `PivotSolawiBestellung`;
+DROP PROCEDURE IF EXISTS `PivotSolawiBestellung`;
 CREATE PROCEDURE `PivotSolawiBestellung`(
 	IN `pWoche` DECIMAL(6,2)
 )

@@ -1,4 +1,4 @@
-DROP PROCEDURE `BenutzerBestellungView`;
+DROP PROCEDURE IF EXISTS `BenutzerBestellungView`;
 CREATE  PROCEDURE `BenutzerBestellungView` (
 	IN `pWoche` DECIMAL(6,2),
 	IN `pBenutzer` INT,

@@ -1,4 +1,4 @@
-DROP PROCEDURE `BenutzerBestellung`;
+DROP PROCEDURE IF EXISTS `BenutzerBestellung`;
 CREATE PROCEDURE `BenutzerBestellung` (
    IN `pWoche` DECIMAL(6,2),
    IN `pInhalt` BOOLEAN
@@ -33,7 +33,7 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
                  1 AS `Quelle`,
                  `Benutzer`.`ID` AS `Benutzer_ID`,
                  `BenutzerModulAbo`.`Kommentar` AS `Kommentar`,
-                  Replace(Replace(`Modul`.`Name`, 'Kräutermodul', 'Kräuter'), 'Quarkmodul' , 'Quark, 400g') AS Modul,
+                  Replace(Replace(`Modul`.`Name`, 'Kräutermodul', 'Kräuter'), 'Quarkmodul' , 'Quark') AS Modul,
                  ModulInhalt.Produkt_ID,
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
                  IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * ModulInhaltWoche.Anzahl * ModulInhalt.Anzahl AS Lieferzahl,
