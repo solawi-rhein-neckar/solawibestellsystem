@@ -52,11 +52,11 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
 
 /**** public ****/
     function showTable(response, path) {
-    	console.log('show table ' + path);
+        console.log('show table ' + path);
 
-    	if (path.match(/^BenutzerBestellView.*$/) || path.match(/^BenutzerBestellungView.*$/)) {
-    		sbs.saveOrdersIntoProductCache(response);
-    	}
+        if (path.match(/^BenutzerBestellView.*$/) || path.match(/^BenutzerBestellungView.*$/)) {
+            sbs.saveOrdersIntoProductCache(response);
+        }
 
         sortResponse(response);
 
@@ -71,8 +71,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         table.className = tableName;
         var keys = null;
         if (response.length == 0) {
-        	var tr = handleEmpty(table);
-        	tableExtensions.forEach(function(ext){ext.addColumnHeaders(tr, keys);});
+            var tr = handleEmpty(table);
+            tableExtensions.forEach(function(ext){ext.addColumnHeaders(tr, keys);});
         }
         for (var i = 0; i < response.length; i++) {
             if(!keys) {
@@ -80,16 +80,16 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                 var tr = addColumnHeaderRow(table, keys);
                 if (pub.columns.length) {
                     for (var j = 0; j < keys.length; j++) {
-                    	keys[j] = keys[j].replace(' ', '');
+                        keys[j] = keys[j].replace(' ', '');
                     }
                 }
                 tableExtensions.forEach(function(ext){ext.addColumnHeaders(tr, keys);});
                 /*tr.childNodes.forEach(function(child){
-                	var div = document.createElement("DIV");
-                	div.innerText = child.innerText;
-                	div.style.position = 'absolute';
-                	div.style.backgroundColor = 'white';
-                	child.insertBefore(div, child.firstChild);
+                    var div = document.createElement("DIV");
+                    div.innerText = child.innerText;
+                    div.style.position = 'absolute';
+                    div.style.backgroundColor = 'white';
+                    child.insertBefore(div, child.firstChild);
                 });*/
             }
             var dataRow = response[i];
@@ -97,7 +97,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
                 var tr = document.createElement("TR");
                 table.appendChild(tr);
                 for (var j = 0; j < keys.length; j++) {
-                	var div = addDataCell(keys[j], dataRow, tr);
+                    var div = addDataCell(keys[j], dataRow, tr);
                     div.id = "span_" + tablePath + "_" + i + "_" + j;
                     tableExtensions.forEach(function(ext){ext.enhanceDataCell(div, keys[j]);});
                 }
@@ -107,9 +107,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     }
 
     function onEntitySaved(result, path, data) {
-    	tableExtensions.forEach(function(ext){if (ext.onEntitySaved) {ext.onEntitySaved(result, path, data)};});
-    	pub.reload();
-	}
+        tableExtensions.forEach(function(ext){if (ext.onEntitySaved) {ext.onEntitySaved(result, path, data)};});
+        pub.reload();
+    }
 
 /**** private ****/
 
@@ -118,12 +118,12 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         var td = document.createElement("TD");
         table.appendChild(tr);
         tr.appendChild(td);
-    	td.innerText = ' (empty) ';
-    	return tr;
+        td.innerText = ' (empty) ';
+        return tr;
     }
 
     function addDataCell(key, dataRow, tr) {
-    	var value = dataRow[key];
+        var value = dataRow[key];
         var td = document.createElement("TD");
         td.className='col_'+key;
         tr.appendChild(td);
@@ -144,7 +144,34 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
 
         }
 
-        div.innerText = value === undefined || value === null || value === '' ? '-' : pub.hideZeros && (value === 0 || value === '0' || value === '0.0') ? '' : value;
+
+        if (key.match(/^[A-Za-z1-9öäüÖÄÜ]+_ID_[0-9][0-9]?$/)) {
+
+            key = key.replace(/.*_ID_/, '');
+
+            var inp = document.createElement("INPUT");
+            inp.type = 'number';
+            inp.value = value;
+            inp.size = 1;
+            inp.onchange = function(evt) {
+
+            evt.target.disabled = 'disabled';
+
+                postAjax('ModulInhaltWoche',
+                        {ModulInhalt_ID: dataRow['_ID'], Depot_ID: key, Anzahl: evt.target.value == '' || evt.target.value < 0 ? null : evt.target.value, Woche: sbs.selectedWeek, onDuplicateKeyUpdate: 'Anzahl'},
+                        function() {
+                           evt.target.disabled = '';
+                           if (evt.target.value < 0) {
+                               evt.target.value = '';
+                           }
+                        });
+            };
+
+            div.appendChild(inp);
+
+        } else {
+            div.innerText = value === undefined || value === null || value === '' ? '-' : pub.hideZeros && (value === 0 || value === '0' || value === '0.0') ? '' : value;
+        }
 
 
         /* foreign key lookup in sbs.tableCache */
@@ -171,7 +198,12 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             td.appendChild(span);
             td.className='col_'+keys[j];
             span.className = "TableHead";
-            if (keys[j].match(/^[0-9][0-9][.].*/) ) {
+                        if (keys[j].match(/^[A-Za-z1-9öäüÖÄÜ]+_ID_[0-9][0-9]?$/)) {
+                span.innerText = keys[j].replace(/_ID_.*/, '');
+                span.dataKey = keys[j].replace(/.*_ID_/, '');
+                span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
+                span.style.cursor='pointer';
+            } else if (keys[j].match(/^[0-9][0-9][.].*/) ) {
                 span.innerText = keys[j].substr(3).replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
@@ -185,23 +217,23 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     }
 
     function createRedisplaySortedFunc(sortBy) {
-    	return function(){sortByColumn2 = sortByColumn1; sortByColumn1 = sortBy; showTable(responseCache, tablePath);}
+        return function(){sortByColumn2 = sortByColumn1; sortByColumn1 = sortBy; showTable(responseCache, tablePath);}
     }
 
     function sortResponse(response) {
         if (sortByColumn1) {
-        	console.log('sorting by ' + sortByColumn1 + (sortByColumn2 ? (', then ' + sortByColumn2) : ''));
-        	response.sort(rowSortFunc);
+            console.log('sorting by ' + sortByColumn1 + (sortByColumn2 ? (', then ' + sortByColumn2) : ''));
+            response.sort(rowSortFunc);
         }
     }
 
     function rowSortFunc(a,b) {
-    	return a[sortByColumn1] < b[sortByColumn1] ? -1 : a[sortByColumn1] > b[sortByColumn1] ? 1 : (sortByColumn2 ? (a[sortByColumn2] < b[sortByColumn2] ? -1 : a[sortByColumn2] > b[sortByColumn2]) : 0);
+        return a[sortByColumn1] < b[sortByColumn1] ? -1 : a[sortByColumn1] > b[sortByColumn1] ? 1 : (sortByColumn2 ? (a[sortByColumn2] < b[sortByColumn2] ? -1 : a[sortByColumn2] > b[sortByColumn2]) : 0);
     }
 
     function columnSortFunc(a,b){
-    	return columnWeight[a] && columnWeight[b] ? columnWeight[a] - columnWeight[b] : columnWeight[a] ? -1 : columnWeight[b] ? 1 : a>b ? 1 : a<b ? -1 : 0
-	}
+        return columnWeight[a] && columnWeight[b] ? columnWeight[a] - columnWeight[b] : columnWeight[a] ? -1 : columnWeight[b] ? 1 : a>b ? 1 : a<b ? -1 : 0
+    }
 
     function initColumnWeight() {
         const columnOrder = ['ID'
@@ -266,4 +298,3 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     initColumnWeight();
     return pub;
 }
-

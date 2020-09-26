@@ -51,7 +51,8 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
              LEFT JOIN ModulInhaltWoche
              	ON ModulInhaltWoche.Woche = pWoche
              	AND ModulInhaltWoche.ModulInhalt_ID = ModulInhalt.ID
-             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = Benutzer.Depot_ID )
+             	AND (ModulInhaltWoche.Anzahl IS NOT NULL)
+             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = 0 OR ModulInhaltWoche.Depot_ID = Benutzer.Depot_ID )
              WHERE
                     ( `BenutzerModulAbo`.ID IS NOT NULL )
                  OR ( Modul.ID <> 4 AND ((Modul.AnzahlProAnteil * Benutzer.Anteile) > 0) )
@@ -80,6 +81,6 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
 	       	ON `BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`
             AND  `BenutzerUrlaub`.`Woche` = `u`.`Woche`
       	LEFT JOIN Produkt on u.Produkt_ID = Produkt.ID
-      	WHERE Benutzer.Depot_ID <> 16
+      	WHERE Benutzer.Depot_ID <> 0
 );
 END

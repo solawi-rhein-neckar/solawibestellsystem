@@ -148,7 +148,8 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
              LEFT JOIN ModulInhaltWoche
              	ON ModulInhaltWoche.Woche = pWoche
              	AND ModulInhaltWoche.ModulInhalt_ID = ModulInhalt.ID
-             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = Benutzer.Depot_ID )
+             	AND (ModulInhaltWoche.Anzahl IS NOT NULL)
+             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = 0 OR ModulInhaltWoche.Depot_ID = Benutzer.Depot_ID )
              WHERE
                     ( `BenutzerModulAbo`.ID IS NOT NULL )
                  OR ( Modul.ID <> 4 AND ((Modul.AnzahlProAnteil * Benutzer.Anteile) > 0) )
@@ -177,7 +178,7 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
 	       	ON `BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`
             AND  `BenutzerUrlaub`.`Woche` = `u`.`Woche`
       	LEFT JOIN Produkt on u.Produkt_ID = Produkt.ID
-      	WHERE Benutzer.Depot_ID <> 16
+      	WHERE Benutzer.Depot_ID <> 0
 );
 END")->execute();
 
@@ -433,6 +434,38 @@ SET \@query = CONCAT('
 ');
 
 CALL BenutzerBestellung(pWoche, FALSE);
+
+PREPARE stt FROM \@query;
+
+EXECUTE stt;
+
+DEALLOCATE PREPARE stt;
+
+END")->execute();
+
+$dbh->prepare("DROP PROCEDURE IF EXISTS `PivotModulInhalt`;")->execute();
+$dbh->prepare("CREATE PROCEDURE `PivotModulInhalt`(
+	IN `pWoche` DECIMAL(6,2)
+)
+    READS SQL DATA
+    SQL SECURITY INVOKER
+BEGIN
+
+SET SESSION group_concat_max_len = 32000;
+
+SET \@query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('(SELECT ModulInhaltWoche.Anzahl From ModulInhaltWoche WHERE ModulInhaltWoche.ModulInhalt_ID = ModulInhalt.ID AND ModulInhaltWoche.Depot_ID = ', sub.ID, ' AND ModulInhaltWoche.WOCHE = ', pWoche, ') AS `', sub.KurzName, '_ID_', sub.ID  , '`' ))  FROM (Select * From Depot Where ID <> 0 ORDER BY Name) as sub);
+
+SET \@query = CONCAT('
+	SELECT ModulInhalt.ID AS `_ID`, ', pWoche, ' AS `:Date`,
+		   Modul.Name AS `:Modul`,
+		   ModulInhalt.Anzahl AS `:P#`,
+           Produkt.Name AS `:Produkt`,
+		   (SELECT Anzahl From ModulInhaltWoche WHERE ModulInhaltWoche.ModulInhalt_ID = ModulInhalt.ID AND ((ModulInhaltWoche.Depot_ID IS NULL) OR ModulInhaltWoche.Depot_ID = 0) AND ModulInhaltWoche.WOCHE = ', pWoche, ') AS `ALLE_ID_0`, ',
+		   \@query, '
+	FROM
+		ModulInhalt
+		Join Modul on ModulInhalt.Modul_ID = Modul.ID
+		join Produkt on ModulInhalt.Produkt_ID = Produkt.ID');
 
 PREPARE stt FROM \@query;
 
@@ -734,9 +767,14 @@ END")->execute();
 					my $key;
 					my $value;
 					my $reason;
+					my $onDuplicateKeyUpdate;
 					while (($key, $value) = each (%$body)) {
 						if ( $key =~ /^[a-zA-Z0-9_]+$/ && (! ($key =~ /^(ErstellZeitpunkt|AenderZeitpunkt|AenderBenutzer_ID)$/ )) ) {
-							if ( ($user->{Role_ID} == 1 || ($user->{Role_ID} == 0 && $table =~ /.*Benutzer.*/))
+							if ( $key =~ /^onDuplicateKeyUpdate$/ ) {
+								if ($value =~ /^[a-zA-Z0-9_]+$/) {
+									$onDuplicateKeyUpdate = $value;
+								}
+							} else if ( ($user->{Role_ID} == 1 || ($user->{Role_ID} == 0 && $table =~ /.*Benutzer.*/))
 								 && ($key =~ /^Woche$/ || $key =~ /^StartWoche$/ || $key =~ /^EndWoche$/) && $value < $cur_week ) {
 								$reason = "Woche muss in Zukunft liegen (>= $cur_week )!";
 							} else {
@@ -756,6 +794,10 @@ END")->execute();
 						my $keys = join(",", @keys);
 						my $placeholders = join(",", @placeholders);
 						my $sql= "INSERT INTO `$table` ( $keys ) VALUES ( $placeholders )";
+						if ( $onDuplicateKeyUpdate ) {
+							$sql = $sql . " ON DUPLICATE KEY UPDATE `$onDuplicateKeyUpdate` = ? ";
+							push(@values, $body->{$onDuplicateKeyUpdate});
+						}
 						eval {
 							$sth = $dbh->prepare($sql);
 							$sth->execute(@values);

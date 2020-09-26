@@ -93,8 +93,8 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
             tr.appendChild(td);
             var weekSelect = Object.create(WeekSelect);
             weekSelect.year = Number(sbs.selectedWeek.match(/[0-9]+/)[0]);
-            weekSelect.tableName = 'ModulInhaltWoche/ModulInhalt_ID/' + rowId,
-            weekSelect.postData = {ModulInhalt_ID: rowId, Woche: sbs.selectedWeek},
+            weekSelect.tableName = 'ModulInhaltWoche/ModulInhalt_ID/' + rowId + '/Depot_ID/0',
+            weekSelect.postData = {ModulInhalt_ID: rowId, Woche: sbs.selectedWeek, Anzahl: 1, Depot_ID: 0, onDuplicateKeyUpdate: 'Anzahl'},
             weekSelect.addTo(td);
         }
     }
@@ -117,7 +117,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     		btn.disabled='disabled';
         }
     }
-    
+
     function showEditor(event) {
     	solawiEditor.showEditorForCell(solawiTable.getTableName(), event);
     }

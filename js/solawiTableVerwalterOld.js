@@ -236,7 +236,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
         		postAjax('Benutzer/'+userId, {FleischAnteile: 0}, function(){});
 
         		if (week < sbs.week) {
-            		postAjax('Benutzer/'+userId, {Depot_ID: 16}, function(){});
+            		postAjax('Benutzer/'+userId, {Depot_ID: 0}, function(){});
         		}
 
         		 reloadWhenReady();

@@ -68,7 +68,22 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 }
 
 .weektable td.active {
-	background-color: yellow;
+	background-color: brown;
+}
+.weektable td.active0 {
+	background-color: white !important;
+}
+.weektable td.active1 {
+	background-color: yellow !important;
+}
+.weektable td.active2 {
+	background-color: orange !important;
+}
+.weektable td.active3 {
+	background-color: red !important;
+}
+.weektable td.active4 {
+	background-color: violet !important;
 }
 
 .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
@@ -278,9 +293,9 @@ div.hat_tausch {
 				style="display: inline-block; max-width: 42%; vertical-align: top;">
 				<b>Bearbeiten </b> <br />
 				<button	onclick="SBTview.reset();SBTedit.reset();getAjax('Depot', SBTmeta.showTable);">Depot</button>
-				<button	onclick="SBTview.reset();SBTedit.reset();getAjax('Solawi', SBTmeta.showTable);">Abgeschlossen</button>
 				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Modul', SBTedit.showTable);">Modul</button>
 				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('ModulInhalt', SBTedit.showTable);">ModulInhalt</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('PivotModulInhalt/'+SBS.selectedWeek, SBTedit.showTable);">PivotModulInhalt</button>
 				<!--button onclick="SBS.reset();getAjax('ModulInhaltWoche', SBTedit.showTable);">ModulInhaltWoche</button-->
 				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Produkt', SBTedit.showTable);">Produkt</button>
 				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
