@@ -298,8 +298,7 @@ div.hat_tausch {
 				<button	onclick="SBTview.reset();SBTedit.reset();getAjax('Depot', SBTmeta.showTable);">Depot</button>
 				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('ID');getAjax('Modul', SBTedit.showTable);">Modul</button>
 				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Produkt_ID');SBTedit.setSortBy('Modul_ID');getAjax('ModulInhalt', SBTedit.showTable);">ModulInhalt</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy(':Produkt');SBTedit.setSortBy(':Modul');getAjax('PivotModulInhalt/'+SBS.selectedWeek, SBTedit.showTable);">PivotModulInhalt</button>
-				<!--button onclick="SBS.reset();getAjax('ModulInhaltWoche', SBTedit.showTable);">ModulInhaltWoche</button-->
+				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotModulInhalt/'+SBS.selectedWeek, SBTview.showTable);">PivotModulInhalt</button>				<!--button onclick="SBS.reset();getAjax('ModulInhaltWoche', SBTedit.showTable);">ModulInhaltWoche</button-->
 				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('Nr');getAjax('Produkt', SBTedit.showTable);">Produkt</button>
 				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('Name');getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
 				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Modul_ID');SBTedit.setSortBy('Benutzer_ID');getAjax('BenutzerModulAbo', SBTedit.showTable);">BenutzerModulAbo</button>
