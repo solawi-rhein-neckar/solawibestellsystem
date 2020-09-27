@@ -20,7 +20,8 @@ SET @query = CONCAT('
 	FROM
 		ModulInhalt
 		Join Modul on ModulInhalt.Modul_ID = Modul.ID
-		join Produkt on ModulInhalt.Produkt_ID = Produkt.ID');
+		join Produkt on ModulInhalt.Produkt_ID = Produkt.ID ORDER BY Modul.Name, Produkt.Nr');
+
 
 PREPARE stt FROM @query;
 

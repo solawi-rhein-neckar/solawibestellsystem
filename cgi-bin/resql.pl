@@ -133,8 +133,8 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
                   Replace(Replace(`Modul`.`Name`, 'Kräutermodul', 'Kräuter'), 'Quarkmodul' , 'Quark') AS Modul,
                  ModulInhalt.Produkt_ID,
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
-                 IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * ModulInhaltWoche.Anzahl * ModulInhalt.Anzahl AS Lieferzahl,
-                 ModulInhaltWoche.Anzahl * ModulInhalt.Anzahl * IF(Modul.ID = 4,Benutzer.FleischAnteile,Benutzer.Anteile) * IF(Modul.ID = 2,3,Modul.AnzahlProAnteil) AS Gutschrift,
+                 IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
+                 IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl * IF(Modul.ID = 4,Benutzer.FleischAnteile,Benutzer.Anteile) * IF(Modul.ID = 2,3,Modul.AnzahlProAnteil) AS Gutschrift,
                  `BenutzerModulAbo`.BezahltesModul,
                  pWoche AS `Woche`
              FROM `Modul`
@@ -149,7 +149,12 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
              	ON ModulInhaltWoche.Woche = pWoche
              	AND ModulInhaltWoche.ModulInhalt_ID = ModulInhalt.ID
              	AND (ModulInhaltWoche.Anzahl IS NOT NULL)
-             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = 0 OR ModulInhaltWoche.Depot_ID = Benutzer.Depot_ID )
+             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = 0  )
+             LEFT JOIN ModulInhaltWoche AS ModulInhaltDepot
+             	ON ModulInhaltDepot.Woche = pWoche
+             	AND ModulInhaltDepot.ModulInhalt_ID = ModulInhalt.ID
+             	AND (ModulInhaltDepot.Anzahl IS NOT NULL)
+             	AND ( ModulInhaltDepot.Depot_ID = Benutzer.Depot_ID )
              WHERE
                     ( `BenutzerModulAbo`.ID IS NOT NULL )
                  OR ( Modul.ID <> 4 AND ((Modul.AnzahlProAnteil * Benutzer.Anteile) > 0) )
@@ -465,7 +470,7 @@ SET \@query = CONCAT('
 	FROM
 		ModulInhalt
 		Join Modul on ModulInhalt.Modul_ID = Modul.ID
-		join Produkt on ModulInhalt.Produkt_ID = Produkt.ID');
+		join Produkt on ModulInhalt.Produkt_ID = Produkt.ID ORDER BY Modul.Name, Produkt.Nr');
 
 PREPARE stt FROM \@query;
 
@@ -774,7 +779,7 @@ END")->execute();
 								if ($value =~ /^[a-zA-Z0-9_]+$/) {
 									$onDuplicateKeyUpdate = $value;
 								}
-							} else if ( ($user->{Role_ID} == 1 || ($user->{Role_ID} == 0 && $table =~ /.*Benutzer.*/))
+							} elsif ( ($user->{Role_ID} == 1 || ($user->{Role_ID} == 0 && $table =~ /.*Benutzer.*/))
 								 && ($key =~ /^Woche$/ || $key =~ /^StartWoche$/ || $key =~ /^EndWoche$/) && $value < $cur_week ) {
 								$reason = "Woche muss in Zukunft liegen (>= $cur_week )!";
 							} else {
