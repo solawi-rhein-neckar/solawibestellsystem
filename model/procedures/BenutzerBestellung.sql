@@ -59,10 +59,11 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
              	AND (ModulInhaltDepot.Anzahl IS NOT NULL)
              	AND ( ModulInhaltDepot.Depot_ID = Benutzer.Depot_ID )
              WHERE
-                    ( `BenutzerModulAbo`.ID IS NOT NULL )
+                    (( `BenutzerModulAbo`.ID IS NOT NULL )
                  OR ( Modul.ID <> 4 AND ((Modul.AnzahlProAnteil * Benutzer.Anteile) > 0) )
                  OR ( Modul.ID = 4 /*Fleisch*/ AND Benutzer.FleischAnteile > 0 )
-                 OR ( Modul.ID = 2 /*Milch*/ AND Benutzer.Anteile > 0 )
+                 OR ( Modul.ID = 2 /*Milch*/ AND Benutzer.Anteile > 0 ))
+                 AND (ModulInhalt.ID is null or ModulInhalt.HauptProdukt or ModulInhaltWoche.Anzahl > 0 or ModulInhaltDepot.Anzahl > 0)
            )
            UNION ALL
            (SELECT

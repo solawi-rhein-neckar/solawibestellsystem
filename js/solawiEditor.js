@@ -126,9 +126,16 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
     function createInputSelect(response) {
         inp = document.createElement("SELECT");
         var lastOption = null;
+        if (response.sort && response.length > 0) {
+            if ((response[0] && response[0]['Nr']) || (response.length > 1 && response[1] && response[1]['Nr'])) {
+                response.sort( function rowSortFunc(a,b) { return a['Nr'] < b['Nr'] ? -1 : a['Nr'] > b['Nr'] ? 1 : 0; } );
+            } else {
+                response.sort( function rowSortFunc(a,b) { return a['Name'] < b['Name'] ? -1 : a['Name'] > b['Name'] ? 1 : 0; } );
+            }
+        }
         for (var k=0; k<response.length; k++) {
             var row = response[k];
-            if (row && (row.ID || row.ID === 0)) {
+            if (row && (row.ID || row.ID === 0)  && ((!disableUnavailableProducts) || (!row.Nr) || row.AnzahlZusatzBestellungMax > 0 || row.Nr <= 900) ) {
                 var opt = document.createElement("OPTION");
                 opt.value=row.ID;
                 opt.innerText=row.Name;

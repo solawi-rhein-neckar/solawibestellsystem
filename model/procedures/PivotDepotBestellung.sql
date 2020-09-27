@@ -9,7 +9,7 @@ BEGIN
 
 SET SESSION group_concat_max_len = 32000;
 
-SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('SUM(IF(Produkt = \'', Name, '\', IF(AnzahlZusatz is not null, Anzahl + (AnzahlZusatz * 0.0001), Anzahl), 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
+SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('SUM(IF(Produkt = \'', Name, '\', IF(AnzahlZusatz is not null, Anzahl + (AnzahlZusatz * 0.0001), Anzahl), 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt WHERE Nr <= 900 ORDER BY Nr);
 
 SET @query = CONCAT('
 	SELECT Benutzer as `00.',
