@@ -67,11 +67,14 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 	background-color: orange;
 }
 
+.weektable td.inactive {
+	background-color: white;
+}
 .weektable td.active {
 	background-color: brown;
 }
 .weektable td.active0 {
-	background-color: white !important;
+	background-color: lightgrey !important;
 }
 .weektable td.active1 {
 	background-color: yellow !important;
@@ -293,15 +296,15 @@ div.hat_tausch {
 				style="display: inline-block; max-width: 42%; vertical-align: top;">
 				<b>Bearbeiten </b> <br />
 				<button	onclick="SBTview.reset();SBTedit.reset();getAjax('Depot', SBTmeta.showTable);">Depot</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Modul', SBTedit.showTable);">Modul</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('ModulInhalt', SBTedit.showTable);">ModulInhalt</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('PivotModulInhalt/'+SBS.selectedWeek, SBTedit.showTable);">PivotModulInhalt</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('ID');getAjax('Modul', SBTedit.showTable);">Modul</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Produkt_ID');SBTedit.setSortBy('Modul_ID');getAjax('ModulInhalt', SBTedit.showTable);">ModulInhalt</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy(':Produkt');SBTedit.setSortBy(':Modul');getAjax('PivotModulInhalt/'+SBS.selectedWeek, SBTedit.showTable);">PivotModulInhalt</button>
 				<!--button onclick="SBS.reset();getAjax('ModulInhaltWoche', SBTedit.showTable);">ModulInhaltWoche</button-->
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Produkt', SBTedit.showTable);">Produkt</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo', SBTedit.showTable);">BenutzerModulAbo</button>
-				<button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">BenutzerZusatzBestellung</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerUrlaub', SBTedit.showTable);">BenutzerUrlaub</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('Nr');getAjax('Produkt', SBTedit.showTable);">Produkt</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('Name');getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Modul_ID');SBTedit.setSortBy('Benutzer_ID');getAjax('BenutzerModulAbo', SBTedit.showTable);">BenutzerModulAbo</button>
+				<button onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Benutzer_ID');SBTedit.setSortBy('Woche');getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">BenutzerZusatzBestellung</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Benutzer_ID');SBTedit.setSortBy('Woche');getAjax('BenutzerUrlaub', SBTedit.showTable);">BenutzerUrlaub</button>
 			</span>
 		</div>
 
