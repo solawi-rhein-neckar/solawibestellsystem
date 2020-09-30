@@ -152,7 +152,7 @@ var WeekSelect = {
     toggleSingle: function(elem) {
         if (this.tableName && this.postData ) {
             this.postData.Woche = this.year + (elem.dataWeek <= 9 ? '.0' : '.') + elem.dataWeek;
-            if (this.postData.Anzahl === 0 || this.postData.Anzahl) {
+            if (this.postData.onDuplicateKeyUpdate === 'Anzahl') {
 	            if (elem.className.match(/inactive/)) {
 	            	this.postData.Anzahl = 1
 	            } else {
