@@ -30,17 +30,25 @@ if ( $q->request_method() =~ /^POST$/ ) {
 	my $ua = LWP::UserAgent->new();
 	$ua->cookie_jar({ });
 	my $response = $ua->get( 'https://www.solawi-rhein-neckar.org/intern/login');
-	$response->content =~ /_wpnonce[^>]*value=\"([^\"]*)\"/;
-	my $nonce = $1;
+	my $nonce;
+	if ($response->content =~ /_wpnonce[^>]*value=\"([^\"]*)\"/) {
+		$nonce = $1;
+	}
 
 	push @{ $ua->requests_redirectable }, 'POST';
 	$response = $ua->post( 'https://www.solawi-rhein-neckar.org/intern/login/?redirect_to=https://www.solawi-rhein-neckar.org/intern/account', { 'username-73'=> $body->{name}, 'user_password-73' => $body->{password}, 'form_id' => 73, 'timestamp' => time(), '_wpnonce' => $nonce, 'redirect_to' => 'https://www.solawi-rhein-neckar.org/intern/account' } );
-	$response->content =~ /first_name[^>]*value=\"([^\"]*)\"/;
-	my $first = $1;
-	$response->content =~ /last_name[^>]*value=\"([^\"]*)\"/;
-	my $last = $1;
-	$response->content =~ /user_login[^>]*value=\"([^\"]*)\"/;
-	my $user = $1;
+	my $first;
+	if ($response->content =~ /first_name[^>]*value=\"([^\"]*)\"/) {
+		$first = $1;
+	}
+	my $last;
+	if ($response->content =~ /last_name[^>]*value=\"([^\"]*)\"/) {
+		$last = $1;
+	}
+	my $user;
+	if ($response->content =~ /user_login[^>]*value=\"([^\"]*)\"/) {
+		$user = $1;
+	}
     my $rows = -1;
 	if ($user && ($first || $last)) {
 		my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE (Name is not null and TRIM(Name) <> '' AND Name = ?) OR (MitName is not null AND TRIM(MitName) <> '' AND MitName = ?)");

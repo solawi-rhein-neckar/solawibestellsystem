@@ -140,7 +140,7 @@
 			Name: <input type='text' id='inpName' name='name' placeholder='name' />
 			Password: <input type='password' id='inpPass' name='password' />
 			<input type='submit' value='Login'
-				onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
+				onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
 			<div id="loginError" style="display: none; color: red; font-weight: bold; padding-top: 20px;">
 				Falscher Benutzername oder Falsches Passwort! Bitte mit den
 				Login-Daten des
@@ -156,8 +156,8 @@
 				<br />
 				Bitte Mail an Depotverwalter und
 					<a  id="missingUserEmail"
-						href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+">
-						solawiBestellsystem@regenduft.de
+						href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+">
+						ag-bestellsystem@solawi-rhein-neckar.org
 					</a>
 				schreiben.
 			</div>

@@ -164,7 +164,7 @@
 		<input type='password' id='inpPass' name='password' placeholder='Passwort' />
 		<br />
 		<input class="loginbutton" type='submit' value='Anmelden'
-			onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
+			onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
 		<div class="message" id="loginError">
 			Falscher Benutzername<br>oder falsches Passwort!
 			<br><br>
@@ -179,8 +179,8 @@
 			<br />
 			Bitte Mail an Depotverwalter und
 			<a id="missingUserEmail"
-				href="mailto:solawiBestellsystem@regenduft.de?subject=Solawi+Bestellsystem+fehlender+Benutzer+">
-				solawiBestellsystem@regenduft.de
+				href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+">
+				ag-bestellsystem@solawi-rhein-neckar.org
 			</a> schreiben.
 		</div>
 		<a href="adminOld.htm">Berichte und Admin-Bereich</a>
