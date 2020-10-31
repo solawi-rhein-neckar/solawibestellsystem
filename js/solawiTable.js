@@ -153,6 +153,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
             inp.type = 'number';
             inp.value = value;
             inp.size = 1;
+inp.style.width='40px';
             inp.onchange = function(evt) {
 
             evt.target.disabled = 'disabled';
@@ -298,3 +299,4 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     initColumnWeight();
     return pub;
 }
+
