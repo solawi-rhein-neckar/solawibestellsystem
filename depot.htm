@@ -32,6 +32,8 @@
         var SBTmeta = SolawiTable(SBS, 'table', 'tablePath', true, false, true);
         var SBTedit = SolawiTable(SBS, 'table', 'tablePath', true, false);
         var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
+        var SBTpunkte = SolawiTable(SBS, 'tablePunkte', 'tablePunktePath', false, false);
+
 		SBTview.hideZeros = true;
 
         //check login status
@@ -50,7 +52,7 @@
                                     'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
                         }
                         SBTmeta.setSortBy('Name');
-                        SBTmeta.columns = [ 'Name', 'MitName', 'Anteile', 'Fleisch Anteile', 'AnteileStartWoche', 'PunkteStart', 'PunkteStand', 'PunkteWoche', 'Depot_ID', 'Role_ID',
+                        SBTmeta.columns = [ 'Name', 'MitName', 'PunkteStand', 'PunkteWoche', 'Anteile', 'Fleisch Anteile', 'AnteileStartWoche', 'PunkteStart', 'Depot_ID', 'Role_ID',
                                 'Cookie', 'Passwort', 'AltName', 'ErstellZeitpunkt', 'AenderZeitpunkt', 'AenderBenutzer_ID' ];
                         getAjax('Benutzer', SBTmeta.showTable);
                     } else {

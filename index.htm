@@ -48,6 +48,9 @@
         if (userResponse.length > 0) {
             SBS.user = userResponse[0];
 
+            setContent('punktestand', SBS.user.PunkteStand);
+            setContent('punktewoche', SBS.user.PunkteWoche);
+
             if (SBS.user['Role_ID'] == 3) {
                 showInline('depotManageLink');
                 showInline('depotManageLink2');
@@ -126,6 +129,21 @@
     	document.getElementById('btn_show_selected_week').style.display = 'inline';
     	document.getElementById('btn_show_full_year').style.display = 'none';
 	}
+    function showPunkte() {
+        var SBTpunkte = SolawiTable(SBS, 'tablePunkte', 'tablePunktePath', false, false);
+        getAjax('BenutzerPunkte/' + SBS.user.ID, function(response, path, data) {
+        	SBTpunkte.showTable(response, path, data);
+        	window.scrollTo(0,750);
+	        getAjax('BenutzerView/MY', function(userResponse) {
+	            if (userResponse.length > 0) {
+	                SBS.user = userResponse[0];
+
+	                setContent('punktestand', SBS.user.PunkteStand);
+	                setContent('punktewoche', SBS.user.PunkteWoche);
+	            }
+	        });
+        });
+    }
 
 </script>
 <div id="blockui_post" style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 250; background-color: rgba(0, 0, 0, 0.3); display: none;">
@@ -244,8 +262,14 @@
 		<table id="table" cellspacing="0">
 		</table>
 	</div>
-	<div style="font-size:12px;padding:3px;color:#999;">
-		* Der 'Punkte-Abzug' ergibt sich aus der (Liefer-)Anzahl. Die 'Gutschrift' ergibt sich aus der "Standard-Lieferung".<br/>Das Guthaben soll bald automatisch aus der Summe_über_alle_Produkte( Gutschrift - Punkte-Abzug ) errechnet werden und sich bis zum Jahresende jeweils in die nächste Woche übertragen.
+	<div style="font-size:12px;padding:3px;color:#333;">
+		* Der 'Punkte-Abzug' ergibt sich aus der (Liefer-)Anzahl. Die 'Gutschrift' ergibt sich aus der "Standard-Lieferung".<br/> <b>Das Tausch-Punkte-Konto 2020 ist nur zum TEST. 2021 starten alle mit 0 Punkten. Tauschpunkte verfallen am Jahresende.</b>
+	</div>
+	<div style="text-align:right;font-size:16px;padding:3px;color:#000;">
+		Tausch-Punkte-Konto: <span style="font-weight:bold;" id="punktestand"></span> in Woche <a href="#" onclick="showPunkte();" id="punktewoche" style="font-weight:bold;padding-right:1.2em;padding-left:0 !important;"></a>
+		<br/>
+		<table id="tablePunkte" cellspacing="0">
+		</table>
 	</div>
 
 	<h2>Änderungen / Tauschen</h2>

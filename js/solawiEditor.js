@@ -40,13 +40,22 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         tableName = pTableName;
         var edit = resetEditor("ID " + event.target.dataId + ": " + event.target.dataKey + " ");
 
-        var inp = createInput(event.target.dataKey);
-        inp.dataId = event.target.dataId;
-        inp.value = event.target.dataValue || event.target.innerText;
-        inp.addEventListener('keypress', saveEditorInputs);
-        /*inp.addEventListener('change', saveEditorInputs);*/
+        if (pTableName == 'Benutzer' && event.target.dataKey == 'PunkteWoche') {
 
-        edit.appendChild(inp);
+        	var tb = document.createElement("table");
+        	tb.id = 'tablePunkte';
+        	edit.appendChild(tb);
+            getAjax('BenutzerPunkte/' + event.target.dataId, SBTpunkte.showTable);
+
+        } else {
+	        var inp = createInput(event.target.dataKey);
+	        inp.dataId = event.target.dataId;
+	        inp.value = event.target.dataValue || event.target.innerText;
+	        inp.addEventListener('keypress', saveEditorInputs);
+	        /*inp.addEventListener('change', saveEditorInputs);*/
+
+	        edit.appendChild(inp);
+        }
         finishEditor(edit);
     }
 

@@ -22,6 +22,11 @@ table, td {
 	padding: 3px;
 }
 
+div#editor.editBenutzer {
+    max-height: 750px;
+    overflow: scroll;
+}
+
 .PivotDepotBestellung>tr:first-child>td:first-child>span, .PivotSolawiBestellung>tr:first-child>td:first-child>span {
 	writing-mode: horizontal-tb !important;
 	font-size: 1.1em;

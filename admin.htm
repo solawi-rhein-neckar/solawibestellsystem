@@ -30,6 +30,11 @@ input.editor.inp_Passwort, input.editor.inp_Cookie, input.editor.inp_PunkteStand
 	display: none;
 }
 
+div#editor.editBenutzer {
+    max-height: 750px;
+    overflow: scroll;
+}
+
 .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID {
 	font-size: 75%;
 	color: #999;
@@ -162,6 +167,7 @@ div.hat_tausch {
         var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
         SBTview.hideZeros = true;
         var SBTmeta = SolawiTable(SBS, 'table', 'tablePath', true, false, true);
+        var SBTpunkte = SolawiTable(SBS, 'tablePunkte', 'tablePunktePath', false, false);
 
         //check login status
         getAjax('Benutzer/OWN',

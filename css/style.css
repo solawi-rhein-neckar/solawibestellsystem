@@ -457,6 +457,19 @@ display: inline-block;
 
 }
 
+table#tablePunkte>tr:first-child>td>span {
+  writing-mode: horizontal-tb !important;
+}
+
+table#tablePunkte .col_Woche {
+	display: table-cell !important;
+}
+
+table#tablePunkte .col_Total {
+	font-weight: bold;
+}
+
+
 div.full_year td.col_Woche {
 	display: table-cell !important;
 }

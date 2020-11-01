@@ -1,5 +1,5 @@
-DROP PROCEDURE IF EXISTS `BenutzerPunkte`;
-CREATE PROCEDURE `BenutzerPunkte` (
+DROP PROCEDURE IF EXISTS `BenutzerPunkteUpdate`;
+CREATE PROCEDURE `BenutzerPunkteUpdate` (
    IN `pBenutzer` int
 )
 READS SQL DATA

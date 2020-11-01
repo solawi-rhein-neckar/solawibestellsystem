@@ -510,9 +510,12 @@ END")->execute();
 				if ( $user->{Role_ID} <= 1 && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ? AND `ID` = ?");
 					$sth->execute($id, $user->{ID});
-				} elsif ( $table =~ /^BenutzerBestellungView$/ ) {
+				} elsif ( $table =~ /^BenutzerBestellungView$/) {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id,$user->{ID},undef);
+				} elsif ( $table =~ /^BenutzerPunkteUpdate$/ ||  $table =~ /^BenutzerPunkte$/) {
+					$sth = $dbh->prepare("CALL $table(?)");
+					$sth->execute($user->{Role_ID} <= 1 ? $user->{ID} : $id == 'null' || $id == 'NULL' ? undef : $id);
 				} elsif ( $user->{Role_ID} <= 1 && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $user->{ID});
