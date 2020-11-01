@@ -209,7 +209,10 @@ inp.style.width='40px';
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
             } else {
-                span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch').replace('Punkte', 'Punkte-Abzug*');
+                span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
+                if (tableName == 'BenutzerBestellView') {
+                    span.innerText = span.innerText.replace('Punkte', 'Punkte-Abzug*');
+                }
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
             }
@@ -263,10 +266,12 @@ inp.style.width='40px';
             ,'Kommentar'
             ,'Anteile'
             ,'FleischAnteile'
+            ,'AnteileStartWoche'
             ,'StartWoche'
             ,'EndWoche'
 
             ,'Punkte'
+            ,'PunkteStart'
             ,'PunkteStand'
             ,'PunkteWoche'
             ,'Role'

@@ -50,7 +50,7 @@
                                     'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
                         }
                         SBTmeta.setSortBy('Name');
-                        SBTmeta.columns = [ 'Name', 'MitName', 'Anteile', 'Fleisch Anteile', 'PunkteStand', 'PunkteWoche', 'Depot_ID', 'Role_ID',
+                        SBTmeta.columns = [ 'Name', 'MitName', 'Anteile', 'Fleisch Anteile', 'AnteileStartWoche', 'PunkteStart', 'PunkteStand', 'PunkteWoche', 'Depot_ID', 'Role_ID',
                                 'Cookie', 'Passwort', 'AltName', 'ErstellZeitpunkt', 'AenderZeitpunkt', 'AenderBenutzer_ID' ];
                         getAjax('Benutzer', SBTmeta.showTable);
                     } else {
