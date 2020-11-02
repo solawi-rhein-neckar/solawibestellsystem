@@ -14,7 +14,7 @@ SET @query = CONCAT('
 	SELECT Depot,
 		   SUM( IF(Produkt = \'Milch, 0.5L\', Anzahl/2, 0) ) AS `Milch`,',
 		   @query, ' ,
-		   SUM(IF(Produkt <> \'Gemüse\',0, Urlaub)) as Urlauber,
+		   SUM(IF(NOT (Produkt LIKE \'Gem_se\'),0, Urlaub)) as Urlauber,
 
 		  MAX((SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`)) as `Anteile`,
 

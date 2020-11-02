@@ -130,7 +130,7 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
                  1 AS `Quelle`,
                  `Benutzer`.`ID` AS `Benutzer_ID`,
                  `BenutzerModulAbo`.`Kommentar` AS `Kommentar`,
-                  Replace(Replace(`Modul`.`Name`, 'Kräutermodul', 'Kräuter'), 'Quarkmodul' , 'Quark') AS Modul,
+                  Replace(Replace(`Modul`.`Name`, 'utermodul', 'uter'), 'Quarkmodul' , 'Quark') AS Modul,
                  ModulInhalt.Produkt_ID,
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
                  IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
@@ -149,7 +149,7 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
              	ON ModulInhaltWoche.Woche = pWoche
              	AND ModulInhaltWoche.ModulInhalt_ID = ModulInhalt.ID
              	AND (ModulInhaltWoche.Anzahl IS NOT NULL)
-             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = 0  )
+             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = 0 )
              LEFT JOIN ModulInhaltWoche AS ModulInhaltDepot
              	ON ModulInhaltDepot.Woche = pWoche
              	AND ModulInhaltDepot.ModulInhalt_ID = ModulInhalt.ID
@@ -325,7 +325,7 @@ SET \@query = CONCAT('
 	SELECT Depot,
 		   SUM( IF(Produkt = \\'Milch, 0.5L\\', Anzahl/2, 0) ) AS `Milch`,',
 		   \@query, ' ,
-		   SUM(IF(Produkt <> \\'Gemüse\\',0, Urlaub)) as Urlauber,
+		   SUM(IF(NOT (Produkt LIKE \\'Gem_se\\'),0, Urlaub)) as Urlauber,
 
 		  MAX((SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`)) as `Anteile`,
 
@@ -394,10 +394,10 @@ SET \@query = CONCAT('
 	SELECT Depot as `00.',pWoche,'`,
 		   SUM( IF(Produkt = \\'Milch, 0.5L\\', cast(Anzahl/2 as decimal(5,1)), 0) ) AS `06.Milch`,',
 		   \@query, ',
-		   SUM(IF(Produkt <> \\'Gemüse\\',0, Urlaub)) as `99.', pWoche,' Urlauber`,
-		  SUM(IF(Produkt <> \\'Gemüse\\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `97.Mitglieder`,
-		  SUM(IF(Produkt <> \\'Gemüse\\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.Anteile`,
-		  SUM(IF(Produkt <> \\'Gemüse\\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.FleischAnteileErlaubt`,
+		   SUM(IF(NOT (Produkt LIKE \\'Gem_se\\'),0, Urlaub)) as `99.', pWoche,' Urlauber`,
+		  SUM(IF((NOT (Produkt LIKE \\'Gem_se\\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `97.Mitglieder`,
+		  SUM(IF((NOT (Produkt LIKE \\'Gem_se\\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.Anteile`,
+		  SUM(IF((NOT (Produkt LIKE \\'Gem_se\\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.FleischAnteileErlaubt`,
 		  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \\', \\') as `96.Kommentar`
 	FROM
 		(Select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,
@@ -510,7 +510,7 @@ END")->execute();
 				if ( $user->{Role_ID} <= 1 && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ? AND `ID` = ?");
 					$sth->execute($id, $user->{ID});
-				} elsif ( $table =~ /^BenutzerBestellungView$/) {
+				} elsif ( $table =~ /^BenutzerBestellungView$/ ) {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id,$user->{ID},undef);
 				} elsif ( $table =~ /^BenutzerPunkteUpdate$/ ||  $table =~ /^BenutzerPunkte$/) {

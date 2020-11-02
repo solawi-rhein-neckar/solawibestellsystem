@@ -14,10 +14,10 @@ SET @query = CONCAT('
 	SELECT Depot as `00.',pWoche,'`,
 		   SUM( IF(Produkt = \'Milch, 0.5L\', cast(Anzahl/2 as decimal(5,1)), 0) ) AS `06.Milch`,',
 		   @query, ',
-		   SUM(IF(Produkt <> \'Gemüse\',0, Urlaub)) as `99.', pWoche,' Urlauber`,
-		  SUM(IF(Produkt <> \'Gemüse\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `97.Mitglieder`,
-		  SUM(IF(Produkt <> \'Gemüse\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.Anteile`,
-		  SUM(IF(Produkt <> \'Gemüse\' OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.FleischAnteileErlaubt`,
+		   SUM(IF(NOT (Produkt LIKE \'Gem_se\'),0, Urlaub)) as `99.', pWoche,' Urlauber`,
+		  SUM(IF((NOT (Produkt LIKE \'Gem_se\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `97.Mitglieder`,
+		  SUM(IF((NOT (Produkt LIKE \'Gem_se\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.Anteile`,
+		  SUM(IF((NOT (Produkt LIKE \'Gem_se\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.FleischAnteileErlaubt`,
 		  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \', \') as `96.Kommentar`
 	FROM
 		(Select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,
