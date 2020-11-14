@@ -1,7 +1,7 @@
 /*
     Defined as (closure-)function, because we don't want to put all our private variables into the global namespace.
     The new operator is not required! (We do not use 'this' anywhere in the code).
-
+    
     This file is meant to be used by solawiEditor.
 */
 function SolawiValidator(pSbs) {
@@ -19,7 +19,7 @@ function SolawiValidator(pSbs) {
 /**** public ****/
     function validateEditorInput(data, id) {
     	lookupRowDataInResponseCacheForValidation(id, data);
-
+    	
     	var result = validateEditorZusatzBestellung(data, id);
         if (result != null) {
         	return result;
@@ -32,7 +32,7 @@ function SolawiValidator(pSbs) {
         /* else */
         return validateEditorAnzahl(data['Anzahl'], 0, 9999);
     }
-
+   
 
 /**** private ****/
 
@@ -54,7 +54,7 @@ function SolawiValidator(pSbs) {
         	var max = 9999;
             var row = sbs.tableCache['Produkt'][data['Produkt_ID']]
             if (row) {
-                min = (row.AnzahlBestellung || row.AnzahlBestellung === 0 ? row.AnzahlBestellung * -1 : -9) ;
+                min = (row.AnzahlBestellung || row.AnzahlBestellung === 0 ? row.AnzahlBestellung * -1 : -9);
                 max = row.AnzahlZusatzBestellungMax - row.AnzahlZusatzBestellung;
             }
         	return validateEditorAnzahl(data['Anzahl'], min, max, row ? row.Name : '');
@@ -90,7 +90,7 @@ function SolawiValidator(pSbs) {
     	}
     	return null;
     }
-
+    
     function lookupRowDataInResponseCacheForValidation(rowId, data) {
         /* if not all inputFields are displayed inside this editor (i.e. singleField editor for EndWoche), look up important values in the tableCache */
         if (rowId && responseCache && (!data['StartWoche']) && (!data['Modul_ID']) && !data['Anzahl']) {

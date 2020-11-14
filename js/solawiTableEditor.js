@@ -117,7 +117,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     		btn.disabled='disabled';
         }
     }
-
+    
     function showEditor(event) {
     	solawiEditor.showEditorForCell(solawiTable.getTableName(), event);
     }

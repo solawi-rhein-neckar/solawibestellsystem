@@ -20,7 +20,7 @@
 	<script>
         var SBS = SolawiBestellSystem();
         var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, true);
-		SBTview.hideZeros = true;
+	SBTview.hideZeros = true;
 
         //check login status
         getAjax('BenutzerView/MY', function(userResponse) {
