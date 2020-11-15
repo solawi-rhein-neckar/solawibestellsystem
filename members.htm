@@ -6,12 +6,16 @@
 	<link rel="stylesheet" type="text/css" href="css/depot.css">
 	<style>
 
+.col_Cookie,.col_Passwort,.col_ErstellZeitpunkt,.col_AenderZeitpunkt,.col_AenderBenutzer_ID,.col_wpaccount_status,
+.col_wpfirst_name,.col_wplast_name,.col_wpsession_tokens,.col_wpuser_login,.col_wpuser_nicename,.col_wpuser_pass,
+.col_wpuser_activation_key,.col_wpuser_registered,.col_wpuser_status,.col_wpuser_url,.col_wpwp_user_level { display: none;}
+
 </style>
 	<script src="js/util.js"></script>
 	<script src="js/weekSelect.js"></script>
 	<script src="js/solawiBestellSystem.js"></script>
 	<script src="js/solawiValidator.js"></script>
-	<script src="js/solawiEditor.js"></script>
+	<script src="js/solawiEditor.js"></script>	Beruf
 	<script src="js/solawiTableEditor.js"></script>
 	<script src="js/solawiTableVerwalter.js"></script>
 	<script src="js/solawiTable.js"></script>
@@ -21,219 +25,105 @@
 </head>
 <body>
 
+	<script src="js/ui.js"></script>
+
 	<script>
-        if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
-            location.replace('https://bestellung.solawi.fairtrademap.de/depot.htm');
-        } else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi-rhein-neckar.org/)) {
-            location.replace('https://www.solawi-rhein-neckar.org/bestellung/depot.htm');
-        }
-
-        var SBS = SolawiBestellSystem();
-        var SBTmeta = SolawiTable(SBS, 'table', 'tablePath', true, false, true);
         var SBTedit = SolawiTable(SBS, 'table', 'tablePath', true, false);
-        var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
-        var SBTpunkte = SolawiTable(SBS, 'tablePunkte', 'tablePunktePath', false, false);
 
-		SBTview.hideZeros = true;
 
-        //check login status
-        getAjax(
-                'Benutzer/OWN',
-                function(userResponse) {
-                    if (userResponse.length > 0 && userResponse[0]) {
-                        SBS.user = userResponse[0];
-                        document.getElementById('logoutbtn').innerText = 'Logout ' + SBS.user.Name;
-                        setHtmlContent('selectedWeek', SBS.selectedWeek + '<span style="font-weight:normal"> ('
-                                + weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
-                        setContent('selectedWeek2', SBS.selectedWeek);
-                        setContent('selectedWeek0', SBS.selectedWeek);
-                        if (SBS.user.Role_ID != 3) {
-                            setContent('warning',
-                                    'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
-                        }
-                        SBTmeta.setSortBy('Name');
-                        SBTmeta.columns = [ 'Name', 'MitName', 'PunkteStand', 'PunkteWoche', 'Anteile', 'Fleisch Anteile', 'AnteileStartWoche', 'PunkteStart', 'Depot_ID', 'Role_ID',
-                                'Cookie', 'Passwort', 'AltName', 'ErstellZeitpunkt', 'AenderZeitpunkt', 'AenderBenutzer_ID' ];
-                        getAjax('Benutzer', SBTmeta.showTable);
-                    } else {
-                        show('loginform');
-                        hide('logoutbtn');
-                        hide('tableContainer');
-                    }
-                });
+        SBTedit.setSortBy('Name');
+        //SBTedit.columns = [ 'Name', 'MitName', 'PunkteStand', 'PunkteWoche', 'Anteile', 'Fleisch Anteile', 'AnteileStartWoche', 'PunkteStart', 'Depot_ID', 'Role_ID',
+        //        'Cookie', 'Passwort', 'AltName', 'ErstellZeitpunkt', 'AenderZeitpunkt', 'AenderBenutzer_ID' ];
 
-        SBS.fillCache('Modul');
-        SBS.fillCache('Role');
-        SBS.fillCache('Depot');
-        SBS.fillCache('Produkt');
-        SBS.fillCache('Benutzer');
+		//initUser(function(){getAjax('Benutzer/ACTIVE', SBTedit.showTable);});
+
+		initUser(function(){getAjax('/cgi-bin/wp.pl/', function(response, path){
+	        var byWpId = {};
+	        for (var j = 0; j < response.length; j++) {
+				byWpId[response[j].ID] = response[j];
+	        }
+		    getAjax('Benutzer/ACTIVE', function(response2, path2) {
+		        for (var i = 0; i < response2.length; i++) {
+		            var usr = response2[i];
+		            usr.NOTES = '';
+		            if (usr.wpID) {
+		                var wpUsr = byWpId[usr.wpID];
+		                if (wpUsr) {
+ 		            		Object.keys(wpUsr).forEach(function(key) {
+ 		            		   usr['wp'+key]=wpUsr[key];
+ 		            		});
+ 		            		if (wpUsr.wpSynced) {
+ 		            		   usr.NOTES += ' !DUP_SYNC! ';
+ 		            		}
+ 		            		wpUsr.wpSynced = 1;
+		                }
+		            }
+		            if (usr.wpMitID) {
+		                var wpMit = byWpId[usr.wpMitID]
+		                if (wpMit) {
+ 		            		usr.wpMitName = wpMit.display_name;
+ 		            		if (usr.Depot_ID && wpMit.Depot) {
+ 			            		var depot = SBS.tableCache['Depot'][usr.Depot_ID];
+ 			            		if (depot && wpMit.Depot != depot.wpName && !(wpMit.Depot == 'Hofteam' && depot.wpName == 'Selbstabholer')) {
+ 									usr.NOTES += ' !MIT_DEPOT! ';
+ 			            		}
+ 		            		}
+		                }
+		            	if (!usr.wpMitName) {
+							usr.NOTES += ' !MISS_WP_MIT! ';
+		            	} else if ((!usr.MitName) || usr.wpMitName.toLowerCase() != usr.MitName.toLowerCase()) {
+							usr.NOTES += ' !MIT_NAME! ';
+		            	}
+		            } else {
+		                usr.wpMitName = '';
+		                if (usr.MitName) {
+							usr.NOTES += ' !NO_WP_MIT! ';
+		                }
+		            }
+		            if (!usr.wpID) {
+		                usr.NOTES += ' !NO_WP! ';
+		            } else {
+		                if (!usr.wpdisplay_name) {
+							usr.NOTES += ' !MISS_WP! ';
+		                } else if ((!usr.Name) || usr.wpdisplay_name.toLowerCase() != usr.Name.toLowerCase()) {
+							usr.NOTES += ' !NAME! ';
+	            		}
+	            		if (usr.Depot_ID && usr.wpDepot) {
+		            		var depot = SBS.tableCache['Depot'][usr.Depot_ID];
+		            		if (depot && usr.wpDepot != depot.wpName && !(usr.wpDepot == 'Hofteam' && depot.wpName == 'Selbstabholer')) {
+								usr.NOTES += ' !DEPOT! ';
+		            		}
+	            		}
+		            }
+		        }
+		        for (var j = 0; j < response.length; j++) {
+		            var wpUsr = response[j];
+					if (!wpUsr.wpSynced) {
+					    var usr = {ID: -1, Name:'onlyWP'};
+	            		Object.keys(wpUsr).forEach(function(key) {
+            		    		usr['wp'+key]=wpUsr[key];
+ 		            		});
+	            		response2.push(usr);
+					}
+		        }
+		        SBTedit.showTable(response2, path2);
+		    });
+		}) });
 
         function changeWeek(count) {
-            SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
-            setHtmlContent('selectedWeek', SBS.selectedWeek + '<span style="font-weight:normal"> ('
-                    + weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
-            setContent('selectedWeek2', SBS.selectedWeek);
-            setContent('selectedWeek0', SBS.selectedWeek);
-            if (SBTview.getTableName() && SBTview.getTablePath()) {
-                if (SBTview.getTablePath().match(/.*Woche.*/)) {
-                    getAjax(SBTview.getTableName() + '/Woche/' + SBS.selectedWeek, SBTview.showTable);
-                } else if (SBTview.getTablePath().match(/.*Pivot.*/)) {
-                    getAjax(SBTview.getTableName() + '/' + SBS.selectedWeek, SBTview.showTable);
-                }
-            }
-            if (SBTedit.getTableName() && SBTedit.getTablePath()) {
-                if (SBTedit.getTablePath().match(/.*Woche.*/)) {
-                    getAjax(SBTedit.getTableName() + '/Woche/' + SBS.selectedWeek, SBTedit.showTable);
-                } else if (SBTedit.getTablePath().match(/.*\/Bis\/.*/)) {
-                    getAjax(SBTedit.getTableName() + '/Bis/' + SBS.selectedWeek, SBTedit.showTable);
-                } else if (SBTedit.getTablePath().match(/.*Pivot.*/)) {
-                    getAjax(SBTedit.getTableName() + '/' + SBS.selectedWeek, SBTedit.showTable);
-                }
-            }
-            if (SBTmeta.getTableName() && SBTmeta.getTablePath()) {
-                getAjax(SBTmeta.getTableName(), SBTmeta.showTable);
-            }
-
         }
     </script>
-
-
-	<div id="blockui_post"
-		style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 250; background-color: rgba(0, 0, 0, 0.3); display: none;">
-		<span style="display: inline-block; padding: 30px; background-color: #FFF; border: 1px solid black;">
-			SENDE DATEN...
-		</span>
-	</div>
-	<div id="blockui_get"
-		style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 240; background-color: rgba(0, 0, 0, 0.3); display: none;">
-		<span style="display: inline-block; padding: 30px; background-color: #FFF; border: 1px solid black;">
-			EMPFANGE DATEN - BITTE WARTEN....
-		</span>
-	</div>
-	<div id="blockui_edit"
-		style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; z-index: 230; background-color: rgba(0, 0, 0, 0.3); display: none;">
-		<div
-			style="display: inline-block; padding: 5px; margin: 10px; border: 1px solid black; background-color: #FFF;">
-			<div id="editError" style="color: red; font-weight: bold;"></div>
-			<div id="editor" style="padding: 5px;"></div>
-		</div>
-	</div>
-
-
-	<div id="logoutfrombg"
-		style="box-shadow: 0em 0em 1em 1em rgba(222, 222, 222, 0.7); background: rgba(222, 222, 222, 0.7); position: fixed; height: 6em; width: 19em; z-index: 8888; right: 1px; top: 0; font-size: 12px;">
-	</div>
-	<div id="logoutform"
-		style="position: fixed; right: 1px; top: 0; font-size: 12px; width: 20em; height: 7em; text-align: center; z-index: 9999;">
-		Woche:
-		<button onclick="changeWeek(-1)" style="padding:0 3px;height:1.5em;">&lt;&lt;</button>
-		<span id="selectedWeek0" style="font-weight: bold; background-color: rgba(222, 222, 222);">00</span>
-		<button onclick="changeWeek(+1)" style="padding:0 3px;height:1.5em;">&gt;&gt;</button>
-		<button id="logoutbtn" style="height:1.5em;"
-			onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('tableContainer');">Logout</button>
-		<div id="messages"
-			style="height: 3.5em; overflow: hidden; position: absolute; bottom: 0; width: 20em;">
-		</div>
-	</div>
-
-	<div id="loginform" style="display: none">
-		LOGIN:
-		<form method='post' action='/cgi-bin/wp.pl/login'>
-			Name: <input type='text' id='inpName' name='name' placeholder='name' />
-			Password: <input type='password' id='inpPass' name='password' />
-			<input type='submit' value='Login'
-				onclick='event.preventDefault();postAjax("/cgi-bin/wp.pl/login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
-			<div id="loginError" style="display: none; color: red; font-weight: bold; padding-top: 20px;">
-				Falscher Benutzername oder Falsches Passwort! Bitte mit den
-				Login-Daten des
-					<a href="https://www.solawi-rhein-neckar.org/intern/login/?redirect_to=https%3A%2F%2Fwww.solawi-rhein-neckar.org%2Fintern%2F">
-						Mitgliederbereichs
-					</a>
-				anmelden!
-			</div>
-			<div id="userMissing"
-				style="display: none; color: red; font-weight: bold; padding-top: 20px;">
-				Login erfolgreich, aber Benutzer mit Name <span id="missingUser" style="color: orange;"></span>
-				wurde im Bestellsystem nicht gefunden.
-				<br />
-				Bitte Mail an Depotverwalter und
-					<a  id="missingUserEmail"
-						href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+">
-						ag-bestellsystem@solawi-rhein-neckar.org
-					</a>
-				schreiben.
-			</div>
-		</form>
-		<br />
-		<br />
-		<a style="padding-left: 20px;" href="index.htm">Zurück zur Startseite</a><br />
-	</div>
-
-
-
-
-	<div id="warning" style="color: red"></div>
 
 	<div id="tableContainer">
 
 		<div style="text-align: center; padding: 5px 0 10px 0; white-space: nowrap; overflow: hidden; width: 80%;">
-			DEPOT-VERWALTUNG &#160; - &#160; <b>Woche: </b>
-			<button onclick="changeWeek(-1)">&lt;&lt;</button>
-			<span id="selectedWeek" style="font-weight: bold;">00</span>
-			<button onclick="changeWeek(+1)">&gt;&gt;</button>
-			&#160; - &#160; <a href="index.htm">zurück zur Startseite</a>
+			MITGLIEDER-VERWALTUNG &#160; - &#160; <a href="index.htm">zurück zur Startseite</a>
 		</div>
-
-		<div id="tableEditPath"></div>
-		<table id="tableEdit" cellspacing="0">
-		</table>
 
 		<div id="tablePath"></div>
 		<div class="fixedHeaderTable">
 			<table id="table" cellspacing="0">
 			</table>
-		</div>
-
-		<br /> <br />
-
-		<div style="width: 90%">
-			<span style="display: inline-block; width: 45%; vertical-align: top; border-right: 1px dotted black;">
-				<div style="text-align: center; padding: 5px 0 10px 0; white-space: nowrap; overflow: hidden;">
-					<em>Berichte</em> &#160; &#160; &#160; <b>Woche: </b>
-					<button onclick="changeWeek(-1)">&lt;&lt;</button>
-					<span id="selectedWeek2" style="font-weight: bold;">00</span>
-					<button onclick="changeWeek(+1)">&gt;&gt;</button>
-					&#160; &#160; &#160; <em>Bearbeiten</em> &#160; &#160; &#160; &#160; &#160;
-					&#160;
-				</div>
-				<span style="display: inline-block; width: 60%; vertical-align: top; border-right: 1px dotted black;">
-					<button onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerBestellungView/Woche/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Benutzer)</button>
-					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotSolawiBestellung/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Solawi)</button>
-					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepotBestellung/'+SBS.selectedWeek, SBTview.showTable);">Lieferung (Depot)</button>
-					<button	onclick="getAjax('PivotExportBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD Solawi</button>
-				</span>
-				<span style="display: inline-block; width: 38%; vertical-align: top;">
-					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo/Bis/'+SBS.selectedWeek, SBTedit.showTable);">ModulAbos <b>ab</b> gewählter Woche bearbeiten</button>
-					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung/Woche/'+SBS.selectedWeek, SBTedit.showTable);">Tausch-Bestellungen gewählte Woche bearbeiten</button>
-				</span>
-			</span>
-			<span style="display: inline-block; width: 45%; vertical-align: top;">
-				<div style="text-align: center; padding: 5px 0 10px 0; white-space: nowrap; overflow: hidden;">
-					<span style="display: block;">Ganzes Jahr, nicht nur gewählte Woche</span>
-					<em>Bearbeiten</em>  &#160; &#160;  &#160; &#160; &#160; <b>ALLES BEARBEITEN / ANZEIGEN</b>  &#160; &#160; &#160; <em>Berichte</em>
-				</div>
-				<span style="display: inline-block; width: 48%; vertical-align: top; border-right: 1px dotted black;">
-					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Benutzer', SBTedit.showTable);">Alle Benutzer bearbeiten</button>
-					<button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo', SBTedit.showTable);">Alle ModulAbo bearbeiten</button>
-					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung', SBTedit.showTable);"><b>Tausch-Bestellungen bearbeiten<br/>auch: Serienbestellungen löschen</b></button>
-					<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerUrlaub', SBTedit.showTable);">Alle Urlaube bearbeiten</button>
-				</span>
-				<span style="display: inline-block; width: 48%; vertical-align: top;">
-					<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerView', SBTview.showTable);">Benutzer-Abo
-						(Aktuell)</button> <a target="_blank" href="print.htm#PivotSolawiBestellung">Solawi_Lieferung_Drucken</a>
-					<a target="_blank" href="print.htm#PivotDepotBestellung">Depot_Lieferung_Drucken</a>
-				</span>
-			</span>
 		</div>
 
 		<br /> <br /> <br />

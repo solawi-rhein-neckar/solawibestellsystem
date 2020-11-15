@@ -40,18 +40,24 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	$stl2->execute($body->{name}, $body->{name});
 	my $row2 = $stl2->fetchrow_hashref;
 
-	my $encPass = $row2->{user_pass};
-	my $ppr = Authen::Passphrase::PHPass->from_crypt($encPass);
+	if ($row2 && $row2->{user_pass}) {
+		my $encPass = $row2->{user_pass};
+		my $ppr = Authen::Passphrase::PHPass->from_crypt($encPass);
 
-	if ($ppr->match($body->{password})) {
-		my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE `wpID` = ? or `wpMitID` = ?");
-		my $rows = $stl->execute($sessionid, $row2->{ID}, $row2->{ID});
-		my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
+		if ($ppr->match($body->{password})) {
+			my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE `wpID` = ? or `wpMitID` = ?");
+			my $rows = $stl->execute($sessionid, $row2->{ID}, $row2->{ID});
+			my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
 
-		# print http header with cookies
-		print $q->header( {cookie => [$cookie], "content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"} );
-		print encode_json({result => "success", match => $rows, user => $row2->{user_login}});
-		$dbh->commit();
+			# print http header with cookies
+			print $q->header( {cookie => [$cookie], "content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"} );
+			print encode_json({result => "success", match => $rows, user => $row2->{user_login}});
+			$dbh->commit();
+		} else {
+			# print http header
+			print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+			print encode_json({result => "wrong pw", match => -1});
+		}
 	} else {
 		# print http header
 		print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
@@ -71,6 +77,15 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 		if ($user->{Role_ID} >= 4 && $q->request_method() =~ /^GET$/ ) {
 
 			if ( $q->path_info =~ /^\/syncUsers$/ ) {
+
+				my $cols = ["Depot","first_name","last_name","role","session_tokens","Beruf","Beruf_10","Beruf_10_11","MitMitgliedvon","Mitarbeit-bei","Strasse","account_status","wp_user_level","description"];
+				my $query = "";
+				foreach my $col (@$cols) {
+					$query = $query . ", MAX(IF(meta_key = '$col', meta_value, NULL)) AS `$col`";
+				}
+				$dbh2->prepare("CREATE OR REPLACE VIEW `PivotUsersView` AS SELECT wp_users.* $query FROM wp_users join wp_usermeta on wp_users.ID = wp_usermeta.user_id GROUP BY wp_users.id; ")->execute();
+
+
 				$dbh2->prepare("DROP PROCEDURE IF EXISTS `PivotUsers`")->execute();
 				$dbh2->prepare("CREATE PROCEDURE `PivotUsers`()
 	READS SQL DATA
@@ -99,7 +114,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					while ( my $row = $sth->fetchrow_hashref ) {
 
 						my $sthUsr = $dbh->prepare("UPDATE Benutzer SET wpID = ? WHERE wpID is null AND Name = ?");
-						$sthUsr->execute($row->{ID}, $row->{first_name} . " " . $row->{last_name});
+						$sthUsr->execute($row->{ID}, $row->{display_name});
 						$countUsr += $sthUsr->rows();
 						$dbh->commit();
 
@@ -117,7 +132,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 						$dbh->commit();
 
 						my $sthMit = $dbh->prepare("UPDATE Benutzer SET wpMitID = ? WHERE wpMitID is null AND MitName = ?");
-						$sthMit->execute($row->{ID}, $row->{first_name} . " " . $row->{last_name});
+						$sthMit->execute($row->{ID}, $row->{display_name});
 						$countMitX += $sthMit->rows();
 						$dbh->commit();
 
@@ -130,20 +145,20 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 						while ( my $usr = $sthUsr->fetchrow_hashref ) {
 							$rowCount = $rowCount + 1;
 							if ($usr->{Depot} ne $row->{Depot} && (! ($row->{Depot} eq 'Hofteam' && $usr->{Depot} eq 'Selbstabholer')) ) {
-								push(@$wrongDepot, {ID => $row->{ID}, name => $row->{first_name} . " " . $row->{last_name}, depot => $row->{Depot}, bestellDepot => $usr->{Depot}, bestellName => $usr->{Name}, bestellMitName => $usr->{MitName}});
+								push(@$wrongDepot, {ID => $row->{ID}, name => $row->{display_name}, depot => $row->{Depot}, bestellDepot => $usr->{Depot}, bestellName => $usr->{Name}, bestellMitName => $usr->{MitName}});
 							}
-							if (uc($usr->{Name}) ne uc($row->{first_name} . " " . $row->{last_name}) && uc($usr->{MitName}) ne uc($row->{first_name} . " " . $row->{last_name})) {
-								push(@$wrongName, {ID => $row->{ID}, name => $row->{first_name} . " " . $row->{last_name}, mitName=>$row->{MitMitgliedvon}, depot => $row->{Depot}, bestellName => $usr->{Name}, bestellMitName => $usr->{MitName}});
+							if (uc($usr->{Name}) ne uc($row->{display_name}) && uc($usr->{MitName}) ne uc($row->{display_name})) {
+								push(@$wrongName, {ID => $row->{ID}, name => $row->{display_name}, mitName=>$row->{MitMitgliedvon}, depot => $row->{Depot}, bestellName => $usr->{Name}, bestellMitName => $usr->{MitName}});
 							}
 						}
 						if ($rowCount > 0) {
 							if ($rowCount > 1) {
-								push(@$duplicated, {ID => $row->{ID}, name => $row->{first_name} . " " . $row->{last_name}, depot => $row->{Depot}});
+								push(@$duplicated, {ID => $row->{ID}, name => $row->{display_name}, depot => $row->{Depot}});
 							}
 						} elsif ($row->{role} eq "member") {
-							push(@$missingMember, {ID => $row->{ID}, name => $row->{first_name} . " " . $row->{last_name}, mitName=>$row->{MitMitgliedvon}, depot => $row->{Depot}});
+							push(@$missingMember, {ID => $row->{ID}, name => $row->{display_name}, mitName=>$row->{MitMitgliedvon}, depot => $row->{Depot}});
 						} else {
-							push(@$missingOther, {ID => $row->{ID}, name => $row->{first_name} . " " . $row->{last_name}, mitName=>$row->{MitMitgliedvon}, depot => $row->{Depot}});
+							push(@$missingOther, {ID => $row->{ID}, name => $row->{display_name}, mitName=>$row->{MitMitgliedvon}, depot => $row->{Depot}});
 						}
 					}
 
@@ -153,7 +168,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				}
 
 			} elsif ($q->path_info =~ /^\/$/ ) {
-				my $sth = $dbh2->prepare("CALL PivotUsers();");
+				my $sth = $dbh2->prepare("SELECT * FROM PivotUsersView");
 				$sth->execute();
 				#output query results
 				if ($sth) {

@@ -98,15 +98,15 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 
 			my $sth;
 
-			if ( $q->path_info =~ /^\/([a-zA-Z]+)\/?(MY|OWN)?$/ ) {
+			if ( $q->path_info =~ /^\/([a-zA-Z]+)\/?(MY|OWN|ACTIVE)?$/ ) {
 				# regex matching with perl: will put capture group in implicit variables $1, $2, ...
 				my $table = $1;
-				my $myOwn = $2;
+				my $filter = $2;
 
-				if ( ($myOwn || $user->{Role_ID} <= R_USER) && $table =~ /^Benutzer(View)?$/ ) {
+				if ( ($filter eq "MY" || $filter eq "OWN" || $user->{Role_ID} <= R_USER) && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ?");
 					$sth->execute($user->{ID});
-				} elsif ( ($myOwn || $user->{Role_ID} <= R_USER) && $table =~ /.*Benutzer.*/ ) {
+				} elsif ( ($filter eq "MY" || $filter eq "OWN" || $user->{Role_ID} <= R_USER) && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `Benutzer_ID` = ?");
 					$sth->execute($user->{ID});
 				} elsif ( ($user->{Role_ID} == R_DEPOT) && $table =~ /^Benutzer(View)?$/ ) {
@@ -115,6 +115,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( ($user->{Role_ID} == R_DEPOT) && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
 					$sth->execute($user->{Depot_ID});
+				} elsif ($filter eq "ACTIVE" ){
+					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE Depot_ID > 0");
+					$sth->execute();
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table`");
 					$sth->execute();
