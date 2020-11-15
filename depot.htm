@@ -138,11 +138,11 @@
 
 	<div id="loginform" style="display: none">
 		LOGIN:
-		<form method='post' action='/cgi-bin/query.pl/login'>
+		<form method='post' action='/cgi-bin/wp.pl/login'>
 			Name: <input type='text' id='inpName' name='name' placeholder='name' />
 			Password: <input type='password' id='inpPass' name='password' />
 			<input type='submit' value='Login'
-				onclick='event.preventDefault();postAjax("/cgi-bin/logon.pl", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.first + " " + result.last);show("userMissing");document.getElementById("missingUserEmail").href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.first + "+" + result.last;} else {show("loginError")};});return false;' />
+				onclick='event.preventDefault();postAjax("/cgi-bin/wp.pl/login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.user);show("userMissing");document.getElementById("missingUserEmail").href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.user;} else {show("loginError")};});return false;' />
 			<div id="loginError" style="display: none; color: red; font-weight: bold; padding-top: 20px;">
 				Falscher Benutzername oder Falsches Passwort! Bitte mit den
 				Login-Daten des
@@ -153,7 +153,7 @@
 			</div>
 			<div id="userMissing"
 				style="display: none; color: red; font-weight: bold; padding-top: 20px;">
-				Login erfolgreich, aber Benutzer mit Name <span id="missingUser" style="color: orange;"></span>
+				Login erfolgreich, aber Benutzername <span id="missingUser" style="color: orange;"></span>
 				wurde im Bestellsystem nicht gefunden.
 				<br />
 				Bitte Mail an Depotverwalter und
