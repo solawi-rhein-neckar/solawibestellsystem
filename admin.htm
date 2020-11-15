@@ -177,9 +177,21 @@ div.hat_tausch {
                         document.getElementById('logoutbtn').innerText = 'Logout ' + SBS.user.Name;
                         setContent('selectedWeek', SBS.selectedWeek);
                         setContent('selectedWeek0', SBS.selectedWeek);
-                        if (SBS.user.Role_ID != 2) {
+                        if (SBS.user.Role_ID == 2) {
                             setContent('warning',
                                     'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
+                        }
+                        if (SBS.user.Role_ID == 3) {
+                            setContent('warning',
+                                    'Du bist als DEPOT-VERWALTER ANGEMELDET und siehst NUR DATEN DEINES DEPOTS / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
+                        }
+                        if (SBS.user.Role_ID == 1) {
+                            setContent('warning',
+                                    'Du bist als PRODUKT-VERWALTER ANGEMELDET und darfst nur Produkte bearbeiten, keine Bestellungen/Benutzer!. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
+                        }
+                        if (SBS.user.Role_ID == 4) {
+                            setContent('warning',
+                                    'Du bist als MITGLIEDER-VERWALTUNG ANGEMELDET und darfst alle Mitglieder bearbeiten, aber KEINE PRODUKTE ändern.');
                         }
                         SBTmeta.setSortBy('Name');
                         getAjax('Depot', SBTmeta.showTable);
