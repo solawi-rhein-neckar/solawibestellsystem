@@ -303,6 +303,16 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			if ($sth) {
 				my $results = [];
 				while ( my $row = $sth->fetchrow_hashref ) {
+
+					if ($user->{Role_ID} <= R_DEPOT) {
+						my @keys = keys %$row;
+						foreach my $key (@keys) {
+							if ($key =~ /^_.*$/) {
+								delete($row->{$key});
+							}
+						}
+					}
+
 					if ($row->{Passwort}) {
 						$row->{Passwort} = '***';
 					}
@@ -587,6 +597,4 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 
 # close database handle
 $dbh->disconnect
-
-
 

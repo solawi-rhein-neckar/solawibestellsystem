@@ -210,7 +210,7 @@ inp.style.width='40px';
                 span.style.cursor='pointer';
             } else {
                 span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
-                if (tableName == 'BenutzerBestellView') {
+                if (tableName == 'BenutzerBestellungView') {
                     span.innerText = span.innerText.replace('Punkte', 'Punkte-Abzug*');
                 }
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
