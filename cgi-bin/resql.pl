@@ -134,6 +134,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id,$user->{ID},undef);
 				} elsif ( $table =~ /^BenutzerPunkteUpdate$/ ||  $table =~ /^BenutzerPunkte$/) {
+					$dbh->{AutoCommit} = 1;
 					$sth = $dbh->prepare("CALL $table(?)");
 					$sth->execute($user->{Role_ID} <= R_USER ? $user->{ID} : $id == 'null' || $id == 'NULL' ? undef : $id);
 				} elsif ( $user->{Role_ID} <= R_USER && $table =~ /.*Benutzer.*/ ) {

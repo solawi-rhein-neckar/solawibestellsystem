@@ -427,12 +427,12 @@ $dbh->prepare("DROP PROCEDURE IF EXISTS `BenutzerPunkte`;")->execute();
 $dbh->prepare("CREATE PROCEDURE `BenutzerPunkte` (
    IN `pBenutzer` int
 )
-READS SQL DATA
+MODIFIES SQL DATA
 SQL SECURITY INVOKER
 BEGIN
 
   DECLARE pWoche decimal(6,2);
-  DECLARE day DATETIME DEFAULT MAKEDATE(year(curdate()),1);
+  DECLARE day DATETIME DEFAULT DATE_ADD(MAKEDATE(year(curdate()) - IF(month(curdate()) < 11, -1, 0) , 8), INTERVAL 10 MONTH);
 
   DROP TEMPORARY TABLE IF EXISTS BenutzerPunkteTemp;
   DROP TEMPORARY TABLE IF EXISTS BenutzerPunkteTemp2;
