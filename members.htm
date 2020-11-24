@@ -10,12 +10,22 @@
 .col_wpfirst_name,.col_wplast_name,.col_wpsession_tokens,.col_wpuser_login,.col_wpuser_nicename,.col_wpuser_pass,
 .col_wpuser_activation_key,.col_wpuser_registered,.col_wpuser_status,.col_wpuser_url,.col_wpwp_user_level { display: none;}
 
+select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort,
+	input.editor.inp_Cookie, input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche,
+	table.Benutzer td.col_BenutzerAbo td.col_Woche, .BenutzerBestellView .col_Benutzer_ID,
+	.BenutzerBestellView .col_Depot_ID, .BenutzerBestellView .col_Produkt_ID,
+	.DepotBestellView .col_Depot_ID, .DepotBestellView .col_Produkt_ID,
+	.GesamtBestellView .col_Produkt_ID, .BenutzerView .col_Depot_ID,
+	.BenutzerView .col_Role_ID, .BenutzerBestellungView .col_Benutzer_ID,
+	.BenutzerBestellungView .col_Depot_ID, .BenutzerBestellungView .col_Produkt_ID {
+	display: inline-block !important;
+}
 </style>
 	<script src="js/util.js"></script>
 	<script src="js/weekSelect.js"></script>
 	<script src="js/solawiBestellSystem.js"></script>
 	<script src="js/solawiValidator.js"></script>
-	<script src="js/solawiEditor.js"></script>	Beruf
+	<script src="js/solawiEditor.js"></script>
 	<script src="js/solawiTableEditor.js"></script>
 	<script src="js/solawiTableVerwalter.js"></script>
 	<script src="js/solawiTable.js"></script>
@@ -30,15 +40,8 @@
 	<script>
         var SBTedit = SolawiTable(SBS, 'table', 'tablePath', true, false);
 
-
-        SBTedit.setSortBy('Name');
-        //SBTedit.columns = [ 'Name', 'MitName', 'PunkteStand', 'PunkteWoche', 'Anteile', 'Fleisch Anteile', 'AnteileStartWoche', 'PunkteStart', 'Depot_ID', 'Role_ID',
-        //        'Cookie', 'Passwort', 'AltName', 'ErstellZeitpunkt', 'AenderZeitpunkt', 'AenderBenutzer_ID' ];
-
-		//initUser(function(){getAjax('Benutzer/ACTIVE', SBTedit.showTable);});
-
-		initUser(function(){getAjax('/cgi-bin/wp.pl/', function(response, path){
-	        var byWpId = {};
+        function loadTableBenutzer(){ getAjax('/cgi-bin/wp.pl/', function (response, path) {
+            var byWpId = {};
 	        for (var j = 0; j < response.length; j++) {
 				byWpId[response[j].ID] = response[j];
 	        }
@@ -49,29 +52,29 @@
 		            if (usr.wpID) {
 		                var wpUsr = byWpId[usr.wpID];
 		                if (wpUsr) {
- 		            		Object.keys(wpUsr).forEach(function(key) {
- 		            		   usr['wp'+key]=wpUsr[key];
- 		            		});
- 		            		if (wpUsr.wpSynced) {
- 		            		   usr.NOTES += ' !DUP_SYNC! ';
- 		            		}
- 		            		wpUsr.wpSynced = 1;
+			            		Object.keys(wpUsr).forEach(function(key) {
+			            		   usr['wp'+key]=wpUsr[key];
+			            		});
+			            		if (wpUsr.wpSynced) {
+			            		   usr.NOTES += ' !DUP_SYNC! ';
+			            		}
+			            		wpUsr.wpSynced = 1;
 		                }
 		            }
 		            if (usr.wpMitID) {
 		                var wpMit = byWpId[usr.wpMitID]
 		                if (wpMit) {
- 		            		usr.wpMitName = wpMit.display_name;
- 		            		if (wpMit.wpSynced) {
-  		            		   usr.NOTES += ' !DUP_SYNC! ';
-  		            		}
- 		            		wpMit.wpSynced = 1;
- 		            		if (usr.Depot_ID && wpMit.Depot) {
- 			            		var depot = SBS.tableCache['Depot'][usr.Depot_ID];
- 			            		if (depot && wpMit.Depot != depot.wpName && !(wpMit.Depot == 'Hofteam' && depot.wpName == 'Selbstabholer')) {
- 									usr.NOTES += ' !MIT_DEPOT! ';
- 			            		}
- 		            		}
+			            		usr.wpMitName = wpMit.display_name;
+			            		if (wpMit.wpSynced) {
+			            		   usr.NOTES += ' !DUP_SYNC! ';
+			            		}
+			            		wpMit.wpSynced = 1;
+			            		if (usr.Depot_ID && wpMit.Depot) {
+				            		var depot = SBS.tableCache['Depot'][usr.Depot_ID];
+				            		if (depot && wpMit.Depot != depot.wpName && !(wpMit.Depot == 'Hofteam' && depot.wpName == 'Selbstabholer')) {
+										usr.NOTES += ' !MIT_DEPOT! ';
+				            		}
+			            		}
 		                }
 		            	if (!usr.wpMitName) {
 							usr.NOTES += ' !MISS_WP_MIT! ';
@@ -105,14 +108,21 @@
 					if (!wpUsr.wpSynced) {
 					    var usr = {ID: -1, Name:'onlyWP'};
 	            		Object.keys(wpUsr).forEach(function(key) {
-            		    		usr['wp'+key]=wpUsr[key];
- 		            		});
+	        		    		usr['wp'+key]=wpUsr[key];
+			            		});
 	            		response2.push(usr);
 					}
 		        }
 		        SBTedit.showTable(response2, path2);
 		    });
-		}) });
+        });}
+
+		SBTedit.reload=loadTableBenutzer;
+        SBTedit.setSortBy('Name');
+        SBTedit.columns = ['Name','MitName','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpuser_email','wpBeruf','wpBeruf_10','wpBeruf_10_11','wpMitarbeit-bei','wpStrasse','wpdescription','wprole','wpdisplay_name','wpMitMitgliedvon','wpMitName','AltName','wpDepot'];
+		SBTedit.editAtOnce = true;
+
+		initUser(loadTableBenutzer);
 
         function changeWeek(count) {
         }

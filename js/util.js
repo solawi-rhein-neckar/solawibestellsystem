@@ -14,7 +14,12 @@ function postAjax(path, data, success, method) {
 	        console.log('unblock ' + window.activeAjaxRequestCount);
     	}
         if (xhr.readyState>3 && xhr.status==200) {
-            var result = JSON.parse(xhr.responseText);
+            var result;
+            try {
+                result = JSON.parse(xhr.responseText);
+            } catch(e) {
+                result = {reason: e};
+            }
             if (result.reason || result.result) {
                 var msgs = document.getElementById('messages');
                 var msg = document.createElement("DIV");

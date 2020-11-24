@@ -11,7 +11,11 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             showEditorForCell: showEditorForCell,
             showForAdding: showForAdding,
             showForBatchOrder: showForBatchOrder,
-            setResponse: function(pPath, pResponse) {if (tableValidator) { tableValidator.setResponse(pPath, pResponse); } }
+            setResponse: function(pPath, pResponse) {
+                if (tableValidator) { tableValidator.setResponse(pPath, pResponse); }
+                responseCache = pResponse;
+            },
+            setKeys: setKeys
     };
 
     /* private vars */
@@ -20,6 +24,8 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
     var onEntitySaved = pOnEntitySaved;
     var disableUnavailableProducts = pDisableUnavailableProducts;
     var tableValidator = disableUnavailableProducts ? SolawiValidator(sbs) : null;
+    var keys;
+    var responseCache;
 
     const numberColumnNames = {
             'Menge':1
@@ -35,6 +41,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             ,'Menge':0.01
         }
 
+    function setKeys(pKeys) {keys = pKeys;}
 
     function showEditorForCell(pTableName, event) {
         tableName = pTableName;
@@ -59,17 +66,17 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         finishEditor(edit);
     }
 
-    function showForAdding(pTableName, keys, defaults) {
-        finishEditor(initForAdding(pTableName, keys, defaults));
+    function showForAdding(pTableName, defaults) {
+        finishEditor(initForAdding(pTableName, defaults, {'NOTES':1,'ID':1, 'ErstellZeitpunkt':1, 'AenderBenutzer_ID':1, 'AenderZeitpunkt':1}));
     }
 
     function showForBatchOrder(defaults) {
-        finishBatchOrder(initForAdding('BenutzerZusatzBestellung', ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar'], defaults));
+        finishBatchOrder(initForAdding('BenutzerZusatzBestellung', defaults, {'Woche':1,'ID':1, 'ErstellZeitpunkt':1, 'AenderBenutzer_ID':1, 'AenderZeitpunkt':1}));
     }
 
-    function initForAdding(pTableName, keys, defaults) {
+    function initForAdding(pTableName, defaults, hiddenFields) {
         tableName = pTableName;
-        var edit = resetEditor("Neu hinzufügen: " + tableName);
+        var edit = resetEditor((defaults && defaults.dataId && responseCache ? "Bearbeiten: " : "Neu hinzufügen: ") + tableName);
 
         if (defaults['Benutzer_ID'] && !keys.includes('Benutzer_ID')) {
             var inp = createInput('Benutzer_ID');
@@ -78,22 +85,44 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         }
 
         for (var j = 0; j < keys.length; j++) {
-            if (keys[j] != 'ID' && keys[j] != 'ErstellZeitpunkt' && keys[j] != 'AenderBenutzer_ID' && keys[j] != 'AenderZeitpunkt' && (/*generated column Produkt.Name*/ tableName != 'Produkt' || keys[j] != 'Name')) {
+            if ((! hiddenFields[keys[j]]) && !(tableName == 'Benutzer' && keys[j].match(/^wp.*$/) && (!keys[j].match(/^wp(Mit)?ID$/)) && !(defaults && defaults.dataId)) ) {
 
                 var inp = createInput(keys[j]);
 
-                if (keys[j] == 'Benutzer_ID') {
+                if (defaults && defaults.dataId && responseCache) {
+                    inp.dataId = defaults.dataId;
+                    for (var k = 0; k < responseCache.length; k++) {
+                        if (responseCache[k] && responseCache[k].ID == defaults.dataId) {
+                            inp.value = responseCache[k][keys[j]] || responseCache[k][keys[j]] === 0 ? responseCache[k][keys[j]] : '';
+                            inp.dataValue = inp.value;
+                        }
+                    }
+                } else if (keys[j] == 'Benutzer_ID') {
                     inp.value = defaults['Benutzer_ID'] ? defaults['Benutzer_ID'] : sbs.user.ID;
                 } else if (keys[j] == 'Depot_ID') {
                     inp.value = defaults['Depot_ID'] ? defaults['Depot_ID'] : sbs.user.Depot_ID;
-                } else if ((keys[j] == 'Woche' || keys[j] == 'PunkteWoche') && sbs.selectedWeek) {
+                } else if ((keys[j] == 'Woche' || keys[j] == 'PunkteWoche'|| keys[j] == 'AnteileStartWoche') && sbs.selectedWeek) {
                     inp.value = sbs.selectedWeek;
+                } else if (keys[j] == 'Anteile' || keys[j] == 'FleischAnteile') {
+                    inp.value = 1;
                 }
-                edit.appendChild(inp);
+                var div = document.createElement('DIV');
+                var label = document.createElement('SPAN');
+                div.appendChild(label);
+                div.appendChild(inp);
+                label.innerText=keys[j] + ": ";
+                div.style.padding = '2px';
+                div.style.textAlign = 'left';
+                label.style.display = 'inline-block';
+                label.style.width = '150px';
+                label.style.overflow = 'hidden';
+                div.className = inp.className;
+                edit.appendChild(div);
+
 
                 if (keys[j] == 'Kommentar' && tableName == 'BenutzerZusatzBestellung') {
-                    inp.style.display = 'none';
-                    inp.id='inp_kommentar_hidden';
+                    div.style.display = 'none';
+                    div.id='inp_kommentar_hidden';
                 }
                 if (keys[j] == 'Anzahl' && tableName == 'BenutzerZusatzBestellung') {
                     inp.id='inp_anzahl_zusatz';
@@ -110,7 +139,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         var relation = key.match(/^(?:Besteller|Verwalter)?(.*)_ID$/);
         if (relation && sbs.tableCache[relation[1]]) {
             inp = createInputSelect(sbs.tableCache[relation[1]]);
-        } else if (key.match(/^(Start|End|Punkte)?Woche$/)) {
+        } else if (key.match(/^(AnteileStart|Start|End|Punkte)?Woche$/)) {
             inp = createInputDateSelect();
         } else {
             inp = document.createElement("INPUT");
@@ -171,7 +200,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             inp.onchange=function(event){
                 if (document.getElementById('inp_kommentar_hidden') && document.getElementById('inp_anzahl_zusatz')) {
                     if (event.target.value == '0') {
-                        document.getElementById('inp_kommentar_hidden').style.display='inline-block';
+                        document.getElementById('inp_kommentar_hidden').style.display='block';
                         document.getElementById('inp_anzahl_zusatz').style.display='none';
                         document.getElementById('inp_anzahl_zusatz').value = '1';
                     } else {
@@ -218,24 +247,56 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
     }
 
     function finishEditor(edit) {
-        var linebreak = document.createElement("br")
-        var btn = document.createElement("BUTTON");
-        btn.innerText="Speichern";
-        btn.style['margin-left'] = '5px';
-        btn.style['margin-right'] = '10px';
-        btn.addEventListener('click', saveEditorInputs);
+        var btnEle = document.getElementById('editorSaveBtn');
+        if (!btnEle) {
+            var btn = document.createElement("BUTTON");
+            btn.innerText="Speichern";
+            btn.style['margin-left'] = '5px';
+            btn.style['margin-right'] = '10px';
+            btn.id = 'editorSaveBtn';
+            btn.addEventListener('click', saveEditorInputs);
 
-        var btn2 = document.createElement("BUTTON");
-        btn2.innerText="Abbrechen";
-        btn2.addEventListener('click', function(){hide('blockui_edit');});
-        edit.appendChild(linebreak);
-        edit.appendChild(btn);
-        edit.appendChild(btn2);
+            var btn2 = document.createElement("BUTTON");
+            btn2.innerText="Abbrechen";
+            btn2.addEventListener('click', function(){hide('blockui_edit');});
+            edit.parentNode.appendChild(btn);
+            edit.parentNode.appendChild(btn2);
+        } else {
+            btnEle.disabled = '';
+        }
     }
 
     function saveEditorInputs(event2) {
         validateAndProceed(event2, function(id, sendData) {
-            postAjax(tableName + (id ? '/'+id : ''), sendData, onEntitySaved);
+            if (tableName == 'Benutzer' && Object.keys(sendData)) {
+                var keys = Object.keys(sendData);
+                var sendDataDB = {};
+                var hasDb = false;
+                var sendDataWP = {};
+                var hasWp = false;
+                for (var i = 0; i < keys.length; i++) {
+                    if (keys && keys[i] && keys[i].match && keys[i].match(/^wp.*$/) && (!keys[j].match(/^wp(Mit)?ID$/))) {
+                        sendDataWP[keys[i].replace(/^wp/, '')] = sendData[keys[i]];
+                        hasWp = true;
+                    } else {
+                        sendDataDB[keys[i]] = sendData[keys[i]];
+                        hasDb = true;
+                    }
+                }
+                if (hasWp) {
+                    if (hasDb) {
+                        postAjax(tableName + (id ? '/'+id : ''), sendDataDB, function() {
+                            postAjax('/cgi-bin/wp.pl/user_meta/' + id, sendDataWP, onEntitySaved);
+                        });
+                    } else {
+                        postAjax('/cgi-bin/wp.pl/user_meta/' + id, sendDataWP, onEntitySaved);
+                    }
+                } else if (hasDb) {
+                    postAjax(tableName + (id ? '/'+id : ''), sendDataDB, onEntitySaved);
+                }
+            } else {
+                postAjax(tableName + (id ? '/'+id : ''), sendData, onEntitySaved);
+            }
             hide('blockui_edit');
         });
     }
@@ -249,15 +310,30 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             var sendData = {};
             var editor = document.getElementById('editor');
             for (var i = 0; i < editor.children.length; i++) {
-                var inpEle = editor.children[i];
+                var ele = editor.children[i];
+                var inpEle = ele;
+                if (ele.tagName == 'DIV') {
+                    for (var j = 0; j <  ele.children.length; j++) {
+                        if (ele.children[j].tagName == 'INPUT' || ele.children[j].tagName == 'SELECT') {
+                            inpEle = ele.children[j];
+                        }
+                    }
+                }
                 if (inpEle.tagName == 'INPUT' || inpEle.tagName == 'SELECT') {
-                    data[inpEle.dataKey] = inpEle.value;
-                    sendData[inpEle.dataKey] = inpEle.value;
-                    id = id || inpEle.dataId;
+                    if ( ((! inpEle.dataValue) && (!(inpEle.dataValue === '')) && !(inpEle.dataValue === 0)) || inpEle.value != inpEle.dataValue) {
+                        data[inpEle.dataKey] = inpEle.value;
+                        sendData[inpEle.dataKey] = inpEle.value;
+                        id = id || inpEle.dataId;
+                    } else {
+                        console.log('not saving unchanged field ' + inpEle.dataKey);
+                    }
                 }
             }
 
-            if ( tableValidator &&   ! tableValidator.validateEditorInput(data, id) ) {
+            if (Object.keys(data).length == 0 || (tableValidator &&   ! tableValidator.validateEditorInput(data, id) )) {
+                if (Object.keys(data).length == 0) {
+                    setContent('editError', 'Nichts geändert! - Abbrechen clicken');
+                }
                 event2.target.disabled='';
             } else {
                 onSuccessCallback(id, sendData);

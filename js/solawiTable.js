@@ -31,7 +31,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         reset: function(){clearContent(elemIdTable);clearContent(elemIdLabel);tableName='';tablePath='';},
         setSortBy: function(sortBy){sortByColumn2 = sortByColumn1; sortByColumn1 = sortBy;},
         columns: [],
-        editorDefault: {}
+        editorDefault: {},
+        editAtOnce: false
     };
 
     /* private vars */
@@ -77,12 +78,12 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         for (var i = 0; i < response.length; i++) {
             if(!keys) {
                 keys = pub.columns.length ? pub.columns : Object.keys(response[i]).sort(columnSortFunc);
-                var tr = addColumnHeaderRow(table, keys);
                 if (pub.columns.length) {
                     for (var j = 0; j < keys.length; j++) {
                         keys[j] = keys[j].replace(' ', '');
                     }
                 }
+                var tr = addColumnHeaderRow(table, pub.columns.length ? pub.columns : keys, keys);
                 tableExtensions.forEach(function(ext){ext.addColumnHeaders(tr, keys);});
                 /*tr.childNodes.forEach(function(child){
                     var div = document.createElement("DIV");
@@ -189,27 +190,27 @@ inp.style.width='40px';
         return div;
     }
 
-    function addColumnHeaderRow(table, keys) {
+    function addColumnHeaderRow(table, columns, keys) {
         var tr = document.createElement("TR");
         table.appendChild(tr);
-        for (var j = 0; j < keys.length; j++) {
+        for (var j = 0; j < columns.length; j++) {
             var td = document.createElement("TD");
             var span = document.createElement("SPAN");
             tr.appendChild(td);
             td.appendChild(span);
             td.className='col_'+keys[j];
             span.className = "TableHead";
-                        if (keys[j].match(/^[A-Za-z1-9öäüÖÄÜ]+_ID_[0-9][0-9]?$/)) {
-                span.innerText = keys[j].replace(/_ID_.*/, '');
-                span.dataKey = keys[j].replace(/.*_ID_/, '');
+            if (columns[j].match(/^[A-Za-z1-9öäüÖÄÜ]+_ID_[0-9][0-9]?$/)) {
+                span.innerText = columns[j].replace(/_ID_.*/, '');
+                span.dataKey = columns[j].replace(/.*_ID_/, '');
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
-            } else if (keys[j].match(/^[0-9][0-9][.].*/) ) {
-                span.innerText = keys[j].substr(3).replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
+            } else if (columns[j].match(/^[0-9][0-9][.].*/) ) {
+                span.innerText = columns[j].substr(3).replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
                 span.addEventListener('click', createRedisplaySortedFunc(keys[j]) );
                 span.style.cursor='pointer';
             } else {
-                span.innerText = keys[j].replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
+                span.innerText = columns[j].replace('AnzahlModul', 'Jede_Woche-Abo').replace('AnzahlZusatz', 'Tausch');
                 if (tableName == 'BenutzerBestellungView') {
                     span.innerText = span.innerText.replace('Punkte', 'Punkte-Abzug*');
                 }

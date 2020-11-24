@@ -191,28 +191,34 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			my $sth;
 
 			if ($user->{Role_ID} >= 4 &&  $q->path_info =~ /^\/user_meta\/([a-zA-Z0-9]+)$/ ) {  # ID supplied -> UPDATE
-				my $user_id = $1;
+				my $id = $1;
 				my $key; my $value; my $sql;
-				while (($key, $value) = each (%$body)) {
-					if ( $key =~ /^[a-zA-Z0-9_]+$/ ) {
-
-							# TODO:
-							# SELECT * FROM user_meta WHERE user_id = ? AND meta_key = ?
-							# if found
-							# my $sql = UPDATE user_meta SET meta_value = ? WHERE  user_id = ? AND meta_key = ?
-							# if not found
-							# my $sql = INSERT into user_meta (meta_value, user_id, meta_key) VALUES (?, ?, ?)
-
+				$sth = $dbh->prepare("SELECT wpID FROM Benutzer WHERE ID = ?");
+				$sth->execute($id);
+				my $row = $sth && $sth->fetchrow_hashref;
+				my $wpUser_id = $row && $row->{wpID};
+				if ($wpUser_id) {
+					while (($key, $value) = each (%$body)) {
+						if ( $key =~ /^[a-zA-Z0-9_-]+$/ ) {
 							eval {
+								$sql = "UPDATE wp_usermeta SET meta_value = ? WHERE user_id = ? and meta_key = ?";
 								$sth = $dbh2->prepare($sql);
-								$sth->execute($value, $user_id, $key);
+								my $rows = $sth->execute($value, $wpUser_id, $key);
+								if ($rows < 1) {
+									$sql = "INSERT INTO wp_usermeta (meta_value, user_id, meta_key) VALUES (?, ?, ?)";
+									$dbh2->prepare($sql);
+									$sth->execute($value, $wpUser_id, $key);
+								}
 								$dbh2->commit();
-								print encode_json({result => 1, type => "update", query => $sql, params => [$key,$value]});
+								print encode_json({result => 1, type => "update", rows=>$rows, query => $sql, params => [$value,$wpUser_id,$key], user_id => $id});
 							};
 							if ($@) {
-								print encode_json({result => 0, type => "update", reason => $@, query => $sql, params => [$key,$value]});
+								print encode_json({result => 0, type => "update", reason => $@, query => $sql, params => [$value,$wpUser_id,$key], user_id => $id});
 							}
+						}
 					}
+				} else {
+					print encode_json({result => 0, reason => "no wpID found for user", user_id => $id});
 				}
 
 			} else {

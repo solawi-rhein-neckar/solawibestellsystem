@@ -26,7 +26,15 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
 /**** public ****/
 
     function addColumnHeaders(tr, keys) {
-    	addCreateButton(tr.firstChild, keys);
+    	var tableName = solawiTable.getTableName();
+    	solawiEditor.setKeys(keys ? keys
+							: tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar', 'Woche']
+						 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID']
+							: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID']
+						 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche']
+							: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
+						 	: ['Name']);
+    	addCreateButton(tr.firstChild);
     	if (keys) {
     		addDeleteButtonColumnHeader(tr);
     		addWeekSelectColumnHeader(tr);
@@ -99,34 +107,28 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
         }
     }
 
-    function addCreateButton(td, keys) {
+    function addCreateButton(td) {
 		td.innerText = '';
         var btn = document.createElement('BUTTON');
         td.appendChild(btn);
         var tableName = solawiTable.getTableName();
-        btn.addEventListener('click', createFuncAddNew(	keys ? keys
-        												: tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar', 'Woche']
-        											 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID']
-        												: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID']
-        											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche']
-        												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
-        											 	: ['Name']));
+        btn.addEventListener('click', function(event) {
+        	event.stopPropagation();
+        	solawiEditor.showForAdding(solawiTable.getTableName(), solawiTable.editorDefault)
+        });
         btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'Tauschen' : '+';
         btn.className='btn_plus'
         if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && (sbs.selectedWeek < sbs.week ||  sbs.selectedWeek == sbs.AbgeschlosseneWoche) ) {
     		btn.disabled='disabled';
         }
     }
-    
-    function showEditor(event) {
-    	solawiEditor.showEditorForCell(solawiTable.getTableName(), event);
-    }
 
-    function createFuncAddNew(keys) {
-        return function(event) {
-        	event.stopPropagation();
-        	solawiEditor.showForAdding(solawiTable.getTableName(), keys, solawiTable.editorDefault)
-        }
+    function showEditor(event) {
+    	if (solawiTable.editAtOnce) {
+    	   	solawiEditor.showForAdding(solawiTable.getTableName(), event.target);
+    	} else {
+ 		   	solawiEditor.showEditorForCell(solawiTable.getTableName(), event);
+    	}
     }
 
     return pub;

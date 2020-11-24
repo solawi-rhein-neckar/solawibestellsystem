@@ -42,6 +42,7 @@
     SBTedit.setSortBy('Produkt_ID');
     SBTedit.setSortBy('Woche');
     var solawiEditor = SolawiEditor(SBS, SBTedit.reload, true);
+    solawiEditor.setKeys(['Benutzer_ID','Produkt_ID','Anzahl','Woche','Kommentar']);
 
     //check login status
     getAjax('BenutzerView/MY', function(userResponse) {

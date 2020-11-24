@@ -22,9 +22,15 @@ table, td {
 	padding: 3px;
 }
 
-div#editor.editBenutzer {
-    max-height: 750px;
-    overflow: scroll;
+div#editor {
+	min-width: 500px;
+    max-height: 650px;
+    overflow: auto;
+    overflow-x:hidden;
+    overflow-y:scroll;
+	max-width: 500px;
+	width: 500px;
+	display: inline-block;
 }
 
 .PivotDepotBestellung>tr:first-child>td:first-child>span, .PivotSolawiBestellung>tr:first-child>td:first-child>span {
