@@ -31,8 +31,13 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
     var solawiTableEdit;
     var solawiTableValid;
     var solawiTableView;
+    var lieferTitle;
+    var solawiTableLiefer;
     var weekSelect;
     var solawiSeriesEditor;
+    var seriesBtn;
+    var holiday;
+    var stornoCtnr;
 
     const numberColumnNames = {
             'Menge':1
@@ -247,27 +252,26 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
     }
 
     function finishEditor(edit) {
-        var btnEle = document.getElementById('editorSaveBtn'+editorSuffix);
-        if (!btnEle) {
-            btnEle = document.createElement("BUTTON");
-            btnEle.innerText="Speichern";
-            btnEle.style['margin-left'] = '5px';
-            btnEle.style['margin-right'] = '10px';
-            btnEle.id = 'editorSaveBtn'+editorSuffix;
-            btnEle.addEventListener('click', saveEditorInputs);
-
-            var btn2 = document.createElement("BUTTON");
-            btn2.innerText="Abbrechen";
-            btn2.addEventListener('click', function(){if (collectChangedInputData().size == 0 || confirm('Änderung verwerfen?')){hide('blockui_edit'+editorSuffix);}});
-            var div = document.createElement("DIV");
-            div.style.textAlign = 'left';
-            div.appendChild(btnEle);
-            div.appendChild(btn2);
-            edit.parentNode.appendChild(div);
+        var btnCtnr = document.getElementById('editorSaveBtn'+editorSuffix);
+        if (btnCtnr) {
+            while (btnCtnr.firstChild) btnCtnr.removeChild(btnCtnr.firstChild);
         } else {
-            btnEle.disabled = '';
+            btnCtnr = document.createElement("DIV");
+            btnCtnr.id = 'editorSaveBtn'+editorSuffix;
+            btnCtnr.style.textAlign = 'left';
+            edit.parentNode.appendChild(btnCtnr);
         }
+        btnEle = document.createElement("BUTTON");
+        btnEle.innerText="Speichern";
+        btnEle.style['margin-left'] = '5px';
+        btnEle.style['margin-right'] = '10px';
+        btnEle.addEventListener('click', saveEditorInputs);
 
+        var btn2 = document.createElement("BUTTON");
+        btn2.innerText="Abbrechen";
+        btn2.addEventListener('click', function(){if (collectChangedInputData().size == 0 || confirm('Änderung verwerfen?')){hide('blockui_edit'+editorSuffix);}});
+        btnCtnr.appendChild(btnEle);
+        btnCtnr.appendChild(btn2);
 
         var info = document.getElementById('benutzerEditor'+editorSuffix);
         if (tableName == 'Benutzer') {
@@ -278,98 +282,115 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                 info.style.width = '61%';
                 info.style.height = '650px';
                 info.style.overflow = 'auto';
-                edit.parentNode.insertBefore(info, btnEle.parentNode);
+                info.style.textAlign = 'left';
+                edit.parentNode.insertBefore(info, btnCtnr);
 
                 var tabPane = document.createElement("DIV");
                 info.appendChild(tabPane);
                 var btn = document.createElement("BUTTON");
-                btn.innerText="Abo und Tausch";
+                btn.innerText="Abos | Tausch | Lieferung";
                 tabPane.appendChild(btn);
                 var btn1 = document.createElement("BUTTON");
-                btn1.innerText="Alle Tausche / Serie";
+                btn1.innerText="Alle Tausche";
                 tabPane.appendChild(btn1);
                 var btn2 = document.createElement("BUTTON");
                 btn2.innerText="Abo Korrektur";
                 tabPane.appendChild(btn2);
                 var btn3 = document.createElement("BUTTON");
-                btn3.innerText="Punkte";
+                btn3.innerText="Urlaub u. Punkte";
                 tabPane.appendChild(btn3);
 
-                var seriesEditorPane = document.createElement("DIV");
-                seriesEditorPane.id='blockui_edit_series';
-                var seriesEditor = document.createElement("DIV");
-                seriesEditor.id='editor_series';
-                seriesEditorPane.appendChild(seriesEditor);
-                info.appendChild(seriesEditorPane);
-                var table = document.createElement("TABLE");
-                info.appendChild(table);
-                table.id='benutzerEditorValidTable';
-                var span = document.createElement("DIV");
-                span.id='benutzerEditorValidLabel';
-                info.appendChild(span);
-                var table = document.createElement("TABLE");
-                info.appendChild(table);
-                table.id='benutzerEditorTable';
-                var span = document.createElement("DIV");
-                span.id='benutzerEditorLabel';
-                info.appendChild(span);
-
-                var holiday = document.createElement("div");
+                holiday = document.createElement("div");
+                holiday.style['margin-bottom'] = '15px';
                 holiday.style.display = 'inline-block';
-                holiday.style['margin-top'] = '10px';
                 info.appendChild(holiday);
-
-                var title = document.createElement("div");
-                title.style.padding = '3px';
-                title.innerText = 'Urlaub';
-                title.style.fontWeight = 'bold';
-                holiday.appendChild(title);
                 weekSelect = Object.create(WeekSelect);
                 weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
                 weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + dataId;
                 weekSelect.postData = {Benutzer_ID: dataId, Woche: SBS.selectedWeek},
                 weekSelect.allowMulti = false;
-                weekSelect.addTo(holiday);
+                weekSelect.setElem(holiday);
 
-                solawiSeriesEditor = SolawiEditor(SBS, SBTedit.reload, false, '_series');
+                var table = document.createElement("TABLE");
+                info.appendChild(table);
+                table.id='benutzerEditorValidTable';
+                var span = document.createElement("DIV");
+                span.id='benutzerEditorValidLabel';
+                span.style.color='#999';
+                info.appendChild(span);
+                table = document.createElement("TABLE");
+                table.style.marginTop = '15px';
+                info.appendChild(table);
+                table.id='benutzerEditorTable';
+                span = document.createElement("DIV");
+                span.id='benutzerEditorLabel';
+                span.style.color='#999';
+                info.appendChild(span);
+
+                seriesBtn = document.createElement("BUTTON");
+                seriesBtn.onclick=function(){solawiSeriesEditor.showForBatchOrder({Benutzer_ID: dataId});};
+                seriesBtn.style.marginTop="15px";
+                seriesBtn.innerText='Serien-Tausch';
+                info.appendChild(seriesBtn);
+                lieferTitle = document.createElement("DIV");
+                lieferTitle.innerText = 'Lieferung';
+                lieferTitle.style.fontWeight = 'bold';
+                lieferTitle.style.marginTop = '15px';
+                info.appendChild(lieferTitle);
+                table = document.createElement("TABLE");
+                info.appendChild(table);
+                table.id='benutzerLieferTable';
+                span = document.createElement("DIV");
+                span.id='benutzerLieferLabel';
+                span.style.color='#999';
+                info.appendChild(span);
+
+
+                solawiSeriesEditor = SolawiEditor(SBS, function() {solawiTableEdit.reload();solawiTableLiefer.reload();}, false);
                 solawiSeriesEditor.setKeys(['Benutzer_ID','Produkt_ID','Anzahl','Woche','Kommentar']);
-
                 solawiTableValid = SolawiTable(SBS, 'benutzerEditorValidTable', 'benutzerEditorValidLabel', true, true);
                 solawiTableEdit = SolawiTable(SBS, 'benutzerEditorTable', 'benutzerEditorLabel', true, false);
                 solawiTableView = SolawiTable(SBS, 'benutzerEditorTable', 'benutzerEditorLabel', false, false);
+                solawiTableLiefer = SolawiTable(SBS, 'benutzerLieferTable', 'benutzerLieferLabel', false, false);
+                solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];
+                var stvrf = solawiTableValid.reload;
+                solawiTableValid.reload=function() {stvrf(); solawiTableLiefer.reload();};
+                var stvrf2 = solawiTableEdit.reload;
+                solawiTableEdit.reload=function() {stvrf2(); solawiTableLiefer.reload();};
                 btn.onclick=function() {
-                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();
-                    var edit = document.getElementById('editor_series');
-                    while (edit.firstChild) edit.removeChild(edit.firstChild);
+                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='Lieferung';seriesBtn.style.display='inline-block';
                     getAjax('BenutzerModulAbo/Benutzer_ID/' + dataId + "/Bis/" + SBS.week, solawiTableValid.showTable)
                     getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataId + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
+                    getAjax('BenutzerBestellungView/Benutzer_ID/' + dataId + "/Woche/" + SBS.selectedWeek, solawiTableLiefer.showTable)
                 };
                 btn1.onclick=function() {
-                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();
-                    solawiSeriesEditor.showForBatchOrder({Benutzer_ID: dataId});
+                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='';seriesBtn.style.display='none';
                     getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataId, solawiTableEdit.showTable)
                 };
                 btn2.onclick=function() {if(confirm('ACHTUNG! Hier können Abos RÜCKWIRKEND verändert werden! Bitte nur zur Fehlerkorrektur. Normalerweise sollte unter "Abos" das bestehende Abo beendet werden (EndWoche = Jetzt) und danach ein neues Abo ab heute angelegt werden!')){
-                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();
-                    var edit = document.getElementById('editor_series');
-                    while (edit.firstChild) edit.removeChild(edit.firstChild);
+                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='';seriesBtn.style.display='none';
                     getAjax('BenutzerModulAbo/Benutzer_ID/' + dataId, function(a1,a2,a3) {solawiTableEdit.showTable(a1,a2,a3);document.getElementById('benutzerEditorLabel').innerText='ACHTUNG! Hier können Abos RÜCKWIRKEND verändert werden! Bitte nur zur Fehlerkorrektur. Normalerweise sollte unter "Abos" das bestehende Abo beendet werden (EndWoche = Jetzt) und danach ein neues Abo ab heute angelegt werden!';})
                 }};
                 btn3.onclick=function() {
-                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();
-                    var edit = document.getElementById('editor_series');
-                    while (edit.firstChild) edit.removeChild(edit.firstChild);
-                    getAjax('BenutzerPunkte/' + dataId, solawiTableEdit.showTable);
+                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='';seriesBtn.style.display='none';
+                    getAjax('BenutzerPunkte/' + dataId, solawiTableView.showTable);
+                    var title = document.createElement("div");
+                    title.style.padding = '3px';
+                    title.innerText = 'Urlaub';
+                    title.style.fontWeight = 'bold';
+                    holiday.appendChild(title);
+                    weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + dataId;
+                    weekSelect.postData = {Benutzer_ID: dataId, Woche: SBS.selectedWeek};
+                    weekSelect.refresh();
                 };
 
-                var stornoCtnr = document.createElement("SPAN");
+                stornoCtnr = document.createElement("SPAN");
                 stornoCtnr.id= "stornoCtnr"+editorSuffix;
                 stornoCtnr.style.float = 'right';
                 stornoCtnr.display='inline-block';
-                btnEle.parentNode.appendChild(stornoCtnr);
 
                 var weekLabel = document.createElement("SPAN");
-                weekLabel.innerText="Woche f. Tausch (oben) oder Kündigung: ";
+                weekLabel.innerText="Woche f. Tausch / Lieferung (oben) oder Kündigung: ";
                 stornoCtnr.appendChild(weekLabel);
 
                 var weekSelector = createInputDateSelect();
@@ -378,8 +399,9 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                   SBS.selectedWeek=evt.target.value;
                   if (solawiTableEdit.getTablePath() && solawiTableEdit.getTablePath().match(/BenutzerZusatzBestellung.*Woche.*/)) {
                       getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataId + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
-                  } else {
-                      console.log(solawiTableEdit.getTablePath());
+                  }
+                  if (solawiTableLiefer.getTablePath() && solawiTableLiefer.getTablePath().match(/BenutzerBestellungView.*Woche.*/)) {
+                      getAjax('BenutzerBestellungView/Benutzer_ID/' + dataId + "/Woche/" + SBS.selectedWeek, solawiTableLiefer.showTable)
                   }
                 };
                 stornoCtnr.appendChild(weekSelector);
@@ -389,14 +411,15 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                 stornoBtn.onclick = stornoUser;
                 stornoCtnr.appendChild(stornoBtn);
             }
-            solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();
-            var edit = document.getElementById('editor_series');
-            while (edit.firstChild) edit.removeChild(edit.firstChild);
+            solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';
+            solawiTableValid.editorDefault['Benutzer_ID'] = dataId;
+            solawiTableEdit.editorDefault['Benutzer_ID'] = dataId;
+            lieferTitle.innerText = 'Lieferung';
+            seriesBtn.style.display='inline-block';
             getAjax('BenutzerModulAbo/Benutzer_ID/' + dataId + "/Bis/" + SBS.week, solawiTableValid.showTable)
             getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataId + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
-            weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + dataId;
-            weekSelect.postData = {Benutzer_ID: dataId, Woche: SBS.selectedWeek};
-            weekSelect.refresh();
+            getAjax('BenutzerBestellungView/Benutzer_ID/' + dataId + "/Woche/" + SBS.selectedWeek, solawiTableLiefer.showTable)
+            btnCtnr.appendChild(stornoCtnr);
         } else {
             if (info) {
                 info.parentNode.removeChild(info);
@@ -538,6 +561,10 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
     }
 
     function finishBatchOrder(edit) {
+        var btnCtnr = document.getElementById('editorSaveBtn'+editorSuffix);
+        if (btnCtnr) {
+            while (btnCtnr.firstChild) btnCtnr.removeChild(btnCtnr.firstChild);
+        }
         var linebreak = document.createElement("br")
         var btn = document.createElement("BUTTON");
         btn.innerText="Serien-Bestellung";

@@ -27,7 +27,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         getTableName: function(){return tableName},
         getTablePath: function(){return tablePath},
         onEntitySaved: onEntitySaved,
-        reload: function(){getAjax(tablePath, showTable)},
+        reload: function(){if(tablePath){getAjax(tablePath, showTable)}},
         reset: function(){clearContent(elemIdTable);clearContent(elemIdLabel);tableName='';tablePath='';},
         setSortBy: function(sortBy){sortByColumn2 = sortByColumn1; sortByColumn1 = sortBy;},
         columns: [],

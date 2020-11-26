@@ -112,15 +112,19 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, edit
         var btn = document.createElement('BUTTON');
         td.appendChild(btn);
         var tableName = solawiTable.getTableName();
-        btn.addEventListener('click', function(event) {
-        	event.stopPropagation();
-        	solawiEditor.showForAdding(solawiTable.getTableName(), solawiTable.editorDefault)
-        });
+        btn.addEventListener('click', createAddFunc(solawiTable));
         btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'Tauschen' : '+';
         btn.className='btn_plus'
         if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && (sbs.selectedWeek < sbs.week ||  sbs.selectedWeek == sbs.AbgeschlosseneWoche) ) {
     		btn.disabled='disabled';
         }
+    }
+
+    function createAddFunc(solawiTableVar) {
+    	return function(event) {
+        	event.stopPropagation();
+        	solawiEditor.showForAdding(solawiTableVar.getTableName(), solawiTableVar.editorDefault)
+        };
     }
 
     function showEditor(event) {
