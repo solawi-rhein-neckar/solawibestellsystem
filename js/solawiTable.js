@@ -45,7 +45,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     var sortByColumn1 = null;
     var sortByColumn2 = null;
     var tableExtensions = [];
-    if (pEditable) tableExtensions.push(SolawiTableEditor(sbs, pub, pDisableUnavailableProducts));
+    if (pEditable) tableExtensions.push(SolawiTableEditor(sbs, pub, pDisableUnavailableProducts, pEditable));
     if (pVerwalter) tableExtensions.push(SolawiTableVerwalter(sbs, pub));
 
     /* private constants */

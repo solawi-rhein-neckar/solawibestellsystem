@@ -75,14 +75,21 @@ document.write('<div id="blockui_post" \
 		</span> \
 	</div> \
 	<div id="blockui_edit" \
-		style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; z-index: 230; background-color: rgba(0, 0, 0, 0.3); display: none;"> \
+		style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; z-index: 240; background-color: rgba(0, 0, 0, 0.3); display: none;"> \
 		<div \
 			style="display: inline-block; padding: 5px; margin: 10px; border: 1px solid black; background-color: #FFF;"> \
 			<div id="editError" style="color: red; font-weight: bold;"></div> \
 			<div id="editor" style="padding: 5px;"></div> \
 		</div> \
 	</div> \
-  \
+	<div id="blockui_edit2" \
+		style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; z-index: 230; background-color: rgba(0, 0, 0, 0.3); display: none;"> \
+		<div \
+			style="display: inline-block; width: 90%; padding: 5px; margin: 10px; border: 1px solid black; background-color: #FFF;"> \
+			<div id="editError2" style="color: red; font-weight: bold;"></div> \
+			<div id="editor2" style="padding: 5px;"></div> \
+		</div> \
+	</div> \  \
   \
 	<div id="logoutfrombg" \
 		style="box-shadow: 0em 0em 1em 1em rgba(222, 222, 222, 0.7); background: rgba(222, 222, 222, 0.7); position: fixed; height: 6em; width: 19em; z-index: 8888; right: 1px; top: 0; font-size: 12px;"> \

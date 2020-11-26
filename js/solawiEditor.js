@@ -5,7 +5,7 @@
     The new operator is not required! (We do not use 'this' anywhere in the code).
 
 */
-function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
+function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditorSuffix) {
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
             showEditorForCell: showEditorForCell,
@@ -20,12 +20,19 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
 
     /* private vars */
     var tableName; /* needs to be initialized on showing editor */
+    var editorSuffix = pEditorSuffix === true || !pEditorSuffix ? '' : pEditorSuffix;
     var sbs = pSbs;
     var onEntitySaved = pOnEntitySaved;
     var disableUnavailableProducts = pDisableUnavailableProducts;
     var tableValidator = disableUnavailableProducts ? SolawiValidator(sbs) : null;
     var keys;
     var responseCache;
+    var dataId;
+    var solawiTableEdit;
+    var solawiTableValid;
+    var solawiTableView;
+    var weekSelect;
+    var solawiSeriesEditor;
 
     const numberColumnNames = {
             'Menge':1
@@ -47,22 +54,14 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         tableName = pTableName;
         var edit = resetEditor("ID " + event.target.dataId + ": " + event.target.dataKey + " ");
 
-        if (pTableName == 'Benutzer' && event.target.dataKey == 'PunkteWoche') {
+        var inp = createInput(event.target.dataKey);
+        inp.dataId = event.target.dataId;
+        inp.value = event.target.dataValue || event.target.innerText;
+        inp.dataValue = inp.value;
+        inp.addEventListener('keypress', saveEditorInputs);
+        /*inp.addEventListener('change', saveEditorInputs);*/
 
-        	var tb = document.createElement("table");
-        	tb.id = 'tablePunkte';
-        	edit.appendChild(tb);
-            getAjax('BenutzerPunkte/' + event.target.dataId, SBTpunkte.showTable);
-
-        } else {
-	        var inp = createInput(event.target.dataKey);
-	        inp.dataId = event.target.dataId;
-	        inp.value = event.target.dataValue || event.target.innerText;
-	        inp.addEventListener('keypress', saveEditorInputs);
-	        /*inp.addEventListener('change', saveEditorInputs);*/
-
-	        edit.appendChild(inp);
-        }
+        edit.appendChild(inp);
         finishEditor(edit);
     }
 
@@ -76,6 +75,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
 
     function initForAdding(pTableName, defaults, hiddenFields) {
         tableName = pTableName;
+        dataId = defaults && defaults.dataId;
         var edit = resetEditor((defaults && defaults.dataId && responseCache ? "Bearbeiten: " : "Neu hinzufügen: ") + tableName);
 
         if (defaults['Benutzer_ID'] && !keys.includes('Benutzer_ID')) {
@@ -234,35 +234,223 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
     }
 
     function resetEditor(pLabel) {
-        var edit = document.getElementById('editor');
+        var edit = document.getElementById('editor'+editorSuffix);
         var label = document.createElement("DIV");
         edit.className = 'edit' + tableName;
         label.innerText = pLabel.replace('BenutzerZusatzBestellung', 'Tausch').replace('BenutzerModulAbo', 'Jede_Woche-Abo');
         label.className = 'editorLabel';
         while (edit.firstChild) edit.removeChild(edit.firstChild);
         edit.appendChild(label);
-        setContent('editError', '');
-        show('blockui_edit');
+        setContent('editError'+editorSuffix, '');
+        show('blockui_edit'+editorSuffix);
         return edit;
     }
 
     function finishEditor(edit) {
-        var btnEle = document.getElementById('editorSaveBtn');
+        var btnEle = document.getElementById('editorSaveBtn'+editorSuffix);
         if (!btnEle) {
-            var btn = document.createElement("BUTTON");
-            btn.innerText="Speichern";
-            btn.style['margin-left'] = '5px';
-            btn.style['margin-right'] = '10px';
-            btn.id = 'editorSaveBtn';
-            btn.addEventListener('click', saveEditorInputs);
+            btnEle = document.createElement("BUTTON");
+            btnEle.innerText="Speichern";
+            btnEle.style['margin-left'] = '5px';
+            btnEle.style['margin-right'] = '10px';
+            btnEle.id = 'editorSaveBtn'+editorSuffix;
+            btnEle.addEventListener('click', saveEditorInputs);
 
             var btn2 = document.createElement("BUTTON");
             btn2.innerText="Abbrechen";
-            btn2.addEventListener('click', function(){hide('blockui_edit');});
-            edit.parentNode.appendChild(btn);
-            edit.parentNode.appendChild(btn2);
+            btn2.addEventListener('click', function(){if (collectChangedInputData().size == 0 || confirm('Änderung verwerfen?')){hide('blockui_edit'+editorSuffix);}});
+            var div = document.createElement("DIV");
+            div.style.textAlign = 'left';
+            div.appendChild(btnEle);
+            div.appendChild(btn2);
+            edit.parentNode.appendChild(div);
         } else {
             btnEle.disabled = '';
+        }
+
+
+        var info = document.getElementById('benutzerEditor'+editorSuffix);
+        if (tableName == 'Benutzer') {
+            if (!info) {
+                info = document.createElement("DIV");
+                info.id='benutzerEditor'+editorSuffix;
+                info.style.display='inline-block';
+                info.style.width = '61%';
+                info.style.height = '650px';
+                info.style.overflow = 'auto';
+                edit.parentNode.insertBefore(info, btnEle.parentNode);
+
+                var tabPane = document.createElement("DIV");
+                info.appendChild(tabPane);
+                var btn = document.createElement("BUTTON");
+                btn.innerText="Abo und Tausch";
+                tabPane.appendChild(btn);
+                var btn1 = document.createElement("BUTTON");
+                btn1.innerText="Alle Tausche / Serie";
+                tabPane.appendChild(btn1);
+                var btn2 = document.createElement("BUTTON");
+                btn2.innerText="Abo Korrektur";
+                tabPane.appendChild(btn2);
+                var btn3 = document.createElement("BUTTON");
+                btn3.innerText="Punkte";
+                tabPane.appendChild(btn3);
+
+                var seriesEditorPane = document.createElement("DIV");
+                seriesEditorPane.id='blockui_edit_series';
+                var seriesEditor = document.createElement("DIV");
+                seriesEditor.id='editor_series';
+                seriesEditorPane.appendChild(seriesEditor);
+                info.appendChild(seriesEditorPane);
+                var table = document.createElement("TABLE");
+                info.appendChild(table);
+                table.id='benutzerEditorValidTable';
+                var span = document.createElement("DIV");
+                span.id='benutzerEditorValidLabel';
+                info.appendChild(span);
+                var table = document.createElement("TABLE");
+                info.appendChild(table);
+                table.id='benutzerEditorTable';
+                var span = document.createElement("DIV");
+                span.id='benutzerEditorLabel';
+                info.appendChild(span);
+
+                var holiday = document.createElement("div");
+                holiday.style.display = 'inline-block';
+                holiday.style['margin-top'] = '10px';
+                info.appendChild(holiday);
+
+                var title = document.createElement("div");
+                title.style.padding = '3px';
+                title.innerText = 'Urlaub';
+                title.style.fontWeight = 'bold';
+                holiday.appendChild(title);
+                weekSelect = Object.create(WeekSelect);
+                weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
+                weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + dataId;
+                weekSelect.postData = {Benutzer_ID: dataId, Woche: SBS.selectedWeek},
+                weekSelect.allowMulti = false;
+                weekSelect.addTo(holiday);
+
+                solawiSeriesEditor = SolawiEditor(SBS, SBTedit.reload, false, '_series');
+                solawiSeriesEditor.setKeys(['Benutzer_ID','Produkt_ID','Anzahl','Woche','Kommentar']);
+
+                solawiTableValid = SolawiTable(SBS, 'benutzerEditorValidTable', 'benutzerEditorValidLabel', true, true);
+                solawiTableEdit = SolawiTable(SBS, 'benutzerEditorTable', 'benutzerEditorLabel', true, false);
+                solawiTableView = SolawiTable(SBS, 'benutzerEditorTable', 'benutzerEditorLabel', false, false);
+                btn.onclick=function() {
+                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();
+                    var edit = document.getElementById('editor_series');
+                    while (edit.firstChild) edit.removeChild(edit.firstChild);
+                    getAjax('BenutzerModulAbo/Benutzer_ID/' + dataId + "/Bis/" + SBS.week, solawiTableValid.showTable)
+                    getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataId + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
+                };
+                btn1.onclick=function() {
+                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();
+                    solawiSeriesEditor.showForBatchOrder({Benutzer_ID: dataId});
+                    getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataId, solawiTableEdit.showTable)
+                };
+                btn2.onclick=function() {if(confirm('ACHTUNG! Hier können Abos RÜCKWIRKEND verändert werden! Bitte nur zur Fehlerkorrektur. Normalerweise sollte unter "Abos" das bestehende Abo beendet werden (EndWoche = Jetzt) und danach ein neues Abo ab heute angelegt werden!')){
+                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();
+                    var edit = document.getElementById('editor_series');
+                    while (edit.firstChild) edit.removeChild(edit.firstChild);
+                    getAjax('BenutzerModulAbo/Benutzer_ID/' + dataId, function(a1,a2,a3) {solawiTableEdit.showTable(a1,a2,a3);document.getElementById('benutzerEditorLabel').innerText='ACHTUNG! Hier können Abos RÜCKWIRKEND verändert werden! Bitte nur zur Fehlerkorrektur. Normalerweise sollte unter "Abos" das bestehende Abo beendet werden (EndWoche = Jetzt) und danach ein neues Abo ab heute angelegt werden!';})
+                }};
+                btn3.onclick=function() {
+                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();
+                    var edit = document.getElementById('editor_series');
+                    while (edit.firstChild) edit.removeChild(edit.firstChild);
+                    getAjax('BenutzerPunkte/' + dataId, solawiTableEdit.showTable);
+                };
+
+                var stornoCtnr = document.createElement("SPAN");
+                stornoCtnr.id= "stornoCtnr"+editorSuffix;
+                stornoCtnr.style.float = 'right';
+                stornoCtnr.display='inline-block';
+                btnEle.parentNode.appendChild(stornoCtnr);
+
+                var weekLabel = document.createElement("SPAN");
+                weekLabel.innerText="Woche f. Tausch (oben) oder Kündigung: ";
+                stornoCtnr.appendChild(weekLabel);
+
+                var weekSelector = createInputDateSelect();
+                weekSelector.value = SBS.selectedWeek;
+                weekSelector.onchange=function(evt) {
+                  SBS.selectedWeek=evt.target.value;
+                  if (solawiTableEdit.getTablePath() && solawiTableEdit.getTablePath().match(/BenutzerZusatzBestellung.*Woche.*/)) {
+                      getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataId + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
+                  } else {
+                      console.log(solawiTableEdit.getTablePath());
+                  }
+                };
+                stornoCtnr.appendChild(weekSelector);
+
+                var stornoBtn = document.createElement("BUTTON");
+                stornoBtn.innerText = "kündigen";
+                stornoBtn.onclick = stornoUser;
+                stornoCtnr.appendChild(stornoBtn);
+            }
+            solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();
+            var edit = document.getElementById('editor_series');
+            while (edit.firstChild) edit.removeChild(edit.firstChild);
+            getAjax('BenutzerModulAbo/Benutzer_ID/' + dataId + "/Bis/" + SBS.week, solawiTableValid.showTable)
+            getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataId + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
+            weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + dataId;
+            weekSelect.postData = {Benutzer_ID: dataId, Woche: SBS.selectedWeek};
+            weekSelect.refresh();
+        } else {
+            if (info) {
+                info.parentNode.removeChild(info);
+            }
+            var stornoBtn = document.getElementById('stornoCtnr'+editorSuffix);
+            if (stornoBtn) {
+                stornoBtn.parentNode.removeChild(stornoBtn);
+            }
+        }
+
+    }
+
+
+    function stornoUser() {
+        if (tableName=='Benutzer' && confirm('Benutzer wirklich kündigen? Hierdurch ENDEN alle Modul-Abos zur gewählten Woche ' + SBS.selectedWeek +
+                '(= letzte Lieferung in dieser Woche!). Außerdem werden alle Tausch-Bestellungen nach dieser Woche gelöscht. ' +
+                'Außerdem werden die Anteile und FleischAnteile JETZT SOFORT auf 0 gesetzt. ' +
+                (SBS.selectedWeek < SBS.week ? 'BENUTZER WIRD INS DEPOT "Geloescht" VERSCHOBEN!' : '') )) {
+
+            getAjax('BenutzerModulAbo/Benutzer_ID/'+dataId, function(result) {
+                if (result) {
+                    for (var i = 0; i < result.length; i++) {
+                        if (result[i].EndWoche > SBS.selectedWeek) {
+                            postAjax('BenutzerModulAbo/'+result[i].ID, {EndWoche: SBS.selectedWeek}, function(){});
+                        }
+                    }
+                }
+            });
+            getAjax('BenutzerZusatzBestellung/Benutzer_ID/'+dataId, function(result) {
+                if (result) {
+                    for (var i = 0; i < result.length; i++) {
+                        if (result[i].Woche > SBS.selectedWeek) {
+                            deleteAjax('BenutzerZusatzBestellung/'+result[i].ID, function(){});
+                        }
+                    }
+                }
+            });
+
+            postAjax('Benutzer/'+dataId, {Anteile: 0}, function(){});
+            postAjax('Benutzer/'+dataId, {FleischAnteile: 0}, function(){});
+
+            if (SBS.selectedWeek < SBS.week) {
+                postAjax('Benutzer/'+dataId, {Depot_ID: 0}, function(){});
+            }
+
+             reloadWhenReady();
+        }
+    }
+
+    function reloadWhenReady() {
+        if (window.activeAjaxRequestCount) {
+            window.setTimeout(reloadWhenReady, 333);
+        } else {
+            solawiTable.reload();
         }
     }
 
@@ -297,7 +485,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             } else {
                 postAjax(tableName + (id ? '/'+id : ''), sendData, onEntitySaved);
             }
-            hide('blockui_edit');
+            hide('blockui_edit'+editorSuffix);
         });
     }
 
@@ -305,41 +493,48 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
         if (event2.keyCode == null /*blur*/ || event2.keyCode == 13 /*enter*/) {
             event2.target.disabled='disabled';
 
-            var id;
-            var data = {};
-            var sendData = {};
-            var editor = document.getElementById('editor');
-            for (var i = 0; i < editor.children.length; i++) {
-                var ele = editor.children[i];
-                var inpEle = ele;
-                if (ele.tagName == 'DIV') {
-                    for (var j = 0; j <  ele.children.length; j++) {
-                        if (ele.children[j].tagName == 'INPUT' || ele.children[j].tagName == 'SELECT') {
-                            inpEle = ele.children[j];
-                        }
-                    }
-                }
-                if (inpEle.tagName == 'INPUT' || inpEle.tagName == 'SELECT') {
-                    if ( ((! inpEle.dataValue) && (!(inpEle.dataValue === '')) && !(inpEle.dataValue === 0)) || inpEle.value != inpEle.dataValue) {
-                        data[inpEle.dataKey] = inpEle.value;
-                        sendData[inpEle.dataKey] = inpEle.value;
-                        id = id || inpEle.dataId;
-                    } else {
-                        console.log('not saving unchanged field ' + inpEle.dataKey);
-                    }
-                }
-            }
+            var result = collectChangedInputData();
 
-            if (Object.keys(data).length == 0 || (tableValidator &&   ! tableValidator.validateEditorInput(data, id) )) {
-                if (Object.keys(data).length == 0) {
-                    setContent('editError', 'Nichts geändert! - Abbrechen clicken');
+            if (result.size == 0 || (tableValidator &&   ! tableValidator.validateEditorInput(result.data, result.id) )) {
+                if (result.size == 0) {
+                    setContent('editError'+editorSuffix, 'Nichts geändert! - Abbrechen clicken');
                 }
                 event2.target.disabled='';
             } else {
-                onSuccessCallback(id, sendData);
+                onSuccessCallback(result.id, result.sendData);
             }
         }
 
+    }
+
+    function collectChangedInputData() {
+        var id;
+        var data = {};
+        var sendData = {};
+        var size = 0;
+        var editor = document.getElementById('editor'+editorSuffix);
+        for (var i = 0; i < editor.children.length; i++) {
+            var ele = editor.children[i];
+            var inpEle = ele;
+            if (ele.tagName == 'DIV') {
+                for (var j = 0; j <  ele.children.length; j++) {
+                    if (ele.children[j].tagName == 'INPUT' || ele.children[j].tagName == 'SELECT') {
+                        inpEle = ele.children[j];
+                    }
+                }
+            }
+            if (inpEle.tagName == 'INPUT' || inpEle.tagName == 'SELECT') {
+                if ( ((! inpEle.dataValue) && (!(inpEle.dataValue === '')) && !(inpEle.dataValue === 0)) || inpEle.value != inpEle.dataValue) {
+                    data[inpEle.dataKey] = inpEle.value;
+                    sendData[inpEle.dataKey] = inpEle.value;
+                    id = id || inpEle.dataId;
+                    size++;
+                } else {
+                    console.log('not saving unchanged field ' + inpEle.dataKey);
+                }
+            }
+        }
+        return {id: id, data: data, sendData: sendData, size: size};
     }
 
     function finishBatchOrder(edit) {
@@ -352,7 +547,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
 
         var btn2 = document.createElement("BUTTON");
         btn2.innerText="Schließen";
-        btn2.addEventListener('click', function(){hide('blockui_edit');onEntitySaved();});
+        btn2.addEventListener('click', function(){hide('blockui_edit'+editorSuffix);onEntitySaved();});
         edit.appendChild(linebreak);
         edit.appendChild(btn);
         edit.appendChild(btn2);
@@ -366,8 +561,8 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
 
     function showBatchOrderWeekSelect(event2) {
         validateAndProceed(event2, function(id, sendData) {
-            setContent('editError', '');
-            var editor = document.getElementById('editor');
+            setContent('editError'+editorSuffix, '');
+            var editor = document.getElementById('editor'+editorSuffix);
             for (var i = 0; i < editor.children.length; i++) {
                 var inpEle = editor.children[i];
                 if (inpEle.nodeName == 'INPUT' || inpEle.nodeName == 'SELECT') {
@@ -390,7 +585,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts) {
             weekSelect.labels = 'Bestellungen';
             weekSelect.tableName = 'BenutzerZusatzBestellung/Benutzer_ID/' + (sendData['Benutzer_ID'] ? sendData['Benutzer_ID'] : SBS.user.ID) + '/Produkt_ID/' + sendData['Produkt_ID'] + "/Anzahl/" + sendData['Anzahl'];
             weekSelect.onValidate = disableUnavailableProducts && tableValidator ? function(elem, postData, willDelete) {
-                setContent('editError', '');
+                setContent('editError'+editorSuffix, '');
                 if (willDelete || ! postData['Woche']) {
                     weekSelect.doSave(elem);
                 } else {

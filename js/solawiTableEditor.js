@@ -6,7 +6,7 @@
 
     This file is meant to be used by solawiTable.
 */
-function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
+function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, editorElemId) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
@@ -20,7 +20,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     var sbs = pSbs;
     var solawiTable = pSolawiTable;
     var disableUnavailableProducts = pDisableUnavailableProducts;
-    var solawiEditor = SolawiEditor(sbs, solawiTable.onEntitySaved, disableUnavailableProducts);
+    var solawiEditor = SolawiEditor(sbs, solawiTable.onEntitySaved, disableUnavailableProducts, editorElemId);
 
 
 /**** public ****/

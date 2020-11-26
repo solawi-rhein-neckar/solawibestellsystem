@@ -22,14 +22,17 @@ table, td {
 	padding: 3px;
 }
 
-div#editor {
-	min-width: 500px;
+
+div#editor2 {
+	min-width: 36%;
     max-height: 650px;
+    min-height: 650px;
+    height:650px;
     overflow: auto;
     overflow-x:hidden;
     overflow-y:scroll;
-	max-width: 500px;
-	width: 500px;
+	max-width: 36%;
+	width: 36%;
 	display: inline-block;
 }
 
