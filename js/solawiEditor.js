@@ -6,6 +6,11 @@
 
 */
 function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditorSuffix) {
+
+    /*privat var needed inside pub*/
+    var editorSuffix = pEditorSuffix === true || !pEditorSuffix ? '' : pEditorSuffix;
+    var memberEditor = editorSuffix ? MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) : null;
+
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
             showEditorForCell: showEditorForCell,
@@ -16,12 +21,11 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                 responseCache = pResponse;
             },
             setKeys: setKeys,
-            addCopyFromWpBtn: function(tr, dataRow, createAddFunc) {if(memberEditor)memberEditor.addCopyFromWpBtn(tr, dataRow, createAddFunc)}
+            addCopyBtn: memberEditor && memberEditor.addCopyBtn
     };
 
     /* private vars */
     var tableName; /* needs to be initialized on showing editor */
-    var editorSuffix = pEditorSuffix === true || !pEditorSuffix ? '' : pEditorSuffix;
     var sbs = pSbs;
     var onEntitySaved = pOnEntitySaved;
     var disableUnavailableProducts = pDisableUnavailableProducts;
@@ -29,7 +33,6 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
     var keys;
     var responseCache;
     var dataId;
-    var memberEditor = editorSuffix ? MemberEditor(editorSuffix, onEntitySaved) : null;
 
     const numberColumnNames = {
             'Menge':1
@@ -49,8 +52,10 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
 
     function showEditorForCell(pTableName, event) {
         tableName = pTableName;
-        var edit = resetEditor("ID " + event.target.dataId + ": " + event.target.dataKey + " ");
+        var edit = resetEditor(tableName + " | ID " + event.target.dataId + ": ");
 
+        var label = document.createElement('SPAN');
+        label.innerText=event.target.dataKey + ": ";
         var inp = createInput(event.target.dataKey);
         inp.dataId = event.target.dataId;
         inp.value = event.target.dataValue || event.target.innerText;
@@ -58,6 +63,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         inp.addEventListener('keypress', saveEditorInputs);
         /*inp.addEventListener('change', saveEditorInputs);*/
 
+        edit.appendChild(label);
         edit.appendChild(inp);
         finishEditor(edit);
     }
@@ -159,7 +165,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         }
         inp.className = 'editor inp_' + key;
         inp.dataKey = key;
-        inp.placeholder = key;
+        /*inp.placeholder = key;*/
         return inp;
     }
 
@@ -242,6 +248,8 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         edit.className = 'edit' + tableName;
         label.innerText = pLabel.replace('BenutzerZusatzBestellung', 'Tausch').replace('BenutzerModulAbo', 'Jede_Woche-Abo');
         label.className = 'editorLabel';
+        label.style.fontWeight = 'bold';
+        label.style.padding = '0 0 8px 0';
         while (edit.firstChild) edit.removeChild(edit.firstChild);
         edit.appendChild(label);
         setContent('editError'+editorSuffix, '');
@@ -394,11 +402,11 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
             editor.appendChild(div);
 
             var weekSelect = Object.create(WeekSelect);
-            weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
-            weekSelect.week = SBS.week;
+            weekSelect.year = Number(sbs.selectedWeek.match(/[0-9]+/)[0]);
+            weekSelect.week = sbs.week;
             weekSelect.label = 'Bestellung';
             weekSelect.labels = 'Bestellungen';
-            weekSelect.tableName = 'BenutzerZusatzBestellung/Benutzer_ID/' + (sendData['Benutzer_ID'] ? sendData['Benutzer_ID'] : SBS.user.ID) + '/Produkt_ID/' + sendData['Produkt_ID'] + "/Anzahl/" + sendData['Anzahl'];
+            weekSelect.tableName = 'BenutzerZusatzBestellung/Benutzer_ID/' + (sendData['Benutzer_ID'] ? sendData['Benutzer_ID'] : sbs.user.ID) + '/Produkt_ID/' + sendData['Produkt_ID'] + "/Anzahl/" + sendData['Anzahl'];
             weekSelect.onValidate = disableUnavailableProducts && tableValidator ? function(elem, postData, willDelete) {
                 setContent('editError'+editorSuffix, '');
                 if (willDelete || ! postData['Woche']) {
@@ -413,10 +421,10 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                 }
             } : null;
             weekSelect.postData = {
-                Benutzer_ID : (sendData['Benutzer_ID'] ? sendData['Benutzer_ID'] : SBS.user.ID),
+                Benutzer_ID : (sendData['Benutzer_ID'] ? sendData['Benutzer_ID'] : sbs.user.ID),
                 Produkt_ID : sendData['Produkt_ID'],
                 Anzahl: sendData['Anzahl'],
-                Woche : SBS.selectedWeek
+                Woche : sbs.selectedWeek
             };
             weekSelect.allowMulti = !disableUnavailableProducts;
             weekSelect.allowPast = false;

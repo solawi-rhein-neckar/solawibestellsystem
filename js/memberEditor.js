@@ -5,17 +5,17 @@
     The new operator is not required! (We do not use 'this' anywhere in the code).
 
 */
-function MemberEditor(pEditorSuffix, pOnEntitySaved) {
+function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
     	enhanceEditor: enhanceEditor,
     	saveToDb: saveToDb,
-    	addCopyFromWpBtn: addCopyFromWpBtn
+    	addCopyBtn: addCopyBtn
     };
 
     /* private vars */
     var editorSuffix = pEditorSuffix;
-
+	var sbs = pSbs;
     var solawiTableEdit;
     var solawiTableValid;
     var solawiTableView;
@@ -65,20 +65,20 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
 	}
 
 	/*public*/
-    function addCopyFromWpBtn(tr, dataRow, createAddFunc){
+    function addCopyBtn(tr, dataRow, createAddFunc,tableName){
         if (dataRow['wpID'] && dataRow['Name'] == 'onlyWP' && dataRow['ID'] == -1) {
 	        var btn = document.createElement('BUTTON');
 	        tr.firstChild.innerHTML = '';
 	        tr.firstChild.appendChild(btn);
 	        var depotId = null;
-	        if (dataRow['wpDepot'] && SBS && SBS.tableCache['Depot']) {
-	        	for (var k = 0; k<SBS.tableCache['Depot'].length; k++) {
-	        		if (SBS.tableCache['Depot'][k] && SBS.tableCache['Depot'][k].wpName == dataRow['wpDepot']){
-						depotId = SBS.tableCache['Depot'][k].ID;
+	        if (dataRow['wpDepot'] && sbs && sbs.tableCache['Depot']) {
+	        	for (var k = 0; k<sbs.tableCache['Depot'].length; k++) {
+	        		if (sbs.tableCache['Depot'][k] && (sbs.tableCache['Depot'][k].wpName == dataRow['wpDepot'] || (dataRow['wpDepot'] == 'Hofteam' && sbs.tableCache['Depot'][k].wpName == 'Selbstabholer')) ){
+						depotId = sbs.tableCache['Depot'][k].ID;
 	        		}
 	        	}
 	        }
-	        btn.addEventListener('click', createAddFunc({wpID: dataRow['wpID'], Name: dataRow['wpdisplay_name'], Depot_ID: depotId}));
+	        btn.addEventListener('click', createAddFunc(tableName, {wpID: dataRow['wpID'], Name: dataRow['wpdisplay_name'], Depot_ID: depotId}));
 	        btn.innerText = 'Kopie_aus_WP';
 	        btn.style.paddingLeft = '0';
 	        btn.style.paddingRight = '0';
@@ -88,7 +88,7 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
 
 	/*public*/
     function enhanceEditor(edit, btnCtnr, pDataIdGetter, createInputDateSelect) {
-    	SBS.selectedWeek = SBS.week;
+    	sbs.selectedWeek = sbs.week;
     	window.changeWeek(0);
     	dataIdGetter = pDataIdGetter;
         var info = document.getElementById('benutzerEditor'+editorSuffix);
@@ -121,9 +121,9 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
             holiday.style.display = 'inline-block';
             info.appendChild(holiday);
             weekSelect = Object.create(WeekSelect);
-            weekSelect.year = Number(SBS.selectedWeek.match(/[0-9]+/)[0]);
+            weekSelect.year = Number(sbs.selectedWeek.match(/[0-9]+/)[0]);
             weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + dataIdGetter();
-            weekSelect.postData = {Benutzer_ID: dataIdGetter(), Woche: SBS.selectedWeek},
+            weekSelect.postData = {Benutzer_ID: dataIdGetter(), Woche: sbs.selectedWeek},
             weekSelect.allowMulti = false;
             weekSelect.setElem(holiday);
 
@@ -162,12 +162,12 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
             info.appendChild(span);
 
 
-            solawiSeriesEditor = SolawiEditor(SBS, function() {solawiTableEdit.reload();solawiTableLiefer.reload();}, false);
+            solawiSeriesEditor = SolawiEditor(sbs, function() {solawiTableEdit.reload();solawiTableLiefer.reload();}, false);
             solawiSeriesEditor.setKeys(['Benutzer_ID','Produkt_ID','Anzahl','Woche','Kommentar']);
-            solawiTableValid = SolawiTable(SBS, 'benutzerEditorValidTable', 'benutzerEditorValidLabel', true, true);
-            solawiTableEdit = SolawiTable(SBS, 'benutzerEditorTable', 'benutzerEditorLabel', true, false);
-            solawiTableView = SolawiTable(SBS, 'benutzerEditorTable', 'benutzerEditorLabel', false, false);
-            solawiTableLiefer = SolawiTable(SBS, 'benutzerLieferTable', 'benutzerLieferLabel', false, false);
+            solawiTableValid = SolawiTable(sbs, 'benutzerEditorValidTable', 'benutzerEditorValidLabel', true, true);
+            solawiTableEdit = SolawiTable(sbs, 'benutzerEditorTable', 'benutzerEditorLabel', true, false);
+            solawiTableView = SolawiTable(sbs, 'benutzerEditorTable', 'benutzerEditorLabel', false, false);
+            solawiTableLiefer = SolawiTable(sbs, 'benutzerLieferTable', 'benutzerLieferLabel', false, false);
             solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];
             var stvrf = solawiTableValid.reload;
             solawiTableValid.reload=function() {stvrf(); solawiTableLiefer.reload();};
@@ -175,9 +175,9 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
             solawiTableEdit.reload=function() {stvrf2(); solawiTableLiefer.reload();};
             btn.onclick=function() {
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='Lieferung';seriesBtn.style.display='inline-block';
-                getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + SBS.week, solawiTableValid.showTable)
-                getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
-                getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableLiefer.showTable)
+                getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
+                getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
+                getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
             };
             btn1.onclick=function() {
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='';seriesBtn.style.display='none';
@@ -196,7 +196,7 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
                 title.style.fontWeight = 'bold';
                 holiday.appendChild(title);
                 weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + dataIdGetter();
-                weekSelect.postData = {Benutzer_ID: dataIdGetter(), Woche: SBS.selectedWeek};
+                weekSelect.postData = {Benutzer_ID: dataIdGetter(), Woche: sbs.selectedWeek};
                 weekSelect.refresh();
             };
 
@@ -210,7 +210,7 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
             stornoCtnr.appendChild(weekLabel);
 
             weekSelector = createInputDateSelect();
-            weekSelector.value = SBS.selectedWeek;
+            weekSelector.value = sbs.selectedWeek;
             weekSelector.onchange=changeWeekEditor;
             stornoCtnr.appendChild(weekSelector);
 
@@ -223,7 +223,7 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
 				window.changeWeekOrig = window.changeWeek;
 				window.changeWeek = function(count) {
 					window.changeWeekOrig(count);
-					weekSelector.value = SBS.selectedWeek;
+					weekSelector.value = sbs.selectedWeek;
 		            changeWeekEditor();
 				}
 	        }
@@ -239,9 +239,9 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
 	        solawiTableEdit.editorDefault['Benutzer_ID'] = dataIdGetter();
 	        lieferTitle.innerText = 'Lieferung';
 	        seriesBtn.style.display='inline-block';
-	        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + SBS.week, solawiTableValid.showTable)
-	        getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
-	        getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableLiefer.showTable)
+	        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
+	        getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
+	        getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
 	        btnCtnr.appendChild(stornoCtnr);
             btnCtnr.style.textAlign = 'left';
         }
@@ -250,7 +250,7 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
 	/*private*/
 	function changeWeekEditor(evt) {
 		  if (evt && evt.target && evt.target.value) {
-          	SBS.selectedWeek=evt.target.value;
+          	sbs.selectedWeek=evt.target.value;
           }
           if (window.changeWeekOrig) {
           	window.changeWeekOrig(0);
@@ -258,29 +258,29 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
           var ele = document.getElementById('blockui_edit'+editorSuffix);
           if (ele && ele.style && ele.style.display != 'none') {
           	  if (evt && evt.type && evt.type == 'insert' && solawiTableValid.getTablePath()) {
-		        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + SBS.week, solawiTableValid.showTable);
+		        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable);
 	          }
 	          if (solawiTableEdit.getTablePath() && solawiTableEdit.getTablePath().match(/BenutzerZusatzBestellung.*Woche.*/)) {
-	              getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
+	              getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
 	          }
 	          if (solawiTableLiefer.getTablePath() && solawiTableLiefer.getTablePath().match(/BenutzerBestellungView.*Woche.*/)) {
-	              getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableLiefer.showTable)
+	              getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
 	          }
           }
 	}
 
 	/*private*/
     function stornoUser() {
-        if (confirm('Benutzer wirklich kündigen? Hierdurch ENDEN alle Modul-Abos zur gewählten Woche ' + SBS.selectedWeek +
+        if (confirm('Benutzer wirklich kündigen? Hierdurch ENDEN alle Modul-Abos zur gewählten Woche ' + sbs.selectedWeek +
                 '(= letzte Lieferung in dieser Woche!). Außerdem werden alle Tausch-Bestellungen nach dieser Woche gelöscht. ' +
                 'Außerdem werden die Anteile und FleischAnteile JETZT SOFORT auf 0 gesetzt. ' +
-                (SBS.selectedWeek < SBS.week ? 'BENUTZER WIRD INS DEPOT "Geloescht" VERSCHOBEN!' : '') )) {
+                (sbs.selectedWeek < sbs.week ? 'BENUTZER WIRD INS DEPOT "Geloescht" VERSCHOBEN!' : '') )) {
 
             getAjax('BenutzerModulAbo/Benutzer_ID/'+dataIdGetter(), function(result) {
                 if (result) {
                     for (var i = 0; i < result.length; i++) {
-                        if (result[i].EndWoche > SBS.selectedWeek) {
-                            postAjax('BenutzerModulAbo/'+result[i].ID, {EndWoche: SBS.selectedWeek}, function(){});
+                        if (result[i].EndWoche > sbs.selectedWeek) {
+                            postAjax('BenutzerModulAbo/'+result[i].ID, {EndWoche: sbs.selectedWeek}, function(){});
                         }
                     }
                 }
@@ -288,14 +288,14 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
             getAjax('BenutzerZusatzBestellung/Benutzer_ID/'+dataIdGetter(), function(result) {
                 if (result) {
                     for (var i = 0; i < result.length; i++) {
-                        if (result[i].Woche > SBS.selectedWeek) {
+                        if (result[i].Woche > sbs.selectedWeek) {
                             deleteAjax('BenutzerZusatzBestellung/'+result[i].ID, function(){});
                         }
                     }
                 }
             });
 
-            if (SBS.selectedWeek < SBS.week) {
+            if (sbs.selectedWeek < sbs.week) {
 	            postAjax('Benutzer/'+dataIdGetter(), {Anteile: 0, FleischAnteile: 0, Depot_ID: 0}, function(){});
             } else {
 	            postAjax('Benutzer/'+dataIdGetter(), {Anteile: 0, FleischAnteile: 0}, function(){});
@@ -316,13 +316,13 @@ function MemberEditor(pEditorSuffix, pOnEntitySaved) {
 
 	/*private*/
     function addModulAbos(userId, data) {
-    	var modules = SBS && SBS.tableCache ? SBS.tableCache['Modul'] : null;
+    	var modules = sbs && sbs.tableCache ? sbs.tableCache['Modul'] : null;
     	if (modules && userId) {
     		for (var i = 0; i < modules.length; i++) {
     			if (modules[i] && modules[i].ID && (modules[i].AnzahlProAnteil || modules[i].ID == 2)) {
     	    		var anteile = modules[i].ID == 4 ? (data.FleischAnteile === '' ? 1 : data.FleischAnteile) : (data.Anteile === '' ? 1 : data.Anteile);
     	    		if (anteile) {
-    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(!modules[i].AnzahlProAnteil && modules[i].ID == 2 ? 3 : modules[i].AnzahlProAnteil), StartWoche: data.PunkteWoche ? data.PunkteWoche : SBS.selectedWeek, EndWoche: '9999.99'}, changeWeekEditor);
+    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(!modules[i].AnzahlProAnteil && modules[i].ID == 2 ? 3 : modules[i].AnzahlProAnteil), StartWoche: data.PunkteWoche ? data.PunkteWoche : sbs.selectedWeek, EndWoche: '9999.99'}, changeWeekEditor);
     				}
     			}
     		}
