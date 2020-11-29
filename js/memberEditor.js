@@ -5,16 +5,17 @@
     The new operator is not required! (We do not use 'this' anywhere in the code).
 
 */
-function MemberEditor(pEditorSuffix) {
+function MemberEditor(pEditorSuffix, pOnEntitySaved) {
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
     	enhanceEditor: enhanceEditor,
-    	saveToDb: saveToDb
+    	saveToDb: saveToDb,
+    	addCopyFromWpBtn: addCopyFromWpBtn
     };
 
+    /* private vars */
     var editorSuffix = pEditorSuffix;
 
-    /* private vars */
     var solawiTableEdit;
     var solawiTableValid;
     var solawiTableView;
@@ -25,13 +26,75 @@ function MemberEditor(pEditorSuffix) {
     var seriesBtn;
     var holiday;
     var stornoCtnr;
+    var weekSelector;
+    var dataIdGetter;
+    var onEntitySaved = pOnEntitySaved;
 
-    function enhanceEditor(edit, btnCtnr, dataIdGetter, createInputDateSelect) {
+	/*public*/
+	function saveToDb(tableName, id, sendData, onEntitySaved) {
+        var keys = Object.keys(sendData);
+        var sendDataDB = {};
+        var hasDb = false;
+        var sendDataWP = {};
+        var hasWp = false;
+        for (var i = 0; i < keys.length; i++) {
+            if (keys && keys[i] && keys[i].match && keys[i].match(/^wp.*$/) && (!keys[i].match(/^wp(Mit)?ID$/))) {
+                sendDataWP[keys[i].replace(/^wp/, '')] = sendData[keys[i]];
+                hasWp = true;
+            } else {
+                sendDataDB[keys[i]] = sendData[keys[i]];
+                hasDb = true;
+            }
+        }
+        if (hasWp) {
+            if (hasDb) {
+                postAjax('/cgi-bin/wp.pl/user_meta/' + id, sendDataWP, function() {
+                    postAjax(tableName + (id ? '/'+id : ''), sendDataDB, onEntitySaved);
+                });
+            } else {
+                postAjax('/cgi-bin/wp.pl/user_meta/' + id, sendDataWP, onEntitySaved);
+            }
+        } else if (hasDb) {
+            postAjax(tableName + (id ? '/'+id : ''), sendDataDB, function(result, path, data) {
+		    	if (path == 'Benutzer' && result && result.type == 'insert' && result.id) {
+	            	addModulAbos(result.id, data);
+            	}
+            	onEntitySaved(result, path, data);
+        	});
+        }
+	}
+
+	/*public*/
+    function addCopyFromWpBtn(tr, dataRow, createAddFunc){
+        if (dataRow['wpID'] && dataRow['Name'] == 'onlyWP' && dataRow['ID'] == -1) {
+	        var btn = document.createElement('BUTTON');
+	        tr.firstChild.innerHTML = '';
+	        tr.firstChild.appendChild(btn);
+	        var depotId = null;
+	        if (dataRow['wpDepot'] && SBS && SBS.tableCache['Depot']) {
+	        	for (var k = 0; k<SBS.tableCache['Depot'].length; k++) {
+	        		if (SBS.tableCache['Depot'][k] && SBS.tableCache['Depot'][k].wpName == dataRow['wpDepot']){
+						depotId = SBS.tableCache['Depot'][k].ID;
+	        		}
+	        	}
+	        }
+	        btn.addEventListener('click', createAddFunc({wpID: dataRow['wpID'], Name: dataRow['wpdisplay_name'], Depot_ID: depotId}));
+	        btn.innerText = 'Kopie_aus_WP';
+	        btn.style.paddingLeft = '0';
+	        btn.style.paddingRight = '0';
+	        btn.className='btn_plus'
+        }
+    }
+
+	/*public*/
+    function enhanceEditor(edit, btnCtnr, pDataIdGetter, createInputDateSelect) {
+    	SBS.selectedWeek = SBS.week;
+    	window.changeWeek(0);
+    	dataIdGetter = pDataIdGetter;
         var info = document.getElementById('benutzerEditor'+editorSuffix);
         if (!info) {
             info = document.createElement("DIV");
             info.id='benutzerEditor'+editorSuffix;
-            info.style.display='inline-block';
             info.style.width = '61%';
             info.style.height = '650px';
             info.style.overflow = 'auto';
@@ -146,37 +209,69 @@ function MemberEditor(pEditorSuffix) {
             weekLabel.innerText="Woche f. Tausch / Lieferung (oben) oder Kündigung: ";
             stornoCtnr.appendChild(weekLabel);
 
-            var weekSelector = createInputDateSelect();
+            weekSelector = createInputDateSelect();
             weekSelector.value = SBS.selectedWeek;
-            weekSelector.onchange=function(evt) {
-              SBS.selectedWeek=evt.target.value;
-              if (solawiTableEdit.getTablePath() && solawiTableEdit.getTablePath().match(/BenutzerZusatzBestellung.*Woche.*/)) {
-                  getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
-              }
-              if (solawiTableLiefer.getTablePath() && solawiTableLiefer.getTablePath().match(/BenutzerBestellungView.*Woche.*/)) {
-                  getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableLiefer.showTable)
-              }
-            };
+            weekSelector.onchange=changeWeekEditor;
             stornoCtnr.appendChild(weekSelector);
 
             var stornoBtn = document.createElement("BUTTON");
             stornoBtn.innerText = "kündigen";
             stornoBtn.onclick = stornoUser;
             stornoCtnr.appendChild(stornoBtn);
+
+	        if (window.changeWeek && !window.changeWeekOrig) {
+				window.changeWeekOrig = window.changeWeek;
+				window.changeWeek = function(count) {
+					window.changeWeekOrig(count);
+					weekSelector.value = SBS.selectedWeek;
+		            changeWeekEditor();
+				}
+	        }
         }
-        solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';
-        solawiTableValid.editorDefault['Benutzer_ID'] = dataIdGetter();
-        solawiTableEdit.editorDefault['Benutzer_ID'] = dataIdGetter();
-        lieferTitle.innerText = 'Lieferung';
-        seriesBtn.style.display='inline-block';
-        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + SBS.week, solawiTableValid.showTable)
-        getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
-        getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableLiefer.showTable)
-        btnCtnr.appendChild(stornoCtnr);
+
+		if(! dataIdGetter()) {
+			info.style.display = 'none';
+            btnCtnr.style.textAlign = 'center';
+		} else {
+            info.style.display='inline-block';
+	        solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';
+	        solawiTableValid.editorDefault['Benutzer_ID'] = dataIdGetter();
+	        solawiTableEdit.editorDefault['Benutzer_ID'] = dataIdGetter();
+	        lieferTitle.innerText = 'Lieferung';
+	        seriesBtn.style.display='inline-block';
+	        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + SBS.week, solawiTableValid.showTable)
+	        getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
+	        getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableLiefer.showTable)
+	        btnCtnr.appendChild(stornoCtnr);
+            btnCtnr.style.textAlign = 'left';
+        }
     }
 
+	/*private*/
+	function changeWeekEditor(evt) {
+		  if (evt && evt.target && evt.target.value) {
+          	SBS.selectedWeek=evt.target.value;
+          }
+          if (window.changeWeekOrig) {
+          	window.changeWeekOrig(0);
+          }
+          var ele = document.getElementById('blockui_edit'+editorSuffix);
+          if (ele && ele.style && ele.style.display != 'none') {
+          	  if (evt && evt.type && evt.type == 'insert' && solawiTableValid.getTablePath()) {
+		        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + SBS.week, solawiTableValid.showTable);
+	          }
+	          if (solawiTableEdit.getTablePath() && solawiTableEdit.getTablePath().match(/BenutzerZusatzBestellung.*Woche.*/)) {
+	              getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableEdit.showTable)
+	          }
+	          if (solawiTableLiefer.getTablePath() && solawiTableLiefer.getTablePath().match(/BenutzerBestellungView.*Woche.*/)) {
+	              getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + SBS.selectedWeek, solawiTableLiefer.showTable)
+	          }
+          }
+	}
+
+	/*private*/
     function stornoUser() {
-        if (tableName=='Benutzer' && confirm('Benutzer wirklich kündigen? Hierdurch ENDEN alle Modul-Abos zur gewählten Woche ' + SBS.selectedWeek +
+        if (confirm('Benutzer wirklich kündigen? Hierdurch ENDEN alle Modul-Abos zur gewählten Woche ' + SBS.selectedWeek +
                 '(= letzte Lieferung in dieser Woche!). Außerdem werden alle Tausch-Bestellungen nach dieser Woche gelöscht. ' +
                 'Außerdem werden die Anteile und FleischAnteile JETZT SOFORT auf 0 gesetzt. ' +
                 (SBS.selectedWeek < SBS.week ? 'BENUTZER WIRD INS DEPOT "Geloescht" VERSCHOBEN!' : '') )) {
@@ -200,52 +295,40 @@ function MemberEditor(pEditorSuffix) {
                 }
             });
 
-            postAjax('Benutzer/'+dataIdGetter(), {Anteile: 0}, function(){});
-            postAjax('Benutzer/'+dataIdGetter(), {FleischAnteile: 0}, function(){});
-
             if (SBS.selectedWeek < SBS.week) {
-                postAjax('Benutzer/'+dataIdGetter(), {Depot_ID: 0}, function(){});
+	            postAjax('Benutzer/'+dataIdGetter(), {Anteile: 0, FleischAnteile: 0, Depot_ID: 0}, function(){});
+            } else {
+	            postAjax('Benutzer/'+dataIdGetter(), {Anteile: 0, FleischAnteile: 0}, function(){});
             }
 
              reloadWhenReady();
         }
     }
 
+	/*private*/
     function reloadWhenReady() {
         if (window.activeAjaxRequestCount) {
             window.setTimeout(reloadWhenReady, 333);
         } else {
-            solawiTable.reload();
+            hide('blockui_edit'+editorSuffix);onEntitySaved();
         }
     }
 
-	function saveToDb(tableName, id, sendData, onEntitySaved) {
-        var keys = Object.keys(sendData);
-        var sendDataDB = {};
-        var hasDb = false;
-        var sendDataWP = {};
-        var hasWp = false;
-        for (var i = 0; i < keys.length; i++) {
-            if (keys && keys[i] && keys[i].match && keys[i].match(/^wp.*$/) && (!keys[i].match(/^wp(Mit)?ID$/))) {
-                sendDataWP[keys[i].replace(/^wp/, '')] = sendData[keys[i]];
-                hasWp = true;
-            } else {
-                sendDataDB[keys[i]] = sendData[keys[i]];
-                hasDb = true;
-            }
-        }
-        if (hasWp) {
-            if (hasDb) {
-                postAjax('/cgi-bin/wp.pl/user_meta/' + id, sendDataWP, function() {
-                    postAjax(tableName + (id ? '/'+id : ''), sendDataDB, onEntitySaved);
-                });
-            } else {
-                postAjax('/cgi-bin/wp.pl/user_meta/' + id, sendDataWP, onEntitySaved);
-            }
-        } else if (hasDb) {
-            postAjax(tableName + (id ? '/'+id : ''), sendDataDB, onEntitySaved);
-        }
-	}
+	/*private*/
+    function addModulAbos(userId, data) {
+    	var modules = SBS && SBS.tableCache ? SBS.tableCache['Modul'] : null;
+    	if (modules && userId) {
+    		for (var i = 0; i < modules.length; i++) {
+    			if (modules[i] && modules[i].ID && (modules[i].AnzahlProAnteil || modules[i].ID == 2)) {
+    	    		var anteile = modules[i].ID == 4 ? (data.FleischAnteile === '' ? 1 : data.FleischAnteile) : (data.Anteile === '' ? 1 : data.Anteile);
+    	    		if (anteile) {
+    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(!modules[i].AnzahlProAnteil && modules[i].ID == 2 ? 3 : modules[i].AnzahlProAnteil), StartWoche: data.PunkteWoche ? data.PunkteWoche : SBS.selectedWeek, EndWoche: '9999.99'}, changeWeekEditor);
+    				}
+    			}
+    		}
+    	}
+    }
+
 
     return pub;
 }

@@ -41,12 +41,13 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 	<script>
         var SBTedit = SolawiTable(SBS, 'table', 'tablePath', '2', false);
 
-        function loadTableBenutzer(){ getAjax('/cgi-bin/wp.pl/', function (response, path) {
+        function loadTableBenutzer(){getAjax('/cgi-bin/wp.pl/', function (response, path) {
             var byWpId = {};
 	        for (var j = 0; j < response.length; j++) {
 				byWpId[response[j].ID] = response[j];
 	        }
-		    getAjax('Benutzer/ACTIVE', function(response2, path2) {
+	        var depotFilter = document.getElementById('depotFilter');
+		    getAjax(depotFilter && (depotFilter.value === '0' || depotFilter.value === 0) ? 'Benutzer' : ('Benutzer/' + (depotFilter && depotFilter.value ? ('Depot_ID/' + depotFilter.value) : 'ACTIVE')), function(response2, path2) {
 		        for (var i = 0; i < response2.length; i++) {
 		            var usr = response2[i];
 		            usr.NOTES = '';
@@ -104,16 +105,42 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 	            		}
 		            }
 		        }
+		        var wpDepot = depotFilter && depotFilter.value && SBS.tableCache['Depot'] && SBS.tableCache['Depot'][depotFilter.value] && SBS.tableCache['Depot'][depotFilter.value].wpName;
 		        for (var j = 0; j < response.length; j++) {
 		            var wpUsr = response[j];
 					if (!wpUsr.wpSynced) {
-					    var usr = {ID: -1, Name:'onlyWP'};
-	            		Object.keys(wpUsr).forEach(function(key) {
-	        		    		usr['wp'+key]=wpUsr[key];
-			            		});
-	            		response2.push(usr);
+	            		if ((!wpDepot) || wpUsr.Depot == wpDepot || (wpUsr.Depot == 'Hofteam' && wpDepot == 'Selbstabholer')) {
+						    var usr = {ID: -1, Name:'onlyWP'};
+		            		Object.keys(wpUsr).forEach(function(key) {
+		        		    		usr['wp'+key]=wpUsr[key];
+				            		});
+		            		response2.push(usr);
+	            		}
 					}
 		        }
+		  		  var filterContainer = document.getElementById('filterContainer');
+		  		  if (filterContainer && (!document.getElementById('depotFilter')) && SBTedit && SBS.tableCache['Depot']) {
+		  	          inp = createInputSelect(SBS.tableCache['Depot']);
+		  	          filterContainer.appendChild(inp);
+		  	          inp.onchange = SBTedit.reload;
+		  	          inp.id = 'depotFilter';
+		  	          inp.value = '';
+				        var opt = document.createElement("OPTION");
+				        opt.value='';
+				        opt.innerText='Zeige alle Depots außer "Geloescht"';
+				        opt.selected='selected';
+				        inp.appendChild(opt);
+		  	      }
+		  		  if (depotFilter && (depotFilter.value === '0' || depotFilter.value === 0)) {
+		  		    var response3 = response2;
+		  		    response2 = [];
+					for (var j = 0; j<response3.length;j++) {
+					    console.log(response3[j]);
+					    if(response3[j] && (!response3[j].Depot_ID)) {
+					        response2.push(response3[j]);
+					    }
+					}
+		  		  }
 		        SBTedit.showTable(response2, path2);
 		    });
         });}
@@ -125,7 +152,38 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 
 		initUser(loadTableBenutzer);
 
+		var filterContainer = document.getElementById('filterContainer');
+		if (filterContainer && SBTedit) {
+	        inp = createInputSelect(sbs.tableCache['Depot']);
+	        filterContainer.appendChild(inp);
+	        inp.onChange = SBTedit.reload;
+	    }
+
+		function createInputSelect(response){
+		    var inp = document.createElement("SELECT");
+		    if (response.slice && response.sort && response.length > 0) {
+		    	response = response.slice();
+		        if ((response[0] && response[0]['Nr']) || (response.length > 1 && response[1] && response[1]['Nr'])) {
+		            response.sort( function rowSortFunc(a,b) { return a['Nr'] < b['Nr'] ? -1 : a['Nr'] > b['Nr'] ? 1 : 0; } );
+		        } else {
+		            response.sort( function rowSortFunc(a,b) { return a['Name'] < b['Name'] ? -1 : a['Name'] > b['Name'] ? 1 : 0; } );
+		        }
+		    }
+		    for (var k=0; k<response.length; k++) {
+		        var row = response[k];
+		        if (row) {
+			        var opt = document.createElement("OPTION");
+			        opt.value=row.ID;
+			        opt.innerText=row.Name;
+			        inp.appendChild(opt);
+		        }
+		    }
+		    return inp;
+		}
+
         function changeWeek(count) {
+            SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
+            setHtmlContent('selectedWeek0', '<span title="weekToDate(SBS.selectedWeek, 4).toLocaleDateString()">' +  SBS.selectedWeek + '</span>');
         }
     </script>
 
@@ -134,6 +192,8 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 		<div style="text-align: center; padding: 5px 0 10px 0; white-space: nowrap; overflow: hidden; width: 80%;">
 			MITGLIEDER-VERWALTUNG &#160; - &#160; <a href="index.htm">zurück zur Startseite</a>
 		</div>
+
+		<div id="filterContainer">FILTER: Depot:</div>
 
 		<div id="tablePath"></div>
 		<div class="fixedHeaderTable">

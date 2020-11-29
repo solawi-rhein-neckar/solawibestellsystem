@@ -15,7 +15,8 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                 if (tableValidator) { tableValidator.setResponse(pPath, pResponse); }
                 responseCache = pResponse;
             },
-            setKeys: setKeys
+            setKeys: setKeys,
+            addCopyFromWpBtn: function(tr, dataRow, createAddFunc) {if(memberEditor)memberEditor.addCopyFromWpBtn(tr, dataRow, createAddFunc)}
     };
 
     /* private vars */
@@ -28,7 +29,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
     var keys;
     var responseCache;
     var dataId;
-    var memberEditor;
+    var memberEditor = editorSuffix ? MemberEditor(editorSuffix, onEntitySaved) : null;
 
     const numberColumnNames = {
             'Menge':1
@@ -101,6 +102,12 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                     inp.value = sbs.selectedWeek;
                 } else if (keys[j] == 'Anteile' || keys[j] == 'FleischAnteile') {
                     inp.value = 1;
+                } else if (keys[j] == 'wpID' && defaults['wpID']) {
+                    inp.value = defaults['wpID'];
+                } else if (keys[j] == 'Name' && defaults['Name']) {
+                    inp.value = defaults['Name'];
+                } else if (keys[j] == 'Benutzer_ID') {
+                    inp.value = defaults['Benutzer_ID'] ? defaults['Benutzer_ID'] : sbs.user.ID;
                 }
                 var div = document.createElement('DIV');
                 var label = document.createElement('SPAN');
@@ -249,7 +256,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         } else {
             btnCtnr = document.createElement("DIV");
             btnCtnr.id = 'editorSaveBtn'+editorSuffix;
-            btnCtnr.style.textAlign = 'left';
+            btnCtnr.style.textAlign = 'center';
             edit.parentNode.appendChild(btnCtnr);
         }
         btnEle = document.createElement("BUTTON");
@@ -260,14 +267,11 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
 
         var btn2 = document.createElement("BUTTON");
         btn2.innerText="Abbrechen";
-        btn2.addEventListener('click', function(){if (collectChangedInputData().size == 0 || confirm('Änderung verwerfen?')){hide('blockui_edit'+editorSuffix);}});
+        btn2.addEventListener('click', function(){if (collectChangedInputData().size == 0 || (tableName == 'BenutzerZusatzBestellung' && !dataId) || confirm('Änderung verwerfen?')){hide('blockui_edit'+editorSuffix);}});
         btnCtnr.appendChild(btnEle);
         btnCtnr.appendChild(btn2);
 
-        if (tableName == 'Benutzer') {
-            if (!memberEditor) {
-                memberEditor = MemberEditor(editorSuffix);
-            }
+        if (memberEditor) {
             memberEditor.enhanceEditor(edit, btnCtnr, dataIdGetter, createInputDateSelect);
         } else {
             var info = document.getElementById('benutzerEditor'+editorSuffix);
@@ -287,11 +291,8 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
 
     function saveEditorInputs(event2) {
         validateAndProceed(event2, function(id, sendData) {
-            if (tableName == 'Benutzer' && Object.keys(sendData)) {
-                if (!memberEditor) {
-                    memberEditor = MemberEditor(editorSuffix);
-                }
-                memberEditor.saveToDb(tableName, id, sendData, onEntitySaved);
+            if (memberEditor && Object.keys(sendData)) {
+                memberEditor.saveToDb(tableName, id, sendData);
             } else {
                 postAjax(tableName + (id ? '/'+id : ''), sendData, onEntitySaved);
             }

@@ -44,6 +44,8 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, edit
     function addColumnCells(tr, dataRow) {
     	addDeleteButtonCell(tr, dataRow);
     	addWeekSelectCell(tr, dataRow['ID']);
+
+		solawiEditor.addCopyFromWpBtn(tr, dataRow, function(defaults){return createAddFunc(solawiTable, defaults)});
     }
 
     function enhanceDataCell(div, key) {
@@ -120,10 +122,10 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, edit
         }
     }
 
-    function createAddFunc(solawiTableVar) {
+    function createAddFunc(solawiTableVar, defaults) {
     	return function(event) {
         	event.stopPropagation();
-        	solawiEditor.showForAdding(solawiTableVar.getTableName(), solawiTableVar.editorDefault)
+        	solawiEditor.showForAdding(solawiTableVar.getTableName(), defaults ? defaults : solawiTableVar.editorDefault)
         };
     }
 
