@@ -2,7 +2,7 @@ window.activeAjaxRequestCount = 0;
 
 function postAjax(path, data, success, method) {
     var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-    xhr.open(method || (data ? 'POST' : 'GET'), 'https://' + (document.location.host || 'solawi-rhein-neckar.org') + (path.match(/^\//) ? path : ('/cgi-bin/resql.pl/' + path)) );
+    xhr.open(method || (data ? 'POST' : 'GET'), 'https://' + (document.location.host || 'solawi-rhein-neckar.org') + (path.match(/^\//) ? path : path == 'wp' ? '/cgi-bin/wp.pl/' : ('/cgi-bin/resql.pl/' + path)) );
     xhr.onreadystatechange = function() {
     	if (xhr.readyState>3) {
 	        window.activeAjaxRequestCount--;

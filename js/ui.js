@@ -31,6 +31,7 @@ function initUser(initTablesFunction) {
 	SBS.fillCache('Depot');
 	SBS.fillCache('Produkt');
 	SBS.fillCache('Benutzer');
+	SBS.fillCache('wp');
 }
 
 function onSuccessfulLogin(result,path){

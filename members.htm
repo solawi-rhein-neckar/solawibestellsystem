@@ -41,7 +41,7 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 	<script>
         var SBTedit = SolawiTable(SBS, 'table', 'tablePath', '2', false);
 
-        function loadTableBenutzer(){getAjax('/cgi-bin/wp.pl/', function (response, path) {
+        function loadTableBenutzer(){getAjax('wp', function (response, path) {
             var byWpId = {};
 	        for (var j = 0; j < response.length; j++) {
 				byWpId[response[j].ID] = response[j];
@@ -147,7 +147,7 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 
 		SBTedit.reload=loadTableBenutzer;
         SBTedit.setSortBy('Name');
-        SBTedit.columns = ['Name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpuser_email','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
+        SBTedit.columns = ['Name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpuser_email','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
 		SBTedit.editAtOnce = true;
 
 		initUser(loadTableBenutzer);
@@ -193,7 +193,10 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 			MITGLIEDER-VERWALTUNG &#160; - &#160; <a href="index.htm">zurück zur Startseite</a>
 		</div>
 
-		<div id="filterContainer">FILTER: Depot:</div>
+		<div id="filterContainer">
+			<button onclick="getAjax('BenutzerPunkte/NULL', loadTableBenutzer)">Punkte_Berechnen</button>
+			&#160; &#160; &#160; | &#160; &#160; &#160; FILTER: &#160; &#160; Depot:
+		</div>
 
 		<div id="tablePath"></div>
 		<div class="fixedHeaderTable">

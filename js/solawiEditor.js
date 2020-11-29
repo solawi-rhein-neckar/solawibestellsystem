@@ -151,16 +151,21 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         } else if (key.match(/^(AnteileStart|Start|End|Punkte)?Woche$/)) {
             inp = createInputDateSelect();
         } else {
-            inp = document.createElement("INPUT");
-            if (numberColumnNames[key] ||  key.match(/^(.*)_ID$/)) {
-                inp.type="number";
-                inp.step=numberColumnNames[key] || 1;
-                inp.min=key.match(/^(.*)_ID$/) ? "0" : "-10";
-                inp.max=key.match(/^(.*)_ID$/) ? "99999" : "999";
-            } else if (key.match(/^(Start|End|Punkte)?Woche$/)) {
-                inp.pattern="^(2019|2020|2021|2022|9999)[.](0[1-9]|[1-4][0-9]|5[0-3])$"
-            } else if (tableName == 'Solawi' && key.match(/^Wert$/)) {
-                inp.pattern="^(2019|2020|2021|2022|9999)[.](0[1-9]|[1-4][0-9]|5[0-3])$"
+            var relation2 = key.match(/^(wp)(Mit)?ID$/);
+            if (relation2 && sbs.tableCache[relation2[1]]) {
+                inp = createInputSelect(sbs.tableCache[relation2[1]]);
+            } else {
+                inp = document.createElement("INPUT");
+                if (numberColumnNames[key] ||  key.match(/^(.*)_ID$/)) {
+                    inp.type="number";
+                    inp.step=numberColumnNames[key] || 1;
+                    inp.min=key.match(/^(.*)_ID$/) ? "0" : "-10";
+                    inp.max=key.match(/^(.*)_ID$/) ? "99999" : "999";
+                } else if (key.match(/^(Start|End|Punkte)?Woche$/)) {
+                    inp.pattern="^(2019|2020|2021|2022|9999)[.](0[1-9]|[1-4][0-9]|5[0-3])$"
+                } else if (tableName == 'Solawi' && key.match(/^Wert$/)) {
+                    inp.pattern="^(2019|2020|2021|2022|9999)[.](0[1-9]|[1-4][0-9]|5[0-3])$"
+                }
             }
         }
         inp.className = 'editor inp_' + key;
@@ -177,6 +182,12 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         response = response.slice();
             if ((response[0] && response[0]['Nr']) || (response.length > 1 && response[1] && response[1]['Nr'])) {
                 response.sort( function rowSortFunc(a,b) { return a['Nr'] < b['Nr'] ? -1 : a['Nr'] > b['Nr'] ? 1 : 0; } );
+            } else if ((response[0] && response[0]['display_name']) || (response.length > 3 && response[3] && response[3]['display_name'])) {
+                response.sort( function rowSortFunc(a,b) { return a['display_name'] < b['display_name'] ? -1 : a['display_name'] > b['display_name'] ? 1 : 0; } );
+                var opt = document.createElement("OPTION");
+                opt.value='';
+                opt.innerText=' ( - ) ';
+                inp.appendChild(opt);
             } else {
                 response.sort( function rowSortFunc(a,b) { return a['Name'] < b['Name'] ? -1 : a['Name'] > b['Name'] ? 1 : 0; } );
             }
@@ -186,7 +197,8 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
             if (row && (row.ID || row.ID === 0)  && ((!disableUnavailableProducts) || (!row.Nr) || row.AnzahlZusatzBestellungMax > 0 || row.Nr <= 900)) {
                 var opt = document.createElement("OPTION");
                 opt.value=row.ID;
-                opt.innerText=row.Name;
+                opt.innerText=row.Name || row['display_name'] || row['user_email'];
+                opt.title='ID: ' + row.ID + (row['user_email'] ? (' - ' + row['user_email']) : '');
                 if (disableUnavailableProducts && (row.AnzahlZusatzBestellungMax < 0 || (row.AnzahlZusatzBestellung > 0 && row.AnzahlZusatzBestellungMax <= row.AnzahlZusatzBestellung) || (row.AnzahlZusatzBestellungMax == 0 && row.AnzahlBestellung <= 0) )) {
 
                     opt.disabled='disabled';
@@ -300,7 +312,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
     function saveEditorInputs(event2) {
         validateAndProceed(event2, function(id, sendData) {
             if (memberEditor && Object.keys(sendData)) {
-                memberEditor.saveToDb(tableName, id, sendData);
+                memberEditor.saveToDb(tableName, id, sendData, onEntitySaved);
             } else {
                 postAjax(tableName + (id ? '/'+id : ''), sendData, onEntitySaved);
             }

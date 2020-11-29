@@ -65,7 +65,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, edit
             if (disableUnavailableProducts) {
             	div.style['border-bottom'] = "1px dotted black";
             }
-            div.title = "click to edit!";
+            div.title = div.title ? div.title + "  -  click to edit!" : "click to edit!";
         }
     }
 

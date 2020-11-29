@@ -110,6 +110,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     function onEntitySaved(result, path, data) {
         tableExtensions.forEach(function(ext){if (ext.onEntitySaved) {ext.onEntitySaved(result, path, data)};});
         pub.reload();
+        if (result && result.type == 'insert' && sbs && sbs.tableCache && sbs.tableCache[path]) {
+            sbs.fillCache(path);
+        }
     }
 
 /**** private ****/
@@ -181,7 +184,16 @@ inp.style.width='40px';
         if (relation && sbs.tableCache[relation[1]]) {
             var row = sbs.tableCache[relation[1]][div.innerText];
             div.dataValue = div.innerText;
+            div.title = div.innerText;
             div.innerText = row == null ? ' (' + div.innerText + ') ' : row.Name;
+        } else {
+            var relation2 = key.match(/^(wp)(Mit)?ID$/);
+            if (relation2 && sbs.tableCache[relation2[1]]) {
+                var row = sbs.tableCache[relation2[1]][div.innerText];
+                div.dataValue = div.innerText;
+                div.title = row == null ? div.innerText : div.innerText + ': ' + row['display_name'];
+                div.innerText = row == null ? ' (' + div.innerText + ') ' : row['user_email'];
+            }
         }
 
         div.dataKey = key;
