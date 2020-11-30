@@ -1,13 +1,13 @@
-DROP PROCEDURE IF EXISTS `BenutzerPunkte`;
-CREATE PROCEDURE `BenutzerPunkte` (
-   IN `pBenutzer` int
+DROP PROCEDURE IF EXISTS `BenutzerPunkteBerechnung`;
+CREATE PROCEDURE `BenutzerPunkteBerechnung` (
+   IN `pBenutzer` int,
+   IN `pYear` int,
+   OUT `pWoche` decimal(6,2)
 )
-MODIFIES SQL DATA
+READS SQL DATA
 SQL SECURITY INVOKER
 BEGIN
-
-  DECLARE pWoche decimal(6,2);
-  DECLARE day DATETIME DEFAULT DATE_ADD(MAKEDATE(year(curdate()) - IF(month(curdate()) < 11, -1, 0) , 8), INTERVAL 10 MONTH);
+  DECLARE day DATETIME DEFAULT DATE_ADD(MAKEDATE(pYear - IF(month(curdate()) < 11, -1, 0) , 8), INTERVAL 10 MONTH);
 
   DROP TEMPORARY TABLE IF EXISTS BenutzerPunkteTemp;
   DROP TEMPORARY TABLE IF EXISTS BenutzerPunkteTemp2;
@@ -52,11 +52,37 @@ BEGIN
     SET day = date_add(day, interval 7 day);
 
   END WHILE;
+END;
+
+DROP PROCEDURE IF EXISTS `BenutzerPunkteView`;
+CREATE PROCEDURE `BenutzerPunkteView` (
+   IN `pBenutzer` int,
+   IN `pYear` int
+)
+READS SQL DATA
+SQL SECURITY INVOKER
+BEGIN
+  DECLARE pWoche decimal(6,2);
+
+  CALL BenutzerPunkteBerechnung(pBenutzer, pYear, pWoche);
+
+  SELECT * FROM BenutzerPunkteTemp;
+END;
+
+DROP PROCEDURE IF EXISTS `BenutzerPunkte`;
+CREATE PROCEDURE `BenutzerPunkte` (
+   IN `pBenutzer` int
+)
+MODIFIES SQL DATA
+SQL SECURITY INVOKER
+BEGIN
+  DECLARE pWoche decimal(6,2);
+
+  CALL BenutzerPunkteBerechnung(pBenutzer, year(curdate()), pWoche);
 
   UPDATE Benutzer SET PunkteStand = (Select Total FROM BenutzerPunkteTemp Where Woche = pWoche And BenutzerPunkteTemp.Benutzer_ID = Benutzer.ID),
                       PunkteWoche = pWoche
           WHERE (Select Total FROM BenutzerPunkteTemp2 Where Woche = pWoche And BenutzerPunkteTemp2.Benutzer_ID = Benutzer.ID) IS NOT NULL;
 
   SELECT * FROM BenutzerPunkteTemp;
-
 END;

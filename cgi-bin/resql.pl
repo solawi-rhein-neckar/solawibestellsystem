@@ -180,6 +180,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( ($user->{Role_ID} == R_DEPOT) && $table =~ /^BenutzerBestellungView$/ && $column =~ /^Woche$/) {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id,undef,$user->{Depot_ID});
+				} elsif ( $table =~ /^BenutzerPunkteView$/ ||  $table =~ /^BenutzerPunkte$/) {
+					$sth = $dbh->prepare("CALL $table(?, ?)");
+					$sth->execute($user->{Role_ID} <= R_USER ? $user->{ID} : $id == 'null' || $id == 'NULL' ? undef : $id, $column);
 				} elsif ( ($user->{Role_ID} == R_DEPOT) && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
 					$sth->execute($id, $user->{Depot_ID});
@@ -322,6 +325,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					}
 					push(@$results, $row);
 				}
+
 				print encode_json($results);
 			}
 
@@ -598,4 +602,5 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 
 # close database handle
 $dbh->disconnect
+
 

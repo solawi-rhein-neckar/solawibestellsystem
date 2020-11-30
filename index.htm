@@ -130,6 +130,10 @@
     	document.getElementById('btn_show_selected_week').style.display = 'inline';
     	document.getElementById('btn_show_full_year').style.display = 'none';
 	}
+    function showPunkte2019() {
+        var SBTpunkte = SolawiTable(SBS, 'tablePunkte', 'tablePunktePath', false, false);
+        getAjax('BenutzerPunkteView/2019/' + SBS.user.ID, SBTpunkte.showTable);
+    }
     function showPunkte() {
         var SBTpunkte = SolawiTable(SBS, 'tablePunkte', 'tablePunktePath', false, false);
         getAjax('BenutzerPunkte/' + SBS.user.ID, function(response, path, data) {
@@ -264,10 +268,10 @@
 		</table>
 	</div>
 	<div style="font-size:12px;padding:3px;color:#333;">
-		* Der 'Punkte-Abzug' ergibt sich aus der (Liefer-)Anzahl. Die 'Gutschrift' ergibt sich aus der "Standard-Lieferung".<br/> <b>Das Tausch-Punkte-Konto 2020 ist nur zum TEST. 2021 starten alle mit 0 Punkten. Tauschpunkte verfallen am Jahresende.</b>
+		* Der 'Punkte-Abzug' ergibt sich aus der (Liefer-)Anzahl. Die 'Gutschrift' ergibt sich aus der "Standard-Lieferung".<br/> <b>Das Tausch-Punkte-Konto 2019/20 ist nur zum TEST. Am 1.11.2020 starten alle mit 0 Punkten. Tauschpunkte verfallen am Saison-Ende, wenn nicht anders besprochen</b>
 	</div>
 	<div style="text-align:center;font-size:18px;padding:3px;color:#000;">
-		<a href="#" onclick="showPunkte();" title="Clicken für Historie und aktuelle Neu-Berechnung des Punkte-Stand">Tausch-Punkte-Konto: <span style="font-weight:bold;" id="punktestand"></span> in Woche <span style="font-weight:bold;" id="punktewoche"></span></a>
+		<a href="#" onclick="showPunkte();event.target.onclick=showPunkte2019;event.target.title='Clicken um Historie des Vorjahrs 2019 anzuzeigen;';event.target.innerHTML += ' &#160; - <b>Nochmal clicken für 2019</b>';" title="Clicken für Historie und aktuelle Neu-Berechnung des Punkte-Stand">Tausch-Punkte-Konto: <span style="font-weight:bold;" id="punktestand"></span> in Woche <span style="font-weight:bold;" id="punktewoche"></span></a>
 		<br/>
 		<table id="tablePunkte" cellspacing="0">
 		</table>
