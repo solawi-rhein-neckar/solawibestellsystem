@@ -35,7 +35,7 @@
                 'Cookie', 'Passwort', 'AltName', 'ErstellZeitpunkt', 'AenderZeitpunkt', 'AenderBenutzer_ID' ];
 
         //check login status
-        initUser(function() {getAjax('Benutzer', SBTmeta.showTable);});
+        initUser(function() {getAjax('Benutzer/Depot_ID/'+SBS.user['Depot_ID'], SBTmeta.showTable);});
 
         function changeWeek(count) {
             SBS.selectedWeek = addWeek(SBS.selectedWeek, count);

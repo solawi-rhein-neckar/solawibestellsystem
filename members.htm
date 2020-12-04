@@ -46,8 +46,7 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 	        for (var j = 0; j < response.length; j++) {
 				byWpId[response[j].ID] = response[j];
 	        }
-	        var depotFilter = document.getElementById('depotFilter');
-		    getAjax(depotFilter && (depotFilter.value === '0' || depotFilter.value === 0) ? 'Benutzer' : ('Benutzer/' + (depotFilter && depotFilter.value ? ('Depot_ID/' + depotFilter.value) : 'ACTIVE')), function(response2, path2) {
+		    getAjax('Benutzer', function(response2, path2) {
 		        for (var i = 0; i < response2.length; i++) {
 		            var usr = response2[i];
 		            usr.NOTES = '';
@@ -105,6 +104,7 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 	            		}
 		            }
 		        }
+		        var depotFilter = document.getElementById('depotFilter');
 		        var wpDepot = depotFilter && depotFilter.value && SBS.tableCache['Depot'] && SBS.tableCache['Depot'][depotFilter.value] && SBS.tableCache['Depot'][depotFilter.value].wpName;
 		        for (var j = 0; j < response.length; j++) {
 		            var wpUsr = response[j];
@@ -131,15 +131,17 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 				        opt.selected='selected';
 				        inp.appendChild(opt);
 		  	      }
-		  		  if (depotFilter && (depotFilter.value === '0' || depotFilter.value === 0)) {
-		  		    var response3 = response2;
-		  		    response2 = [];
-					for (var j = 0; j<response3.length;j++) {
-					    console.log(response3[j]);
-					    if(response3[j] && (!response3[j].Depot_ID)) {
-					        response2.push(response3[j]);
-					    }
-					}
+		  		  /* filter users by depot at the very end. Needs to be done at the end, because assignment needs to be done first */
+	  		      var response3 = response2;
+	  		      response2 = [];
+				  for (var j = 0; j<response3.length;j++) {
+				      console.log(response3[j]);
+				      if(response3[j] && depotFilter && ((response3[j].Depot_ID !== 0 && !response3[j].Depot_ID) || (depotFilter.value !== '' && depotFilter.value == response3[j]['Depot_ID']) ) ) {
+				          response2.push(response3[j]);
+				      }
+				      if(response3[j] && (response3[j].Depot_ID !== 0) && ((!depotFilter) || depotFilter.value === '') ) {
+				          response2.push(response3[j]);
+				      }
 		  		  }
 		        SBTedit.showTable(response2, path2);
 		    });

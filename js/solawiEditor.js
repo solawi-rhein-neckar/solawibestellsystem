@@ -58,7 +58,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         label.innerText=event.target.dataKey + ": ";
         var inp = createInput(event.target.dataKey);
         inp.dataId = event.target.dataId;
-        inp.value = event.target.dataValue || event.target.innerText;
+        inp.value = event.target.dataValue === 0 ? 0 : (event.target.dataValue || event.target.innerText);
         inp.dataValue = inp.value;
         inp.addEventListener('keypress', saveEditorInputs);
         /*inp.addEventListener('change', saveEditorInputs);*/
@@ -185,7 +185,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
             } else if ((response[0] && response[0]['display_name']) || (response.length > 3 && response[3] && response[3]['display_name'])) {
                 response.sort( function rowSortFunc(a,b) { return a['display_name'] < b['display_name'] ? -1 : a['display_name'] > b['display_name'] ? 1 : 0; } );
                 var opt = document.createElement("OPTION");
-                opt.value='';
+                opt.value='NULL';
                 opt.innerText=' ( - ) ';
                 inp.appendChild(opt);
             } else {
@@ -242,7 +242,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                 var opt = document.createElement("OPTION");
                 opt.value=year + (month < 10 ? '.0' : '.') + month;
                 opt.innerText=opt.value;
-                if ((!disableUnavailableProducts) || opt.value >= sbs.week) {
+                if ((!disableUnavailableProducts) || opt.value >= addWeek(sbs.week, -1)) {
                     inp.appendChild(opt);
                 }
             }
