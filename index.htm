@@ -52,10 +52,15 @@
             setContent('punktestand', SBS.user.PunkteStand);
             setContent('punktewoche', SBS.user.PunkteWoche);
 
-            if (SBS.user['Role_ID'] == 3) {
+            if (SBS.user['Role_ID'] >= 3) {
                 showInline('depotManageLink');
                 showInline('depotManageLink2');
                 show('depotManageLink3');
+            }
+            if (SBS.user['Role_ID'] >= 4) {
+                showInline('memberManageLink');
+                showInline('memberManageLink2');
+                show('memberManageLink3');
             }
 
             /*setContent('logoutbtn', 'Logout ' + SBS.user.Name);*/
@@ -225,6 +230,7 @@
 		<div class="desktopmenu">
 			<ul class="desktopmenu">
 				<li><span style="display: none;" id="depotManageLink"><a href="depot.htm">Depotverwaltung</a></span></li>
+				<li><span style="display: none;" id="memberManageLink"><a href="members.htm">Mitglieder-Verwaltung</a></span></li>
 				<li><a href="#Urlaub">Dein Urlaub</a></li>
 				<li><a href="#Downloads">Übersichten</a></li>
 			</ul>
@@ -232,6 +238,7 @@
 		<div class="mobilmenu">
 			<ul>
 				<li><span style="display: none;" id="depotManageLink3"><a href="depot.htm">Depotverwaltung</a></span></li>
+				<li><span style="display: none;" id="memberManageLink3"><a href="members.htm">Mitglieder-Verwaltung</a></span></li>
 				<li><a href="#Urlaub">Dein Urlaub</a></li>
 				<li><a href="#Downloads">Übersichten</a></li>
 			</ul>
@@ -351,6 +358,7 @@
 			</li>
 			<li><a target="_blank" href="print.htm#PivotDepotBestellung">Bestellübersicht Depot</a><br></li>
 			<li style="display: none;" id="depotManageLink2"><a href="depot.htm">Depotverwaltung</a></li>
+			<li style="display: none;" id="memberManageLink2"><a href="members.htm">Mitglieder-Verwaltung</a></li>
 		</ul>
 	</div>
 
