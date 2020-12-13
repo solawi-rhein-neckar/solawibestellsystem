@@ -14,6 +14,7 @@ use DBI;         # https://metacpan.org/pod/DBI          -  connect to sql datab
 use JSON;        # https://metacpan.org/pod/JSON         -  convert objects to json and vice versa
 use Time::Local;
 use POSIX qw(strftime);
+use Encode;
 
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!!: displays (non-syntax) errors and warning in html
 
@@ -44,7 +45,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 		my $encPass = $row2->{user_pass};
 		my $ppr = Authen::Passphrase::PHPass->from_crypt($encPass);
 
-		if ($ppr->match($body->{password})) {
+		if ($ppr->match(Encode::encode("utf-8",$body->{password}))) {
 			my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE `wpID` = ? or `wpMitID` = ?");
 			my $rows = $stl->execute($sessionid, $row2->{ID}, $row2->{ID});
 			my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
