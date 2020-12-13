@@ -34,12 +34,14 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
 	<script type="text/javascript" src="lib/FileSaver.min.js"></script>
 </head>
-<body>
+<body style="background-color:#FFF;">
 
 	<script src="js/ui.js"></script>
 
 	<script>
-        var SBTedit = SolawiTable(SBS, 'table', 'tablePath', '2', false);
+    var SBTedit = SolawiTable(SBS, 'table', 'tablePath', '2', false);
+    var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, false);
+    SBTview.hideZeros = true;
 
         function loadTableBenutzer(){getAjax('wp', function (response, path) {
             var byWpId = {};
@@ -105,7 +107,8 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 		            }
 		        }
 		        var depotFilter = document.getElementById('depotFilter');
-		        var wpDepot = depotFilter && depotFilter.value && SBS.tableCache['Depot'] && SBS.tableCache['Depot'][depotFilter.value] && SBS.tableCache['Depot'][depotFilter.value].wpName;
+		        var depotObj = depotFilter && depotFilter.value && SBS.tableCache['Depot'] && SBS.tableCache['Depot'][depotFilter.value];
+		        var wpDepot = depotObj && depotObj.wpName;
 		        for (var j = 0; j < response.length; j++) {
 		            var wpUsr = response[j];
 					if (!wpUsr.wpSynced) {
@@ -118,41 +121,63 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 	            		}
 					}
 		        }
-		  		  var filterContainer = document.getElementById('filterContainer');
-		  		  if (filterContainer && (!document.getElementById('depotFilter')) && SBTedit && SBS.tableCache['Depot']) {
-		  	          inp = createInputSelect(SBS.tableCache['Depot']);
-		  	          filterContainer.appendChild(inp);
-		  	          inp.onchange = SBTedit.reload;
-		  	          inp.id = 'depotFilter';
-		  	          inp.value = '';
-				        var opt = document.createElement("OPTION");
-				        opt.value='';
-				        opt.innerText='Zeige alle Depots außer "Geloescht"';
-				        opt.selected='selected';
-				        inp.appendChild(opt);
-		  	      }
-		  		  /* filter users by depot at the very end. Needs to be done at the end, because assignment needs to be done first */
-	  		      var response3 = response2;
-	  		      response2 = [];
-				  for (var j = 0; j<response3.length;j++) {
-				      console.log(response3[j]);
-				      if(response3[j] && depotFilter && ((response3[j].Depot_ID !== 0 && !response3[j].Depot_ID) || (depotFilter.value !== '' && depotFilter.value == response3[j]['Depot_ID']) ) ) {
-				          response2.push(response3[j]);
-				      }
-				      if(response3[j] && (response3[j].Depot_ID !== 0) && ((!depotFilter) || depotFilter.value === '') ) {
-				          response2.push(response3[j]);
-				      }
-		  		  }
-		        SBTedit.showTable(response2, path2);
+				/* filter users by depot at the very end. Needs to be done at the end, because assignment needs to be done first */
+				var response3 = response2;
+				response2 = [];
+				for (var j = 0; j<response3.length;j++) {
+					if(response3[j] && depotFilter && ((response3[j].Depot_ID !== 0 && !response3[j].Depot_ID) || (depotFilter.value !== '' && depotFilter.value == response3[j]['Depot_ID']) ) ) {
+					    response2.push(response3[j]);
+					}
+					if(response3[j] && (response3[j].Depot_ID !== 0) && ((!depotFilter) || depotFilter.value === '') ) {
+					    response2.push(response3[j]);
+					}
+				}
+
+		        var btn = document.getElementById('pivotBtn');
+		        if (btn) {
+		            btn.innerText = 'Bestellübersicht ' + ( (depotObj && depotObj.Name) || 'Solawi');
+		        }
+		        var filterContainer = document.getElementById('filterContainer');
+				if (filterContainer && (!document.getElementById('depotFilter')) && SBTedit && SBS.tableCache['Depot']) {
+					inp = createInputSelect(SBS.tableCache['Depot']);
+					filterContainer.appendChild(inp);
+					inp.onchange = SBTedit.reload;
+					inp.id = 'depotFilter';
+					inp.value = '';
+					var opt = document.createElement("OPTION");
+					opt.value='';
+					opt.innerText='Zeige alle Depots außer "Geloescht"';
+					opt.selected='selected';
+					inp.appendChild(opt);
+				}
+
+				SBTedit.showTable(response2, path2);
 		    });
         });}
 
-		SBTedit.reload=loadTableBenutzer;
         SBTedit.setSortBy('Name');
-        SBTedit.columns = ['Name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpuser_email','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
 		SBTedit.editAtOnce = true;
 
-		initUser(loadTableBenutzer);
+		initUser(function() {
+	        if (SBS.user.Role_ID > 3) {
+				SBTedit.reload=loadTableBenutzer;
+		        SBTedit.columns = ['Name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpuser_email','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
+		        loadTableBenutzer();
+	        } else {
+	            SBTedit.reload=function(){getAjax('Benutzer', SBTedit.showTable);};
+	            SBTedit.columns = ['Name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','MitName','AltName'];
+	            SBTedit.reload();
+		        var filterContainer = document.getElementById('filterContainer');
+				var btn = document.createElement('button');
+				btn.innerText='Depot-Bestellung';
+				btn.onclick=function() {
+				    SBTedit.reset();
+				    getAjax('PivotDepotBestellung/Woche/' + SBS.selectedWeek + '/Depot_ID/' + SBS.user.Depot_ID , SBTview.showTable);
+				    document.getElementById('pivotBtn').innerText="Mitglieder-Liste";
+				};
+				filterContainer.appendChild(btn);
+            }
+		});
 
 		var filterContainer = document.getElementById('filterContainer');
 		if (filterContainer && SBTedit) {
@@ -186,18 +211,23 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
         function changeWeek(count) {
             SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
             setHtmlContent('selectedWeek0', '<span title="weekToDate(SBS.selectedWeek, 4).toLocaleDateString()">' +  SBS.selectedWeek + '</span>');
+            if (SBTview.getTableName() && SBTview.getTablePath()) {
+                if (SBTview.getTablePath().match(/PivotDepotBestellung.Woche.[0-9.]+.Depot_ID.[0-9]+/)) {
+                    getAjax(SBTview.getTablePath().replace(/Woche.[0-9.]+/, 'Woche/'+SBS.selectedWeek), SBTview.showTable) ;
+                } else if (SBTview.getTablePath().match(/.*Pivot.*/)) {
+                    getAjax(SBTview.getTableName() + '/' + SBS.selectedWeek, SBTview.showTable);
+                }
+           }
         }
     </script>
 
 	<div id="tableContainer">
 
-		<div style="text-align: center; padding: 5px 0 10px 0; white-space: nowrap; overflow: hidden; width: 80%;">
-			MITGLIEDER-VERWALTUNG &#160; - &#160; <a href="index.htm">zurück zur Startseite</a>
-		</div>
-
-		<div id="filterContainer">
-			<button onclick="getAjax('BenutzerPunkte/NULL', loadTableBenutzer)">Punkte_Berechnen</button>
-			&#160; &#160; &#160; | &#160; &#160; &#160; FILTER: &#160; &#160; Depot:
+		<div id="filterContainer" style="margin-right: 250px;">
+			<a style="float:right;" href="index.htm">zurück zur Startseite</a>
+			<button onclick="SBTview.reset();getAjax('BenutzerPunkte/NULL', SBTedit.reload)">Punkte_Berechnen</button>
+			<button	id="pivotBtn" onclick="if (event.target.innerText == 'Mitglieder-Liste' ) {event.target.innerText='Bestellübersicht';SBTview.reset();SBTedit.reload();} else {event.target.innerText = 'Mitglieder-Liste';SBTedit.reset();var ele = document.getElementById('depotFilter');getAjax((ele && ele.value ? 'PivotDepotBestellung/Woche/' : 'PivotSolawiBestellung/') + SBS.selectedWeek + (ele && ele.value ? '/Depot_ID/' + ele.value : ''), SBTview.showTable);}">Bestellübersicht</button>
+			&#160; &#160; &#160; | &#160; &#160;  MITGLIEDER-VERWALTUNG &#160; &#160; &#160; Depot:
 		</div>
 
 		<div id="tablePath"></div>
