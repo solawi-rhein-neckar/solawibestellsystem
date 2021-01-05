@@ -432,7 +432,7 @@ $dbh->prepare("CREATE PROCEDURE `BenutzerPunkteBerechnung` (
 READS SQL DATA
 SQL SECURITY INVOKER
 BEGIN
-  DECLARE day DATETIME DEFAULT DATE_ADD(MAKEDATE(pYear - IF(month(curdate()) < 11, -1, 0) , 8), INTERVAL 10 MONTH);
+  DECLARE day DATETIME DEFAULT DATE_ADD(MAKEDATE(pYear - IF(month(curdate()) < 11, 1, 0) , 8), INTERVAL 10 MONTH);
 
   DROP TEMPORARY TABLE IF EXISTS BenutzerPunkteTemp;
   DROP TEMPORARY TABLE IF EXISTS BenutzerPunkteTemp2;
@@ -465,7 +465,7 @@ BEGIN
        sum(IFNULL(b.Gutschrift,0)),
        sum(IFNULL(b.Gutschrift,0)) - GREATEST(0, sum(b.Punkte)),
        sum(IFNULL(b.Gutschrift,0)) - GREATEST(0, sum(b.Punkte))
-       + IF(pWoche < Benutzer.AnteileStartWoche, Benutzer.PunkteStart,
+       + IF(pWoche <= Benutzer.AnteileStartWoche, Benutzer.PunkteStart,
             IFNULL((Select t.Total FROM BenutzerPunkteTemp2 as t Where t.Benutzer_ID = b.Benutzer_ID),0)  )
      FROM (SELECT Benutzer_ID, Benutzer, GREATEST(0, sum(Punkte)) as Punkte, max(IFNULL(Gutschrift,0)) as Gutschrift FROM `BenutzerBestellungenTemp` GROUP BY `Benutzer_ID`,`Benutzer`,IFNuLL(Produkt,Modul)) as b
      JOIN Benutzer ON Benutzer.ID = Benutzer_ID
