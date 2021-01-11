@@ -128,7 +128,7 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 					if(response3[j] && depotFilter && ((response3[j].Depot_ID !== 0 && !response3[j].Depot_ID) || (depotFilter.value !== '' && depotFilter.value == response3[j]['Depot_ID']) ) ) {
 					    response2.push(response3[j]);
 					}
-					if(response3[j] && (response3[j].Depot_ID !== 0) && ((!depotFilter) || depotFilter.value === '') ) {
+					else if(response3[j] && (response3[j].Depot_ID !== 0) && ((!depotFilter) || depotFilter.value === '') ) {
 					    response2.push(response3[j]);
 					}
 				}
