@@ -82,12 +82,12 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 		            	if (!usr.wpMitName) {
 							usr.NOTES += ' !MISS_WP_MIT! ';
 		            	} else if ((!usr.MitName) || usr.wpMitName.toLowerCase() != usr.MitName.toLowerCase()) {
-							usr.NOTES += ' !MIT_NAME! ';
+							usr.NOTES += ' mit_name ';
 		            	}
 		            } else {
 		                usr.wpMitName = '';
 		                if (usr.MitName) {
-							usr.NOTES += ' !NO_WP_MIT! ';
+							usr.NOTES += ' no_wp_mit ';
 		                }
 		            }
 		            if (usr.wpMit2ID) {
@@ -105,17 +105,6 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 				            		}
 			            		}
 		                }
-		            	if (!usr.wpMit2Name) {
-							usr.NOTES += ' !MISS_WP2_MIT! ';
-		            	} else if ((!usr.Mit2Name) || usr.wpMit2Name.toLowerCase() != usr.Mit2Name.toLowerCase()) {
-							usr.NOTES += ' !MIT2_NAME! ';
-		            	}
-		            	
-		            } else {
-		                usr.wpMit2Name = '';
-		                if (usr.Mit2Name) {
-							usr.NOTES += ' !NO_WP_MIT2! ';
-		                }
 		            }
 		            if (usr.wpMit3ID) {
 		                var wpMit3 = byWpId[usr.wpMit3ID]
@@ -128,20 +117,9 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 			            		if (usr.Depot_ID && wpMit3.Depot) {
 				            		var depot = SBS.tableCache['Depot'][usr.Depot_ID];
 				            		if (depot && wpMit3.Depot != depot.wpName && !(wpMit3.Depot == 'Hofteam' && depot.wpName == 'Selbstabholer')) {
-										usr.NOTES += ' !Mit3_DEPOT! ';
+										usr.NOTES += ' !MIT3_DEPOT! ';
 				            		}
 			            		}
-		                }
-		            	if (!usr.wpMit3Name) {
-							usr.NOTES += ' !MISS_WP2_MIT! ';
-		            	} else if ((!usr.Mit3Name) || usr.wpMit3Name.toLowerCase() != usr.Mit3Name.toLowerCase()) {
-							usr.NOTES += ' !Mit3_NAME! ';
-		            	}
-		            	
-		            } else {
-		                usr.wpMit3Name = '';
-		                if (usr.Mit3Name) {
-							usr.NOTES += ' !NO_WP_Mit3! ';
 		                }
 		            }
 		            if (!usr.wpID) {
