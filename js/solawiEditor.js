@@ -88,7 +88,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         }
 
         for (var j = 0; j < keys.length; j++) {
-            if ((! hiddenFields[keys[j]]) && !(tableName == 'Benutzer' && keys[j].match(/^wp.*$/) && (!keys[j].match(/^wp(Mit)?ID$/)) && !(defaults && defaults.dataId)) ) {
+            if ((! hiddenFields[keys[j]]) && !(tableName == 'Benutzer' && keys[j].match(/^wp.*$/) && (!keys[j].match(/^wp(Mit|Mit[0-9])?ID$/)) && !(defaults && defaults.dataId)) ) {
 
                 var inp = createInput(keys[j]);
 
@@ -151,7 +151,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         } else if (key.match(/^(AnteileStart|Start|End|Punkte)?Woche$/)) {
             inp = createInputDateSelect();
         } else {
-            var relation2 = key.match(/^(wp)(Mit)?ID$/);
+            var relation2 = key.match(/^(wp)(Mit|Mit[0-9])?ID$/);
             if (relation2 && sbs.tableCache[relation2[1]]) {
                 inp = createInputSelect(sbs.tableCache[relation2[1]]);
             } else {

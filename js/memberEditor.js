@@ -38,7 +38,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
         var sendDataWP = {};
         var hasWp = false;
         for (var i = 0; i < keys.length; i++) {
-            if (keys && keys[i] && keys[i].match && keys[i].match(/^wp.*$/) && (!keys[i].match(/^wp(Mit)?ID$/))) {
+            if (keys && keys[i] && keys[i].match && keys[i].match(/^wp.*$/) && (!keys[i].match(/^wp(Mit|Mit[0-9])?ID$/))) {
                 sendDataWP[keys[i].replace(/^wp/, '')] = sendData[keys[i]];
                 hasWp = true;
             } else {
@@ -176,7 +176,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='Lieferung';seriesBtn.style.display='inline-block';
                 getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
                 getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
-	            solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];
+                solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];
                 getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
             };
             btn1.onclick=function() {
@@ -190,7 +190,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             btn3.onclick=function() {
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='Punkte Vorjahr (2019)';seriesBtn.style.display='none';
                 getAjax('BenutzerPunkte/' + dataIdGetter(), solawiTableView.showTable);
-	            solawiTableLiefer.columns = ['Woche','Benutzer','Abzug','Gutschrift','Subtotal','Total'];
+                solawiTableLiefer.columns = ['Woche', 'Benutzer', 'Abzug', 'Gutschrift', 'Subtotal', 'Total'];
                 getAjax('BenutzerPunkteView/2019/' + dataIdGetter(), solawiTableLiefer.showTable);
                 var title = document.createElement("div");
                 title.style.padding = '3px';

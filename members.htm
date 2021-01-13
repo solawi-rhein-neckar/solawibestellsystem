@@ -7,7 +7,7 @@
 	<style>
 
 .col_Cookie,.col_Passwort,.col_ErstellZeitpunkt,.col_AenderZeitpunkt,.col_AenderBenutzer_ID,.col_wpaccount_status,
-.col_wpfirst_name,.col_wplast_name,.col_wpsession_tokens,.col_wpuser_login,.col_wpuser_nicename,.col_wpuser_pass,
+.col_wpfirst_name,.col_wpsession_tokens,.col_wpuser_login,.col_wpuser_nicename,.col_wpuser_pass,
 .col_wpuser_activation_key,.col_wpuser_registered,.col_wpuser_status,.col_wpuser_url,.col_wpwp_user_level { display: none;}
 
 select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort,
@@ -90,6 +90,60 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 							usr.NOTES += ' !NO_WP_MIT! ';
 		                }
 		            }
+		            if (usr.wpMit2ID) {
+		                var wpMit2 = byWpId[usr.wpMit2ID]
+		                if (wpMit2) {
+			            		usr.wpMit2Name = wpMit2.display_name;
+			            		if (wpMit2.wpSynced) {
+			            		   usr.NOTES += ' !DUP_SYNC! ';
+			            		}
+			            		wpMit2.wpSynced = 1;
+			            		if (usr.Depot_ID && wpMit2.Depot) {
+				            		var depot = SBS.tableCache['Depot'][usr.Depot_ID];
+				            		if (depot && wpMit2.Depot != depot.wpName && !(wpMit2.Depot == 'Hofteam' && depot.wpName == 'Selbstabholer')) {
+										usr.NOTES += ' !MIT2_DEPOT! ';
+				            		}
+			            		}
+		                }
+		            	if (!usr.wpMit2Name) {
+							usr.NOTES += ' !MISS_WP2_MIT! ';
+		            	} else if ((!usr.Mit2Name) || usr.wpMit2Name.toLowerCase() != usr.Mit2Name.toLowerCase()) {
+							usr.NOTES += ' !MIT2_NAME! ';
+		            	}
+		            	
+		            } else {
+		                usr.wpMit2Name = '';
+		                if (usr.Mit2Name) {
+							usr.NOTES += ' !NO_WP_MIT2! ';
+		                }
+		            }
+		            if (usr.wpMit3ID) {
+		                var wpMit3 = byWpId[usr.wpMit3ID]
+		                if (wpMit3) {
+			            		usr.wpMit3Name = wpMit3.display_name;
+			            		if (wpMit3.wpSynced) {
+			            		   usr.NOTES += ' !DUP_SYNC! ';
+			            		}
+			            		wpMit3.wpSynced = 1;
+			            		if (usr.Depot_ID && wpMit3.Depot) {
+				            		var depot = SBS.tableCache['Depot'][usr.Depot_ID];
+				            		if (depot && wpMit3.Depot != depot.wpName && !(wpMit3.Depot == 'Hofteam' && depot.wpName == 'Selbstabholer')) {
+										usr.NOTES += ' !Mit3_DEPOT! ';
+				            		}
+			            		}
+		                }
+		            	if (!usr.wpMit3Name) {
+							usr.NOTES += ' !MISS_WP2_MIT! ';
+		            	} else if ((!usr.Mit3Name) || usr.wpMit3Name.toLowerCase() != usr.Mit3Name.toLowerCase()) {
+							usr.NOTES += ' !Mit3_NAME! ';
+		            	}
+		            	
+		            } else {
+		                usr.wpMit3Name = '';
+		                if (usr.Mit3Name) {
+							usr.NOTES += ' !NO_WP_Mit3! ';
+		                }
+		            }
 		            if (!usr.wpID) {
 		                usr.NOTES += ' !NO_WP! ';
 		            } else {
@@ -128,7 +182,7 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 					if(response3[j] && depotFilter && ((response3[j].Depot_ID !== 0 && !response3[j].Depot_ID) || (depotFilter.value !== '' && depotFilter.value == response3[j]['Depot_ID']) ) ) {
 					    response2.push(response3[j]);
 					}
-					if(response3[j] && (response3[j].Depot_ID !== 0) && ((!depotFilter) || depotFilter.value === '') ) {
+					else if(response3[j] && (response3[j].Depot_ID !== 0) && ((!depotFilter) || depotFilter.value === '') ) {
 					    response2.push(response3[j]);
 					}
 				}
@@ -161,7 +215,7 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 		initUser(function() {
 	        if (SBS.user.Role_ID > 3) {
 				SBTedit.reload=loadTableBenutzer;
-		        SBTedit.columns = ['Name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpuser_email','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
+		        SBTedit.columns = ['Name','wplast_name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpMit2ID','wpMit3ID','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpuser_email','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
 		        loadTableBenutzer();
 	        } else {
 	            SBTedit.reload=function(){getAjax('Benutzer', SBTedit.showTable);};

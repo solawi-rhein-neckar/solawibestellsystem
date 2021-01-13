@@ -187,7 +187,7 @@ inp.style.width='40px';
             div.title = div.innerText;
             div.innerText = row == null ? ' (' + div.innerText + ') ' : row.Name;
         } else {
-            var relation2 = key.match(/^(wp)(Mit)?ID$/);
+            var relation2 = key.match(/^(wp)(Mit|Mit[0-9])?ID$/);
             if (relation2 && sbs.tableCache[relation2[1]]) {
                 var row = sbs.tableCache[relation2[1]][div.innerText];
                 div.dataValue = div.innerText;
