@@ -20,6 +20,7 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 	.BenutzerBestellungView .col_Depot_ID, .BenutzerBestellungView .col_Produkt_ID {
 	display: inline-block !important;
 }
+input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche { pointer-events: none;color:#666; }
 </style>
 	<script src="js/util.js"></script>
 	<script src="js/weekSelect.js"></script>
@@ -196,6 +197,13 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 		        SBTedit.columns = ['Name','wplast_name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpMit2ID','wpMit3ID','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpuser_email','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
 		        loadTableBenutzer();
 	        } else {
+	        	var sheet = (function() {
+					var style = document.createElement("style");
+					style.appendChild(document.createTextNode(""));
+					document.head.appendChild(style);
+					return style.sheet;
+				})();
+				sheet.insertRule("select.editor.inp_Depot_ID{pointer-events: none;color:#666;}", 0);
 	            SBTedit.reload=function(){getAjax('Benutzer', SBTedit.showTable);};
 	            SBTedit.columns = ['Name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','MitName','AltName'];
 	            SBTedit.reload();
@@ -268,7 +276,39 @@ select.editor.inp_Depot_ID, select.editor.inp_Role_ID, input.editor.inp_Passwort
 			</table>
 		</div>
 
-		<br /> <br /> <br />
+		<br /> <br /> 
+		
+		<h2>FAQ Punkteberechnung</h2>
+		<ol>
+		<li><strong>
+		Wann werden die Punkte aktualisiert? </strong>
+		<br/>
+A: Das geschieht derzeit manuell. In der Depot-Verwaltung ist ein Schalter "Punkte Berechnen", damit werden die Punkte für alle Mitglieder aktualisiert. Das funktioniert jeweils ab Montag Morgens um 0:00 Uhr für die Vorwoche.
+Außerdem kann jedes Mitglied seinen Punktestand selbst anklicken um ihn zu aktualiseren. Dann wird auch die Punkte-Historie angezeigt. Die Punktehistorie für die einzelnen Mitglieder ist in der neuen Depotverwaltung auch Verfügbar (Mitglied anklicken zum bearbeiten -> Dann ganz rechts oben auf "Urlaub / Punkte").
+</li>
+		<li><strong>
+ Warum wurde mir noch nichts gutgeschrieben?</strong><br/>
+A: Bei neuen Bestellungen erfolgt die Anzeige einer Gutschrift erst, wenn klar ist, ob das entsprechende Produkt in dieser Woche auch ausgeliefert wird.<br/>
+Grundsätzlich funktioniert die Punkteberechnung so: Es wird eine Standard-Lieferung zugrunde gelegt: Das was ein Mitglied in dieser Woche normalerweise alles bekommen würde, wenn es keine Sonderwünsche hätte. Alle Punkte für die Produkte dieser StandardLieferung erhält jeder als Gutschrift (Spalte in der Liefertabelle: Gutschrift). Außerdem sieht das Bestellsystem ja was ihr wirklich geliefert bekommt. Wenn ihr keine Sonderwünsche habt, ist das natürlich identisch mit der Standardlieferung. Für alles was wirklich geliefert wird, erfolgt ein Abzug. Bei der Punkteberechnung wird die Differenz aus Gutschrift und Abzug für alle Wochen seit Saison-Beginn berechnet und aufsummiert. Das erfolgt jedesmal bei der Punkteberechnung vollständig seit Saison-Beginn, somit fließen nachträgliche Korrekturen auch in den neuberechneten Punktestand ein.
+</li>
+		<li><strong>
+ Was ist zu beachten, wenn sich innerhalb des Solawi-Jahres mein Solawi-Beitrag / FleischAnteil ändert? Kann ich Punkte des Vorjahres mitnehmen?</strong><br/>
+Hierzu gibt es im Bestellsystem vier Spalten:<br/>
+<em>Anteile</em>: Die Anzahl aller Anteile des Mitglieds<br/>
+<em>FleischAnteile</em>: Die Anzahl der Anteile inkl. Fleisch (gleich oder geringer als Anteile)<br/>
+<em>AnteileStartWoche</em>: Dies ist die Woche, ab der die Spalte "Anteile" und "FleischAnteile" gültig ist<br/>
+<em>PunkteStart</em>: Die Anzahl der Punkte die das Mitglied zum Zeitpunkt "AnteileStartWoche" noch übrig hatte. (NICHT verwechseln mit PunkteStand. PunkteStand und PunkteWoche enthalten nur rein zur Information die Werte der letzten Punkteberechnung und werden ständig neu berechnet und überschrieben).
+<br/><br/>
+Wenn man also aus der Vor-Saison Punkte mitnehmen will, muss man unter "PunkteStart" diese Punktzahl eintragen, und die "AnteileStartWoche" auf 2020.45 einstellen. (Bis Jahresende werde ich den Plenumsbeschluss umsetzen dass 240 Punkte automatisch ins nächste Jahr übergehen.)
+<br/><br/>
+Wenn jemand mitten im Solawi-Jahr, z.Bsp. zur Woche 2021.34 sein Fleisch abbestellt, muss man also "FleischAnteile" auf 0 setzen, seinen Punktestand ausrechnen und in "PunkteStart" eintragen und "AnteileStartWoche" auf 2021.34 stellen.<br/>
+Das ist recht umständlich aber selten. Es ist notwendig dass alles so zu machen: Würde man FleischAnteile auf 1 lassen, würde er für immer und ewig Gutschriften bekommen, wenn die andren Fleisch bekommen und er nicht. Würde man FleischAnteile auf 0 setzen, würden ihm rückwirkend für den Anfang des Solawi-Jahres die Punkte für Fleisch-Lieferungen abgezogen. Nur durch Änderung aller 3 Werte FleischAnteile, AnteileStartWoche und PunkteStart können die Punkte künftig richtig neu berechnet werden.
+</li>
+		<li><strong>
+ Kann ich nichts mehr Bestellen wenn ich im Minus bin?</strong><br/>
+Derzeit gibt es keine technische Beschränkung. Erst wenn die Punkteberechnung zuverlässig, gut getestet und erprobt ist, wird es sowas geben.
+</li></ol>
+		<br />
 
 	</div>
 

@@ -56,6 +56,11 @@
                 showInline('depotManageLink');
                 showInline('depotManageLink2');
                 show('depotManageLink3');
+	            if (SBS.user['Role_ID'] < 4) {
+                	showInline('onlyDepotManageLink');
+                	showInline('onlyDepotManageLink2');
+                	show('onlyDdepotManageLink3');
+            	}
             }
             if (SBS.user['Role_ID'] >= 4) {
                 showInline('memberManageLink');
@@ -229,16 +234,18 @@
 		<input 	type="checkbox" id="hamburger" />
 		<div class="desktopmenu">
 			<ul class="desktopmenu">
-				<li><span style="display: none;" id="depotManageLink"><a href="depot.htm">Depotverwaltung</a></span></li>
+				<li><span style="display: none;" id="onlyDepotManageLink"><a href="members.htm">Depotverwaltung_NEU</a></span></li>
 				<li><span style="display: none;" id="memberManageLink"><a href="members.htm">Mitglieder-Verwaltung</a></span></li>
+				<li><span style="display: none;" id="depotManageLink"><a href="depot.htm">Depotverwaltung_alt</a></span></li>
 				<li><a href="#Urlaub">Dein Urlaub</a></li>
 				<li><a href="#Downloads">Übersichten</a></li>
 			</ul>
 		</div>
 		<div class="mobilmenu">
 			<ul>
-				<li><span style="display: none;" id="depotManageLink3"><a href="depot.htm">Depotverwaltung</a></span></li>
+				<li><span style="display: none;" id="onlyDepotManageLink3"><a href="members.htm">Depotverwaltung_NEU</a></span></li>
 				<li><span style="display: none;" id="memberManageLink3"><a href="members.htm">Mitglieder-Verwaltung</a></span></li>
+				<li><span style="display: none;" id="depotManageLink3"><a href="depot.htm">Depotverwaltung_alt</a></span></li>
 				<li><a href="#Urlaub">Dein Urlaub</a></li>
 				<li><a href="#Downloads">Übersichten</a></li>
 			</ul>
@@ -357,8 +364,9 @@
 				</a> <br>
 			</li>
 			<li><a target="_blank" href="print.htm#PivotDepotBestellung">Bestellübersicht Depot</a><br></li>
-			<li style="display: none;" id="depotManageLink2"><a href="depot.htm">Depotverwaltung</a></li>
+			<li style="display: none;" id="onlyDepotManageLink2"><a href="members.htm">Depotverwaltung_NEU</a></li>
 			<li style="display: none;" id="memberManageLink2"><a href="members.htm">Mitglieder-Verwaltung</a></li>
+			<li style="display: none;" id="depotManageLink2"><a href="depot.htm">Depotverwaltung_alt</a></li>
 		</ul>
 	</div>
 

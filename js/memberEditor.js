@@ -19,6 +19,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
     var solawiTableEdit;
     var solawiTableValid;
     var solawiTableView;
+    var tabTitle;
     var lieferTitle;
     var solawiTableLiefer;
     var weekSelect;
@@ -116,8 +117,14 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             btn3.innerText="Urlaub u. Punkte";
             tabPane.appendChild(btn3);
 
-            holiday = document.createElement("div");
-            holiday.style['margin-bottom'] = '15px';
+            tabTitle = document.createElement("DIV");
+            tabTitle.innerText = 'Lieferung';
+            tabTitle.style.fontWeight = 'bold';
+            tabTitle.style.marginTop = '10px';
+			info.appendChild(tabTitle);
+			
+            holiday = document.createElement("DIV");
+            holiday.style['margin-bottom'] = '10px';
             holiday.style.display = 'inline-block';
             info.appendChild(holiday);
             weekSelect = Object.create(WeekSelect);
@@ -135,7 +142,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             span.style.color='#999';
             info.appendChild(span);
             table = document.createElement("TABLE");
-            table.style.marginTop = '15px';
+            table.style.marginTop = '10px';
             info.appendChild(table);
             table.id='benutzerEditorTable';
             span = document.createElement("DIV");
@@ -173,30 +180,25 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             var stvrf2 = solawiTableEdit.reload;
             solawiTableEdit.reload=function() {stvrf2(); solawiTableLiefer.reload();};
             btn.onclick=function() {
-                solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='Lieferung';seriesBtn.style.display='inline-block';
+                solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Abos';lieferTitle.innerText='Lieferung';seriesBtn.style.display='inline-block';
                 getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
                 getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
                 solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];
                 getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
             };
             btn1.onclick=function() {
-                solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='';seriesBtn.style.display='none';
+                solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Alle Tausche';lieferTitle.innerText='';seriesBtn.style.display='none';
                 getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter(), solawiTableEdit.showTable)
             };
             btn2.onclick=function() {if(confirm('ACHTUNG! Hier können Abos RÜCKWIRKEND verändert werden! Bitte nur zur Fehlerkorrektur. Normalerweise sollte unter "Abos" das bestehende Abo beendet werden (EndWoche = Jetzt) und danach ein neues Abo ab heute angelegt werden!')){
-                solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='';seriesBtn.style.display='none';
+                solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Abos rückwirkend manipulieren, Vorsicht!';lieferTitle.innerText='';seriesBtn.style.display='none';
                 getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter(), function(a1,a2,a3) {solawiTableEdit.showTable(a1,a2,a3);document.getElementById('benutzerEditorLabel').innerText='ACHTUNG! Hier können Abos RÜCKWIRKEND verändert werden! Bitte nur zur Fehlerkorrektur. Normalerweise sollte unter "Abos" das bestehende Abo beendet werden (EndWoche = Jetzt) und danach ein neues Abo ab heute angelegt werden!';})
             }};
             btn3.onclick=function() {
-                solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';lieferTitle.innerText='Punkte Vorjahr (2019)';seriesBtn.style.display='none';
+                solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Urlaub';lieferTitle.innerText='Punkte Vorjahr (2019)';seriesBtn.style.display='none';
                 getAjax('BenutzerPunkte/' + dataIdGetter(), solawiTableView.showTable);
                 solawiTableLiefer.columns = ['Woche', 'Benutzer', 'Abzug', 'Gutschrift', 'Subtotal', 'Total'];
                 getAjax('BenutzerPunkteView/2019/' + dataIdGetter(), solawiTableLiefer.showTable);
-                var title = document.createElement("div");
-                title.style.padding = '3px';
-                title.innerText = 'Urlaub';
-                title.style.fontWeight = 'bold';
-                holiday.appendChild(title);
                 weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + dataIdGetter();
                 weekSelect.postData = {Benutzer_ID: dataIdGetter(), Woche: sbs.selectedWeek};
                 weekSelect.refresh();
@@ -239,6 +241,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
 	        solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';
 	        solawiTableValid.editorDefault['Benutzer_ID'] = dataIdGetter();
 	        solawiTableEdit.editorDefault['Benutzer_ID'] = dataIdGetter();
+	        tabTitle.innerText='Abos';
 	        lieferTitle.innerText = 'Lieferung';
 	        seriesBtn.style.display='inline-block';
 	        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
