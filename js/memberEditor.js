@@ -122,7 +122,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             tabTitle.style.fontWeight = 'bold';
             tabTitle.style.marginTop = '10px';
 			info.appendChild(tabTitle);
-			
+
             holiday = document.createElement("DIV");
             holiday.style['margin-bottom'] = '10px';
             holiday.style.display = 'inline-block';
@@ -195,10 +195,10 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
                 getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter(), function(a1,a2,a3) {solawiTableEdit.showTable(a1,a2,a3);document.getElementById('benutzerEditorLabel').innerText='ACHTUNG! Hier können Abos RÜCKWIRKEND verändert werden! Bitte nur zur Fehlerkorrektur. Normalerweise sollte unter "Abos" das bestehende Abo beendet werden (EndWoche = Jetzt) und danach ein neues Abo ab heute angelegt werden!';})
             }};
             btn3.onclick=function() {
-                solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Urlaub';lieferTitle.innerText='Punkte Vorjahr (2019)';seriesBtn.style.display='none';
+                solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Urlaub';lieferTitle.innerText='Punkte Vorjahr (2020)';seriesBtn.style.display='none';
                 getAjax('BenutzerPunkte/' + dataIdGetter(), solawiTableView.showTable);
                 solawiTableLiefer.columns = ['Woche', 'Benutzer', 'Abzug', 'Gutschrift', 'Subtotal', 'Total'];
-                getAjax('BenutzerPunkteView/2019/' + dataIdGetter(), solawiTableLiefer.showTable);
+                getAjax('BenutzerPunkteView/2020/' + dataIdGetter(), solawiTableLiefer.showTable);
                 weekSelect.tableName = 'BenutzerUrlaub/Benutzer_ID/' + dataIdGetter();
                 weekSelect.postData = {Benutzer_ID: dataIdGetter(), Woche: sbs.selectedWeek};
                 weekSelect.refresh();
