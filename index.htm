@@ -29,6 +29,14 @@
 	    location.replace('https://www.solawi-rhein-neckar.org/bestellung/index.htm');
 	}
 
+	function missingMailPart() {
+		return "stem"+"@"+"sola";
+	}
+
+	function getCalendarId() {
+		return 6317652571 * 12;
+	}
+
     var SBS = SolawiBestellSystem();
     var SBTedit = SolawiTable(SBS, 'tableEdit', 'tableEditPath', true, true);
     var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, true);
@@ -48,21 +56,21 @@
     getAjax('BenutzerView/MY', function(userResponse) {
         if (userResponse.length > 0) {
             SBS.user = userResponse[0];
+			var ele = document.getElementById('bugReportLink');
+			if (ele) ele.href="mailto:ag-bestellsy"+missingMailPart()+"wi-rhein-neckar.org?subject=Fehlermeldung+Solawi+Bestellsystem+von+"+SBS.user.name;
+			ele = document.getElementById('calendarFrame');
+			if (ele) ele.src="https://teamup.com/ks"+getCalendarId()+"a"+57+"cb/";
 
             setContent('punktestand', SBS.user.PunkteStand);
             setContent('punktewoche', SBS.user.PunkteWoche);
 
-            if (SBS.user['Role_ID'] >= 3) {
-                showInline('depotManageLink');
-                showInline('depotManageLink2');
-                show('depotManageLink3');
-	            if (SBS.user['Role_ID'] < 4) {
-                	showInline('onlyDepotManageLink');
-                	showInline('onlyDepotManageLink2');
-                	show('onlyDdepotManageLink3');
-            	}
+            if (SBS.user['Role_ID'] == 3) {
+               	showInline('onlyDepotManageLink');
+               	showInline('onlyDepotManageLink2');
+               	show('onlyDdepotManageLink3');
             }
             if (SBS.user['Role_ID'] >= 4) {
+                showInline('depotManageLink2');
                 showInline('memberManageLink');
                 showInline('memberManageLink2');
                 show('memberManageLink3');
@@ -198,7 +206,7 @@
 		<input type='password' id='inpPass' name='password' placeholder='Passwort' />
 		<br />
 		<input class="loginbutton" type='submit' value='Anmelden'
-			onclick='event.preventDefault();postAjax("/cgi-bin/wp.pl/login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.user);show("userMissing");document.getElementById("missingUserEmail").href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.user;} else {show("loginError")};});return false;' />
+			onclick='event.preventDefault();postAjax("/cgi-bin/wp.pl/login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.user);show("userMissing");document.getElementById("missingUserEmail").href="mailto:ag-bestellsy"+missingMailPart()+"wi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.user;} else {show("loginError")};});return false;' />
 		<div class="message" id="loginError">
 			Falscher Benutzername<br>oder falsches Passwort!
 			<br><br>
@@ -224,7 +232,6 @@
 	<br />
 </div>
 
-
 <div id="content">
 	<header>
 	<nav id="page-nav">
@@ -234,18 +241,16 @@
 		<input 	type="checkbox" id="hamburger" />
 		<div class="desktopmenu">
 			<ul class="desktopmenu">
-				<li><span style="display: none;" id="onlyDepotManageLink"><a href="members.htm">Depotverwaltung_NEU</a></span></li>
+				<li><span style="display: none;" id="onlyDepotManageLink"><a href="members.htm">Depotverwaltung</a></span></li>
 				<li><span style="display: none;" id="memberManageLink"><a href="members.htm">Mitglieder-Verwaltung</a></span></li>
-				<li><span style="display: none;" id="depotManageLink"><a href="depot.htm">Depotverwaltung_alt</a></span></li>
 				<li><a href="#Urlaub">Dein Urlaub</a></li>
 				<li><a href="#Downloads">Übersichten</a></li>
 			</ul>
 		</div>
 		<div class="mobilmenu">
 			<ul>
-				<li><span style="display: none;" id="onlyDepotManageLink3"><a href="members.htm">Depotverwaltung_NEU</a></span></li>
+				<li><span style="display: none;" id="onlyDepotManageLink3"><a href="members.htm">Depotverwaltung</a></span></li>
 				<li><span style="display: none;" id="memberManageLink3"><a href="members.htm">Mitglieder-Verwaltung</a></span></li>
-				<li><span style="display: none;" id="depotManageLink3"><a href="depot.htm">Depotverwaltung_alt</a></span></li>
 				<li><a href="#Urlaub">Dein Urlaub</a></li>
 				<li><a href="#Downloads">Übersichten</a></li>
 			</ul>
@@ -255,6 +260,24 @@
 
 
 	<main>
+	
+		<div id="calendar" style="display:none;">
+			<span title="Close Calendar" onclick="hide('calendar');" style="cursor:pointer;position: absolute;right: 5%;margin-top:-11px;margin-right:-11px;font-size: 40;display: inline-block;height: 20px;width: 20px;border-radius: 10px;border: 2px solid black;text-align: center;font-weight: bold;background-color: #CCC;">X</span>
+			<iframe id="calendarFrame" src="#" width="90%" height="1000px" style="margin-left:5%"> Iframe nicht möglich </iframe>
+		</div>
+		
+		<div id="contact" style="display:none; border:1px solid black;margin-left:5%;margin-right:5%;margin-top:15px;margin-bottom:15px; padding:15px;">
+			<span title="Close Contact" onclick="hide('contact');" style="cursor:pointer;position: absolute;right: 5%;margin-top:-11px;margin-right:-11px;font-size: 40;display: inline-block;height: 20px;width: 20px;border-radius: 10px;border: 2px solid black;text-align: center;font-weight: bold;background-color: #CCC;">X</span>
+			
+			<h3>Fehlermeldungen zum Bestellsystem können wie folgt übermittelt werden:</h3>
+			
+			<ul>
+				<li>* Per Email an <a style="padding-left: 0;" id="bugReportLink" href="#">bestellsystem (at) solawi-rhein-neckar (punkt) org</a><br/>&nbsp;</li>
+				<li>* Direkt bei <a style="padding-left: 0;text-decoration: underline;" href="https://github.com/solawi-rhein-neckar/solawibestellsystem/issues" target="_blank">Github</a> als "New Issue" anlegen. (Dafür braucht man einen Github-Account)</a><br/>&nbsp;</li>
+				<li>* <a style="padding-left: 0;text-decoration: underline;" href="https://github.com/solawi-rhein-neckar/solawibestellsystem/projects/1" target="_blank">Hier</a> kann man den Fortschritt der bestehen Issue sehen oder kurze Hinweise hinzufügen.</li>
+			 </ul>
+		</div>
+	
 	<div class="greeting">
 		<p class="greeting">
 			Nächste Lieferung: <span id="calendarWeek">00</span> <br> <span
@@ -367,6 +390,11 @@
 			<li style="display: none;" id="onlyDepotManageLink2"><a href="members.htm">Depotverwaltung_NEU</a></li>
 			<li style="display: none;" id="memberManageLink2"><a href="members.htm">Mitglieder-Verwaltung</a></li>
 			<li style="display: none;" id="depotManageLink2"><a href="depot.htm">Depotverwaltung_alt</a></li>
+		</ul>
+		<br/>
+		<ul>
+			<li><a href="#calendar" onclick="show('calendar');">Mitarbeits - Kalender</a></li>
+			<li><a href="#" onclick="show('contact');">Fehler und Wünsche</a></li>
 		</ul>
 	</div>
 
