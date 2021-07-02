@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8"/>
 	<title></title>
 	<style>
 :root {
@@ -157,7 +157,8 @@ div.hat_tausch {
 
 	<script src="js/ui.js"></script>
 
-	<script>
+	<script type="text/javascript"> 
+	//<![CDATA[
         var SBS = SolawiBestellSystem();
         var SBTedit = SolawiTable(SBS, 'table', 'tablePath', true, false);
         var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
@@ -185,7 +186,7 @@ div.hat_tausch {
             SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
             setContent('selectedWeek', SBS.selectedWeek);
             setContent('selectedWeek0', SBS.selectedWeek);
-            if (SBTview.getTableName() && SBTview.getTablePath()) {
+            if (SBTview.getTableName()){ if(SBTview.getTablePath()) {
                 if (SBTview.getTablePath().match(/PivotDepotBestellung.Woche.[0-9.]+.Depot_ID.[0-9]+/)) {
                     getAjax(SBTview.getTablePath().replace(/Woche.[0-9.]+/, 'Woche/'+SBS.selectedWeek), SBTview.showTable);
                 } else if (SBTview.getTablePath().match(/.*Woche.*/)) {
@@ -193,7 +194,7 @@ div.hat_tausch {
                 } else if (SBTview.getTablePath().match(/.*Pivot.*/)) {
                     getAjax(SBTview.getTableName() + '/' + SBS.selectedWeek, SBTview.showTable);
                 }
-            }
+            } }
             if (SBTmeta.getTableName() && SBTmeta.getTablePath()) {
                 getAjax(SBTmeta.getTablePath(), SBTmeta.showTable);
             }
@@ -210,7 +211,8 @@ div.hat_tausch {
 	        	});
         	return false;
         }
-    </script>
+    //]]>
+</script> 
 
 	<div id="logoutfrombg"
 		style="box-shadow: 0em 0em 1em 1em rgba(222, 222, 222, 0.7); background: rgba(222, 222, 222, 0.7); position: fixed; height: 14em; width: 19em; z-index: 8888; right: 1px; top: 0; font-size: 12px;">
