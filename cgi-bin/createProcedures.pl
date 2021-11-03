@@ -436,7 +436,7 @@ $dbh->prepare("CREATE PROCEDURE `BenutzerPunkteBerechnung` (
 READS SQL DATA
 SQL SECURITY INVOKER
 BEGIN
-  DECLARE day DATETIME DEFAULT DATE_ADD(MAKEDATE(pYear - IF(month(curdate()) < 11, 1, 0) , 8), INTERVAL 10 MONTH);
+  DECLARE day DATETIME DEFAULT DATE_ADD(MAKEDATE(pYear - IF(month(curdate()) < 11 or (day(curdate()) < 5 and month(curdate()) < 12), 1, 0) , 8), INTERVAL 10 MONTH);
 
   DROP TEMPORARY TABLE IF EXISTS BenutzerPunkteTemp;
   DROP TEMPORARY TABLE IF EXISTS BenutzerPunkteTemp2;

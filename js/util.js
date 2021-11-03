@@ -211,7 +211,7 @@ function downloadDepotbestellungen(response, path) {
 			var columns = [];
 			var rows = {};
 			var lastColumn = 0;
-			var worksheet = workbook.getWorksheet(1);
+			var worksheet = workbook.worksheets[0];
 
 			worksheet.getRow(1).getCell(1).value = 'Lieferung'
 			worksheet.getRow(1).getCell(2).value = weekToDate(SBS.selectedWeek, 4).toLocaleDateString();
