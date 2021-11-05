@@ -22,7 +22,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes"/>
 </head>
 
-<script type="text/javascript"> 
+<script type="text/javascript">
 	//<![CDATA[
 	if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
 	    location.replace('https://bestellung.solawi.fairtrademap.de/index.htm');
@@ -155,6 +155,7 @@
     }
     function showPunkte() {
         var SBTpunkte = SolawiTable(SBS, 'tablePunkte', 'tablePunktePath', false, false);
+        document.getElementById('infoPunkte').style.display = 'block';
         getAjax('BenutzerPunkte/' + SBS.user.ID, function(response, path, data) {
         	SBTpunkte.showTable(response, path, data);
         	window.scrollTo(0,750);
@@ -170,7 +171,7 @@
     }
 
 //]]>
-</script> 
+</script>
 <div id="blockui_post" style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 250; background-color: rgba(0, 0, 0, 0.3); display: none;">
 	<span style="display: inline-block; padding: 30px; background-color: #FFF; border: 1px solid black;">
 		SENDE DATEN...
@@ -262,24 +263,24 @@
 
 
 	<main>
-	
+
 		<div id="calendar" style="display:none;">
 			<span title="Close Calendar" onclick="hide('calendar');" style="cursor:pointer;position: absolute;right: 5%;margin-top:-11px;margin-right:-11px;font-size: 40;display: inline-block;height: 20px;width: 20px;border-radius: 10px;border: 2px solid black;text-align: center;font-weight: bold;background-color: #CCC;">X</span>
 			<iframe id="calendarFrame" src="#" width="90%" height="1000px" style="margin-left:5%"> Iframe nicht möglich </iframe>
 		</div>
-		
+
 		<div id="contact" style="display:none; border:1px solid black;margin-left:5%;margin-right:5%;margin-top:15px;margin-bottom:15px; padding:15px;">
 			<span title="Close Contact" onclick="hide('contact');" style="cursor:pointer;position: absolute;right: 5%;margin-top:-11px;margin-right:-11px;font-size: 40;display: inline-block;height: 20px;width: 20px;border-radius: 10px;border: 2px solid black;text-align: center;font-weight: bold;background-color: #CCC;">X</span>
-			
+
 			<h3>Fehlermeldungen zum Bestellsystem können wie folgt übermittelt werden:</h3>
-			
+
 			<ul>
 				<li>* Per Email an <a style="padding-left: 0;" id="bugReportLink" href="#">bestellsystem (at) solawi-rhein-neckar (punkt) org</a><br/>&nbsp;</li>
 				<li>* Direkt bei <a style="padding-left: 0;text-decoration: underline;" href="https://github.com/solawi-rhein-neckar/solawibestellsystem/issues" target="_blank">Github</a> als "New Issue" anlegen. (Dafür braucht man einen Github-Account)</a><br/>&nbsp;</li>
 				<li>* <a style="padding-left: 0;text-decoration: underline;" href="https://github.com/solawi-rhein-neckar/solawibestellsystem/projects/1" target="_blank">Hier</a> kann man den Fortschritt der bestehen Issue sehen oder kurze Hinweise hinzufügen.</li>
 			 </ul>
 		</div>
-	
+
 	<div class="greeting">
 		<p class="greeting">
 			Nächste Lieferung: <span id="calendarWeek">00</span> <br> <span
@@ -307,13 +308,15 @@
 		</table>
 	</div>
 	<div style="font-size:12px;padding:3px;color:#333;">
-		* Der 'Punkte-Abzug' ergibt sich aus der (Liefer-)Anzahl. Die 'Gutschrift' ergibt sich aus der "Standard-Lieferung".<br/> <b>Das Tausch-Punkte-Konto 2019/20 ist nur zum TEST. Am 1.11.2020 starten alle mit 0 Punkten. Tauschpunkte verfallen am Saison-Ende, wenn nicht anders besprochen</b>
+		* Der 'Punkte-Abzug' ergibt sich aus der (Liefer-)Anzahl. Die 'Gutschrift' ergibt sich aus der "Standard-Lieferung".<br/> <b>Das neue Solawi-Jahr startet am 1. Montag im November. Du kannst bis zu 480 Punkte aus dem Vorjahr mitnehmen.</b><br/>Der Punkte-Übertrag wird manuell durchgeführt, dadurch werden in der ersten November-Woche die Punkte manchmal falsch angezeigt. Ab der zweiten November-Woche stimmen die Punkte wieder.
 	</div>
 	<div style="text-align:center;font-size:18px;padding:3px;color:#000;">
 		<a href="#" onclick="showPunkte();event.target.onclick=showPunkte2019;event.target.title='Clicken um Historie des Vorjahrs 2019 anzuzeigen;';event.target.innerHTML += ' &#160; - <b>Nochmal clicken für 2019</b>';" title="Clicken für Historie und aktuelle Neu-Berechnung des Punkte-Stand">Tausch-Punkte-Konto: <span style="font-weight:bold;" id="punktestand"></span> in Woche <span style="font-weight:bold;" id="punktewoche"></span></a>
 		<br/>
+		<div id="infoPunkte" style="display:none">Die Punkte-Historie aus dem Vorjahr ist meist <b>nicht</b> ganz richtig, weil der Übertrag aus dem Vor-Vorjahr (e.g. 2019) nicht mehr im System ist, sobald wir den Übertrag für das nächste Jahr (e.g. 2021) eingetragen haben. Dieser Übertrag aus 2019 wurde aber bei der Berechnung deines Start-Wertes für 2021 berücksichtigt, und wir haben da auch ein Backup von wenn man es nochmal nachrechnen möchte!<br/>&#160;</div>
 		<table id="tablePunkte" cellspacing="0">
 		</table>
+		<br/>
 	</div>
 
 	<h2>Änderungen / Tauschen</h2>
