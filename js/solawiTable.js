@@ -135,7 +135,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         var div = document.createElement("DIV");
         div.dataValue = value;
 
-        if (pub.hideZeros && value != null && value != undefined && value.match && value.match(/^-?[0-9]+[.][0459][09]([1-9]|[1-9][0-9]|[0-9][1-9]|[0-9][1-9][05]|[1-9][0-9][05])$/)) {
+        if (pub.hideZeros && value != null && value != undefined && value.match && value.match(/^-?[0-9]+[.][0459][09]([1-9]|[1-9][0-9]|[0-9][1-9]|[0-9][1-9][05]|[1-9][0-9][05]|[0-9][0-9][5])$/)) {
              var v = value.match(/^-?[0-9]+[.][45]/) ? Math.round(value * 2) / 2 : Math.round(value);
              var z = Math.round((value - v) * 20000)/2;
              if (z > 0 || z < 0) {
