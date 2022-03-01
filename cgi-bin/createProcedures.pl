@@ -78,10 +78,10 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
                  IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
                  IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, Benutzer.FleischAnteile - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
                  	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
-                 	* ModulInhalt.Anzahl * IF(Modul.ID = 4, IF(Benutzer.FleischAnteile < IFNULL(`BenutzerModulAbo`.`Anzahl`,0), Benutzer.FleischAnteile, IFNULL(`BenutzerModulAbo`.`Anzahl`,0)), Benutzer.Anteile)
+                 	* ModulInhalt.Anzahl * IF(Modul.ID = 4, 0, Benutzer.Anteile)
              		* Modul.AnzahlProAnteil)
                  AS Gutschrift,
-                 `BenutzerModulAbo`.BezahltesModul,
+                 `BenutzerModulAbo`.BezahltesModul OR Modul.ID = 4 as BezahltesModul,
                  pWoche AS `Woche`
              FROM `Modul`
              JOIN Benutzer
