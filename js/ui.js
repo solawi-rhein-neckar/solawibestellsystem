@@ -49,7 +49,7 @@ function onSuccessfulLogin(result,path){
 
 function onClickLoginBtn() {
 	event.preventDefault();
-	postAjax('/cgi-bin/wp.pl/login', {
+	postAjax('/cgi-bin/wp.php/login', {
 		name : document.getElementById('inpName').value,
 		password : document.getElementById('inpPass').value
 	}, onSuccessfulLogin);
@@ -110,7 +110,7 @@ document.write('<div id="blockui_post" \
  \
 	<div id="loginform" style="display: none"> \
 		LOGIN: \
-		<form method="post" action="/cgi-bin/wp.pl/login"> \
+		<form method="post" action="/cgi-bin/wp.php/login"> \
 			Name: <input type="text" id="inpName" name="name" placeholder="name" /> \
 			Password: <input type="password" id="inpPass" name="password" /> \
 			<input type="submit" value="Login" \

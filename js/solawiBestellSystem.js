@@ -14,7 +14,7 @@ function SolawiBestellSystem() {
     /* public fields */
     pub.date = new Date();
     pub.day = 4;
-    pub.week = pub.date.getWeekYear() + (pub.date.getWeek() > (pub.date.getDay() == 0 || pub.date.getDay() > pub.day ? 8 : 9 ) ? "." : ".0") +  (pub.date.getDay() == 0 || pub.date.getDay() > pub.day ? pub.date.getWeek() + 1 : pub.date.getWeek());
+    pub.week = addWeek(pub.date.getWeekYear() + (pub.date.getWeek() > (pub.date.getDay() == 0 || pub.date.getDay() > pub.day ? 8 : 9 ) ? "." : ".0") +  (pub.date.getDay() == 0 || pub.date.getDay() > pub.day ? pub.date.getWeek() + 1 : pub.date.getWeek()),0);
     pub.selectedWeek = pub.week;
     pub.disableUnavailableProducts = 0;
     pub.user = null;

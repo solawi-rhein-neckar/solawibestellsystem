@@ -1,7 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html>
 <head>
-<meta charset="UTF-8"/>
+<meta charset="UTF-8">
 	<title></title>
 	<style>
 table, td {
@@ -78,16 +78,11 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 </head>
 <body>
 
-	<script type="text/javascript"> 
-	//<![CDATA[
-		if (location.protocol) {
-			if (!location.protocol.match(/https/)) {
-				if (location.host.match(/solawi.fairtrademap.de/)) {
-				    location.replace('https://bestellung.solawi.fairtrademap.de/adminOld.htm');
-				} else if (location.host.match(/solawi-rhein-neckar.org/)) {
-				    location.replace('https://www.solawi-rhein-neckar.org/bestellung/adminOld.htm');
-				}
-			}
+	<script>
+		if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
+		    location.replace('https://bestellung.solawi.fairtrademap.de/adminOld.htm');
+		} else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi-rhein-neckar.org/)) {
+		    location.replace('https://www.solawi-rhein-neckar.org/bestellung/adminOld.htm');
 		}
 
         var SBS = SolawiBestellSystem();
@@ -137,8 +132,7 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
                 getAjax(SBTmeta.getTablePath(), SBTmeta.showTable);
             }
         }
-    //]]>
-</script> 
+    </script>
 
 
 	<div id="blockui_post"

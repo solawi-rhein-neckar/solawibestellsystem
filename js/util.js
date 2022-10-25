@@ -2,7 +2,7 @@ window.activeAjaxRequestCount = 0;
 
 function postAjax(path, data, success, method) {
     var xhr = window.XMLHttpRequest ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-    xhr.open(method || (data ? 'POST' : 'GET'), 'https://' + (document.location.host || 'solawi-rhein-neckar.org') + (path.match(/^\//) ? path : path == 'wp' ? '/cgi-bin/wp.pl/' : ('/cgi-bin/resql.pl/' + path)) );
+    xhr.open(method || (data ? 'POST' : 'GET'), 'https://' + (document.location.host || 'solawi-rhein-neckar.org') + (path.match(/^\//) ? path : path == 'wp' ? '/cgi-bin/wp.php/' : ('/cgi-bin/resql.php/' + path)) );
     xhr.onreadystatechange = function() {
     	if (xhr.readyState>3) {
 	        window.activeAjaxRequestCount--;
@@ -264,6 +264,9 @@ function downloadDepotbestellungen(response, path) {
 			        for (var j = 2; j < columns.length; j++) {
 			       		if (columns[j]) {
 		       				var val = response[i][columns[j]];
+		       				if (typeof(val) == 'undefined') {
+							val = response[i][columns[j].replace('ä', 'ae').replace('ü','ue').replace('ö','oe').replace('ß','s')];
+							}
 		       				if (typeof(val) != 'undefined') {
 	       						row.getCell(j).value = (isNaN(val) || val === null || val === '' ? val : val === 0 ? '' : Number(val));
 	    			       		missingRows[depot] = false;

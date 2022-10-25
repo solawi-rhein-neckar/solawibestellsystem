@@ -201,7 +201,7 @@
 
 <div class="login-page" id="loginform" style="display: none">
 	<form class="register-form" method='post'
-		action='/cgi-bin/wp.pl/login'>
+		action='/cgi-bin/wp.php/login'>
 		<img style="width: 200px; margin-bottom: 2em;"
 			src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png"
 			alt="Logo Solawi"> <input type='text' id='inpName' name='name' placeholder='Name' />
@@ -209,7 +209,7 @@
 		<input type='password' id='inpPass' name='password' placeholder='Passwort' />
 		<br />
 		<input class="loginbutton" type='submit' value='Anmelden'
-			onclick='event.preventDefault();postAjax("/cgi-bin/wp.pl/login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.user);show("userMissing");document.getElementById("missingUserEmail").href="mailto:ag-bestellsy"+missingMailPart()+"wi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.user;} else {show("loginError")};});return false;' />
+			onclick='event.preventDefault();postAjax("/cgi-bin/wp.php/login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result,path){if (!(!result || !result.user || !result.match || result.match == "0E0")){window.setTimeout(function(){document.location.reload();},333);} else if (result && result.user) {setContent("missingUser", result.user);show("userMissing");document.getElementById("missingUserEmail").href="mailto:ag-bestellsy"+missingMailPart()+"wi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+"+result.user;} else {show("loginError")};});return false;' />
 		<div class="message" id="loginError">
 			Falscher Benutzername<br>oder falsches Passwort!
 			<br><br>
