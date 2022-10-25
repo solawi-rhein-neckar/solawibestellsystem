@@ -22,6 +22,20 @@ table, td {
 	padding: 3px;
 }
 
+
+div#editor2 {
+	min-width: 36%;
+    max-height: 650px;
+    min-height: 650px;
+    height:650px;
+    overflow: auto;
+    overflow-x:hidden;
+    overflow-y:scroll;
+	max-width: 36%;
+	width: 36%;
+	display: inline-block;
+}
+
 .PivotDepotBestellung>tr:first-child>td:first-child>span, .PivotSolawiBestellung>tr:first-child>td:first-child>span {
 	writing-mode: horizontal-tb !important;
 	font-size: 1.1em;

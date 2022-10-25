@@ -1,4 +1,4 @@
-DROP PROCEDURE `BenutzerBestellungView`;
+DROP PROCEDURE IF EXISTS `BenutzerBestellungView`;
 CREATE  PROCEDURE `BenutzerBestellungView` (
 	IN `pWoche` DECIMAL(6,2),
 	IN `pBenutzer` INT,
@@ -24,11 +24,11 @@ SELECT
    `Menge`,
    `Woche`,
    CONVERT(GROUP_CONCAT( ( CASE WHEN(TRIM(`Kommentar`) = '') THEN NULL ELSE `Kommentar` END ) SEPARATOR ', ' ),char(255)) AS `Kommentar`,
-  SUM(`Anzahl`) AS Anzahl,
+  GREATEST(0, SUM(`Anzahl`)) AS Anzahl,
    SUM( AnzahlModul ) AS `AnzahlModul`,
    SUM( `AnzahlZusatz` ) AS `AnzahlZusatz`,
-   sum(Punkte) AS `Punkte`,
-   sum(IFNULL(Gutschrift,0)) as `Gutschrift`,
+   GREATEST(0, sum(Punkte)) AS `Punkte`,
+   max(IFNULL(Gutschrift,0)) as `Gutschrift`,
     `Urlaub`
 
 FROM `BenutzerBestellungenTemp`

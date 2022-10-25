@@ -115,7 +115,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             var viewLieferung = SolawiTable(sbs, 'editLieferungTable'+row['ID'], 'editLieferungLabel'+row['ID'], false, false);
             viewLieferung.setSortBy('Anzahl');
             viewLieferung.setSortBy('Produkt_ID');
-            viewLieferung.columns = ['Produkt', 'Anzahl', 'Kommentar'];
+            viewLieferung.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];
             viewLieferungTables[row['ID']] = viewLieferung;
 
 
@@ -236,7 +236,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
         		postAjax('Benutzer/'+userId, {FleischAnteile: 0}, function(){});
 
         		if (week < sbs.week) {
-            		postAjax('Benutzer/'+userId, {Depot_ID: 16}, function(){});
+            		postAjax('Benutzer/'+userId, {Depot_ID: 0}, function(){});
         		}
 
         		 reloadWhenReady();
@@ -263,7 +263,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
     			if (modules[i] && modules[i].ID && (modules[i].AnzahlProAnteil || modules[i].ID == 2)) {
     	    		var anteile = modules[i].ID == 4 ? (data.FleischAnteile === '' ? 1 : data.FleischAnteile) : (data.Anteile === '' ? 1 : data.Anteile);
     	    		if (anteile) {
-    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(!modules[i].AnzahlProAnteil && modules[i].ID == 2 ? 3 : modules[i].AnzahlProAnteil), StartWoche: data.PunkteWoche ? data.PunkteWoche : sbs.selectedWeek, EndWoche: '9999.99'}, createReloadFunction(userId));
+    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(modules[i].AnzahlProAnteil), StartWoche: data.PunkteWoche ? data.PunkteWoche : sbs.selectedWeek, EndWoche: '9999.99'}, createReloadFunction(userId));
     				}
     			}
     		}

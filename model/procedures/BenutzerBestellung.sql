@@ -1,4 +1,4 @@
-DROP PROCEDURE `BenutzerBestellung`;
+DROP PROCEDURE IF EXISTS `BenutzerBestellung`;
 CREATE PROCEDURE `BenutzerBestellung` (
    IN `pWoche` DECIMAL(6,2),
    IN `pInhalt` BOOLEAN
@@ -33,12 +33,16 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
                  1 AS `Quelle`,
                  `Benutzer`.`ID` AS `Benutzer_ID`,
                  `BenutzerModulAbo`.`Kommentar` AS `Kommentar`,
-                  Replace(Replace(`Modul`.`Name`, 'Kräutermodul', 'Kräuter'), 'Quarkmodul' , 'Quark, 400g') AS Modul,
+                  Replace(Replace(`Modul`.`Name`, 'utermodul', 'uter'), 'Quarkmodul' , 'Quark') AS Modul,
                  ModulInhalt.Produkt_ID,
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
-                 IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * ModulInhaltWoche.Anzahl * ModulInhalt.Anzahl AS Lieferzahl,
-                 ModulInhaltWoche.Anzahl * ModulInhalt.Anzahl * IF(Modul.ID = 4,Benutzer.FleischAnteile,Benutzer.Anteile) * IF(Modul.ID = 2,3,Modul.AnzahlProAnteil) AS Gutschrift,
-                 `BenutzerModulAbo`.BezahltesModul,
+                 IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
+                 IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, Benutzer.FleischAnteile - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
+                 	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
+                 	* ModulInhalt.Anzahl * IF(Modul.ID = 4, 0, Benutzer.Anteile)
+             		* IF(Modul.ID = 2 /*Milch*/,4,Modul.AnzahlProAnteil))
+                 AS Gutschrift,
+                 `BenutzerModulAbo`.BezahltesModul or Modul.ID = 4 AS BezahltesModul,
                  pWoche AS `Woche`
              FROM `Modul`
              JOIN Benutzer
@@ -51,12 +55,19 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
              LEFT JOIN ModulInhaltWoche
              	ON ModulInhaltWoche.Woche = pWoche
              	AND ModulInhaltWoche.ModulInhalt_ID = ModulInhalt.ID
-             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = Benutzer.Depot_ID )
+             	AND (ModulInhaltWoche.Anzahl IS NOT NULL)
+             	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = 0 )
+             LEFT JOIN ModulInhaltWoche AS ModulInhaltDepot
+             	ON ModulInhaltDepot.Woche = pWoche
+             	AND ModulInhaltDepot.ModulInhalt_ID = ModulInhalt.ID
+             	AND (ModulInhaltDepot.Anzahl IS NOT NULL)
+             	AND ( ModulInhaltDepot.Depot_ID = Benutzer.Depot_ID )
              WHERE
-                    ( `BenutzerModulAbo`.ID IS NOT NULL )
+                    (( `BenutzerModulAbo`.ID IS NOT NULL )
                  OR ( Modul.ID <> 4 AND ((Modul.AnzahlProAnteil * Benutzer.Anteile) > 0) )
                  OR ( Modul.ID = 4 /*Fleisch*/ AND Benutzer.FleischAnteile > 0 )
-                 OR ( Modul.ID = 2 /*Milch*/ AND Benutzer.Anteile > 0 )
+                 OR ( Modul.ID = 2 /*Milch*/ AND Benutzer.Anteile > 0 ))
+                 AND (ModulInhalt.ID is null or ModulInhalt.HauptProdukt or ModulInhaltWoche.Anzahl > 0 or ModulInhaltDepot.Anzahl > 0)
            )
            UNION ALL
            (SELECT
@@ -80,6 +91,6 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
 	       	ON `BenutzerUrlaub`.`Benutzer_ID` = `u`.`Benutzer_ID`
             AND  `BenutzerUrlaub`.`Woche` = `u`.`Woche`
       	LEFT JOIN Produkt on u.Produkt_ID = Produkt.ID
-      	WHERE Benutzer.Depot_ID <> 16
+      	WHERE Benutzer.Depot_ID <> 0
 );
 END

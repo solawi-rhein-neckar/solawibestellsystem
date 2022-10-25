@@ -30,6 +30,11 @@ input.editor.inp_Passwort, input.editor.inp_Cookie, input.editor.inp_PunkteStand
 	display: none;
 }
 
+div#editor.editBenutzer {
+    max-height: 750px;
+    overflow: scroll;
+}
+
 .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID {
 	font-size: 75%;
 	color: #999;
@@ -67,8 +72,26 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:nth-child(2) {
 	background-color: orange;
 }
 
+.weektable td.inactive {
+	background-color: white;
+}
 .weektable td.active {
-	background-color: yellow;
+	background-color: brown;
+}
+.weektable td.active0 {
+	background-color: lightgrey !important;
+}
+.weektable td.active1 {
+	background-color: yellow !important;
+}
+.weektable td.active2 {
+	background-color: orange !important;
+}
+.weektable td.active3 {
+	background-color: red !important;
+}
+.weektable td.active4 {
+	background-color: violet !important;
 }
 
 .weektable td.active:hover, .weekWeek:hover, .weektable a:hover {
@@ -132,45 +155,31 @@ div.hat_tausch {
 </head>
 <body>
 
-	<script>
-		if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi.fairtrademap.de/)) {
-		    location.replace('https://bestellung.solawi.fairtrademap.de/admin.htm');
-		} else if (location.protocol && !location.protocol.match(/https/) && location.host.match(/solawi-rhein-neckar.org/)) {
-		    location.replace('https://www.solawi-rhein-neckar.org/bestellung/admin.htm');
-		}
+	<script src="js/ui.js"></script>
 
+	<script>
         var SBS = SolawiBestellSystem();
         var SBTedit = SolawiTable(SBS, 'table', 'tablePath', true, false);
         var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
         SBTview.hideZeros = true;
         var SBTmeta = SolawiTable(SBS, 'table', 'tablePath', true, false, true);
+        var SBTpunkte = SolawiTable(SBS, 'tablePunkte', 'tablePunktePath', false, false);
+        SBTmeta.setSortBy('Name');
 
         //check login status
-        getAjax('Benutzer/OWN',
-                function(userResponse) {
-                    if (userResponse.length > 0 && userResponse[0]) {
-                        SBS.user = userResponse[0];
-                        document.getElementById('logoutbtn').innerText = 'Logout ' + SBS.user.Name;
-                        setContent('selectedWeek', SBS.selectedWeek);
-                        setContent('selectedWeek0', SBS.selectedWeek);
-                        if (SBS.user.Role_ID != 2) {
-                            setContent('warning',
-                                    'Du bist als BENUTZER ANGEMELDET und siehst NUR DEINE BESTELLUNGEN / darfst nicht bearbeiten. Bitte abmelden (logout) und ALS ADMIN ANMELDEN.');
-                        }
-                        SBTmeta.setSortBy('Name');
-                        getAjax('Depot', SBTmeta.showTable);
-                    } else {
-                        show('loginform');
-                        hide('logoutbtn');
-                        hide('tableContainer');
-                    }
-                });
+        initUser(function() {
+			if (SBS.user.Role_ID == 3) {
+			    setContent('warning', 'Du bist als DEPOT-VERWALTER ANGEMELDET und siehst NUR DATEN DEINES DEPOTS / darfst nicht bearbeiten.');
+		    }
+			if (SBS.user.Role_ID == 1) {
+			    setContent('warning', 'Du bist als PRODUKT-VERWALTER ANGEMELDET und darfst nur Produkte bearbeiten, keine Bestellungen/Benutzer!.');
+		    }
+			if (SBS.user.Role_ID == 4) {
+			    setContent('warning','Du bist als MITGLIEDER-VERWALTUNG ANGEMELDET und darfst alle Mitglieder bearbeiten, aber KEINE PRODUKTE ändern.');
+			}
+			getAjax('Depot', SBTmeta.showTable);
+        });
 
-        SBS.fillCache('Modul');
-        SBS.fillCache('Role');
-        SBS.fillCache('Depot');
-        SBS.fillCache('Produkt');
-        SBS.fillCache('Benutzer');
 
         function changeWeek(count) {
             SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
@@ -189,70 +198,23 @@ div.hat_tausch {
                 getAjax(SBTmeta.getTablePath(), SBTmeta.showTable);
             }
         }
+
+        function onClickLoginBtn() {
+        	event.preventDefault();
+        	postAjax('/cgi-bin/resql.php/login', {
+	        		name : document.getElementById('inpName').value,
+	        		password : document.getElementById('inpPass').value
+	        	}, function(result, path){
+	        	    if (!(!result || result.result != "1")) { window.setTimeout(function(){document.location.reload();},333); }
+	        	    else {show("loginError")}
+	        	});
+        	return false;
+        }
     </script>
-
-
-	<div id="blockui_post"
-		style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 250; background-color: rgba(0, 0, 0, 0.3); display: none;">
-		<span
-			style="display: inline-block; padding: 30px; background-color: #FFF; border: 1px solid black;">SENDE
-			DATEN...</span>
-	</div>
-	<div id="blockui_get"
-		style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; padding-top: 30%; z-index: 240; background-color: rgba(0, 0, 0, 0.3); display: none;">
-		<span
-			style="display: inline-block; padding: 30px; background-color: #FFF; border: 1px solid black;">EMPFANGE
-			DATEN - BITTE WARTEN....</span>
-	</div>
-	<div id="blockui_edit"
-		style="position: fixed; top: 0; left: 0; bottom: 100%; right: 100%; width: 100%; height: 100%; text-align: center; z-index: 230; background-color: rgba(0, 0, 0, 0.3); display: none;">
-		<div
-			style="display: inline-block; padding: 5px; margin: 10px; border: 1px solid black; background-color: #FFF;">
-			<div id="editError" style="color: red; font-weight: bold;"></div>
-			<div id="editor" style="padding: 5px;"></div>
-		</div>
-	</div>
-
 
 	<div id="logoutfrombg"
 		style="box-shadow: 0em 0em 1em 1em rgba(222, 222, 222, 0.7); background: rgba(222, 222, 222, 0.7); position: fixed; height: 14em; width: 19em; z-index: 8888; right: 1px; top: 0; font-size: 12px;">
 	</div>
-	<div id="logoutform"
-		style="position: fixed; right: 1px; top: 0; font-size: 12px; width: 20em; height: 15em; text-align: center; z-index: 9999;">
-		Woche:
-		<button onclick="changeWeek(-1)" style="padding:3px;">&lt;&lt;</button>
-		<span id="selectedWeek0"
-			style="font-weight: bold; background-color: rgba(222, 222, 222);">00</span>
-		<button onclick="changeWeek(+1)" style="padding:3px;">&gt;&gt;</button>
-		<button id="logoutbtn"
-			onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn'); hide('tableContainer');">Logout</button>
-		<div id="messages"
-			style="height: 11em; overflow: hidden; position: absolute; bottom: 0; width: 20em;">
-		</div>
-	</div>
-
-	<div id="loginform" style="display: none">
-		LOGIN:
-		<form method='post' action='/cgi-bin/query.pl/login'>
-			Name: <input type='text' id='inpName' name='name' placeholder='name' />
-			Password: <input type='password' id='inpPass' name='password' /> <input
-				type='submit' value='Login'
-				onclick='event.preventDefault();postAjax("login", {name:document.getElementById("inpName").value, password:document.getElementById("inpPass").value}, function(result, path){if (!(!result || result.result != "1")){window.setTimeout(function(){document.location.reload();},333);} else {show("loginError")};});return false;' />
-			<div id="loginError"
-				style="display: none; color: red; font-weight: bold; padding-top: 20px;">
-				Falscher Benutzername oder Falsches Passwort!<br />Der Admin-Bereich
-				funktioniert NICHT mit dem Login des Mitgliederbereichs, sondern hat
-				eigene Logins!<br />Zum Login als Mitglied, bitte den Link "Zurück
-				zur Startseite" verwenden.
-			</div>
-		</form>
-		<br />
-		<br />
-		<a style="padding-left: 20px;" href="index.htm">Zurück zu
-			Startseite</a><br />
-	</div>
-
-	<div id="warning" style="color: red"></div>
 
 	<div id="tableContainer">
 		<div style="width: 90%">
@@ -278,15 +240,14 @@ div.hat_tausch {
 				style="display: inline-block; max-width: 42%; vertical-align: top;">
 				<b>Bearbeiten </b> <br />
 				<button	onclick="SBTview.reset();SBTedit.reset();getAjax('Depot', SBTmeta.showTable);">Depot</button>
-				<button	onclick="SBTview.reset();SBTedit.reset();getAjax('Solawi', SBTmeta.showTable);">Abgeschlossen</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Modul', SBTedit.showTable);">Modul</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('ModulInhalt', SBTedit.showTable);">ModulInhalt</button>
-				<!--button onclick="SBS.reset();getAjax('ModulInhaltWoche', SBTedit.showTable);">ModulInhaltWoche</button-->
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Produkt', SBTedit.showTable);">Produkt</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerModulAbo', SBTedit.showTable);">BenutzerModulAbo</button>
-				<button onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">BenutzerZusatzBestellung</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();getAjax('BenutzerUrlaub', SBTedit.showTable);">BenutzerUrlaub</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('ID');getAjax('Modul', SBTedit.showTable);">Modul</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Produkt_ID');SBTedit.setSortBy('Modul_ID');getAjax('ModulInhalt', SBTedit.showTable);">ModulInhalt</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotModulInhalt/'+SBS.selectedWeek, SBTview.showTable);">PivotModulInhalt</button>				<!--button onclick="SBS.reset();getAjax('ModulInhaltWoche', SBTedit.showTable);">ModulInhaltWoche</button-->
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('Nr');getAjax('Produkt', SBTedit.showTable);">Produkt</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('Name');getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Modul_ID');SBTedit.setSortBy('Benutzer_ID');getAjax('BenutzerModulAbo', SBTedit.showTable);">BenutzerModulAbo</button>
+				<button onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Benutzer_ID');SBTedit.setSortBy('Woche');getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">BenutzerZusatzBestellung</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Benutzer_ID');SBTedit.setSortBy('Woche');getAjax('BenutzerUrlaub', SBTedit.showTable);">BenutzerUrlaub</button>
 			</span>
 		</div>
 
@@ -305,6 +266,7 @@ div.hat_tausch {
 
 		<br /> <br />
 
+		<a href="https://solawi-rhein-neckar.org/cgi-bin/createProcedures.php/RECREATEPROCEDURES" target="_blank">re-create stored procedures</a>
 	</div>
 
 </body>

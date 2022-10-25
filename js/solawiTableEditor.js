@@ -6,7 +6,7 @@
 
     This file is meant to be used by solawiTable.
 */
-function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
+function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, editorElemId) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
@@ -20,13 +20,21 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     var sbs = pSbs;
     var solawiTable = pSolawiTable;
     var disableUnavailableProducts = pDisableUnavailableProducts;
-    var solawiEditor = SolawiEditor(sbs, solawiTable.onEntitySaved, disableUnavailableProducts);
+    var solawiEditor = SolawiEditor(sbs, solawiTable.onEntitySaved, disableUnavailableProducts, editorElemId);
 
 
 /**** public ****/
 
     function addColumnHeaders(tr, keys) {
-    	addCreateButton(tr.firstChild, keys);
+    	var tableName = solawiTable.getTableName();
+    	solawiEditor.setKeys(keys ? keys
+							: tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar', 'Woche']
+						 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID']
+							: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID']
+						 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche']
+							: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
+						 	: ['Name']);
+    	addCreateButton(tr.firstChild);
     	if (keys) {
     		addDeleteButtonColumnHeader(tr);
     		addWeekSelectColumnHeader(tr);
@@ -36,20 +44,30 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
     function addColumnCells(tr, dataRow) {
     	addDeleteButtonCell(tr, dataRow);
     	addWeekSelectCell(tr, dataRow['ID']);
+
+		if (solawiEditor.addCopyBtn) {
+			solawiEditor.addCopyBtn(tr, dataRow, createAddFunc, solawiTable.getTableName());
+		}
     }
 
     function enhanceDataCell(div, key) {
         /* if disableUnavailableProducts ist true, only certain columns are editable, else all columns (except audit metadata) are editable. */
-        if ( ((! disableUnavailableProducts) || (key == 'Kommentar' && (solawiTable.getTableName() != 'BenutzerZusatzBestellung' || (div.innerText && div.innerText.trim() != '' && div.innerText.trim() != '-'))) || key == 'EndWoche') && key != 'ID' && key != 'AenderBenutzer_ID' && key != 'AenderZeitpunkt' && key != 'ErstellZeitpunkt') {
+        if ( (  (! disableUnavailableProducts)
+        		|| (key == 'Kommentar' && (solawiTable.getTableName() != 'BenutzerZusatzBestellung' || (div.innerText && div.innerText.trim() != '' && div.innerText.trim() != '-')))
+        		||  key == 'EndWoche' )
+        	 && (solawiTable.getTableName() != 'Benutzer' || div.dataId != '-1')
+        	 && key != 'ID'
+        	 && key != 'AenderBenutzer_ID'
+        	 && key != 'AenderZeitpunkt'
+        	 && key != 'ErstellZeitpunkt') {
             div.addEventListener('click', showEditor);
             div.style.cursor = "pointer";
             if (disableUnavailableProducts) {
             	div.style['border-bottom'] = "1px dotted black";
             }
-            div.title = "click to edit!";
+            div.title = div.title ? div.title + "  -  click to edit!" : "click to edit!";
         }
     }
-
 
     /**** private ****/
 
@@ -93,40 +111,38 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts) {
             tr.appendChild(td);
             var weekSelect = Object.create(WeekSelect);
             weekSelect.year = Number(sbs.selectedWeek.match(/[0-9]+/)[0]);
-            weekSelect.tableName = 'ModulInhaltWoche/ModulInhalt_ID/' + rowId,
-            weekSelect.postData = {ModulInhalt_ID: rowId, Woche: sbs.selectedWeek},
+            weekSelect.tableName = 'ModulInhaltWoche/ModulInhalt_ID/' + rowId + '/Depot_ID/0',
+            weekSelect.postData = {ModulInhalt_ID: rowId, Woche: sbs.selectedWeek, Anzahl: 1, Depot_ID: 0, onDuplicateKeyUpdate: 'Anzahl'},
             weekSelect.addTo(td);
         }
     }
 
-    function addCreateButton(td, keys) {
+    function addCreateButton(td) {
 		td.innerText = '';
         var btn = document.createElement('BUTTON');
         td.appendChild(btn);
         var tableName = solawiTable.getTableName();
-        btn.addEventListener('click', createFuncAddNew(	keys ? keys
-        												: tableName == 'BenutzerZusatzBestellung' ? ['Benutzer_ID', 'Produkt_ID', 'Anzahl', 'Kommentar', 'Woche']
-        											 	: tableName == 'ModulInhaltWoche' 	? ['ModulInhalt_ID']
-        												: tableName == 'ModulInhalt' 		? ['Modul_ID', 'Produkt_ID']
-        											 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche']
-        												: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
-        											 	: ['Name']));
+        btn.addEventListener('click', createAddFunc(tableName, solawiTable.editorDefault));
         btn.innerText = tableName == 'BenutzerZusatzBestellung' ? 'Tauschen' : '+';
         btn.className='btn_plus'
         if ( disableUnavailableProducts && tableName == 'BenutzerZusatzBestellung' && (sbs.selectedWeek < sbs.week ||  sbs.selectedWeek == sbs.AbgeschlosseneWoche) ) {
     		btn.disabled='disabled';
         }
     }
-    
-    function showEditor(event) {
-    	solawiEditor.showEditorForCell(solawiTable.getTableName(), event);
+
+    function createAddFunc(tableName, defaults) {
+    	return function(event) {
+        	event.stopPropagation();
+        	solawiEditor.showForAdding(tableName, defaults)
+        };
     }
 
-    function createFuncAddNew(keys) {
-        return function(event) {
-        	event.stopPropagation();
-        	solawiEditor.showForAdding(solawiTable.getTableName(), keys, solawiTable.editorDefault)
-        }
+    function showEditor(event) {
+    	if (solawiTable.editAtOnce) {
+    	   	solawiEditor.showForAdding(solawiTable.getTableName(), event.target);
+    	} else {
+ 		   	solawiEditor.showEditorForCell(solawiTable.getTableName(), event);
+    	}
     }
 
     return pub;

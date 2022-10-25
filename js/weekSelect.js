@@ -17,8 +17,8 @@ var WeekSelect = {
 	needsConfirm: false,
 	allowPast: false,
     year: 2019,
-    tableName: 'ModulInhaltWoche/ModulInhalt_ID/1',
-    postData: {ModulInhalt_ID: 1, Woche: '2019.01'},
+    tableName: 'ModulInhaltWoche/ModulInhalt_ID/1/Depot_ID/0',
+    postData: {ModulInhalt_ID: 1, Woche: '2019.01', Anzahl: 1, Depot_ID: 0, onDuplicateKeyUpdate: 'Anzahl'},
     week: '2019.01',
     label: 'Urlaub',
     labels: 'Urlaube',
@@ -40,9 +40,9 @@ var WeekSelect = {
     init: function(result, tablePath) {
         var weeks = {};
         for (var i = 0; i < result.length; i++) {
-            var w = result[i].Woche-this.year;
+            var w = result[i].Woche - this.year;
             if (w > 0 && w < 1) {
-                weeks[Math.round(w*100)]=1;
+                weeks[Math.round(w*100)] = result[i].Anzahl || result[i].Anzahl === 0 || result[i].Anzahl === null ? result[i].Anzahl : 1;
             }
         }
 
@@ -70,8 +70,8 @@ var WeekSelect = {
         var weekCount = window.weekCount(this.year);
         for (var i = 1; i<= weekCount; i++) {
             td = this.createCell(tr, i < 10 ? '0' + i : i, handler, this.getTitle(i));
-            if (weeks[i]) {
-                td.className='active';
+            if (weeks[i] || weeks[i] === 0) {
+                td.className='active active' + weeks[i];
             }
             td.dataWeek = i;
             if (i % 12 == 0) {
@@ -152,6 +152,13 @@ var WeekSelect = {
     toggleSingle: function(elem) {
         if (this.tableName && this.postData ) {
             this.postData.Woche = this.year + (elem.dataWeek <= 9 ? '.0' : '.') + elem.dataWeek;
+            if (this.postData.onDuplicateKeyUpdate === 'Anzahl') {
+	            if (elem.className.match(/inactive/)) {
+	            	this.postData.Anzahl = 1
+	            } else {
+	            	this.postData.Anzahl = 0
+	            }
+            }
         	if ( (this.onValidate) ) {
             	this.onValidate(elem, this.postData, !elem.className.match(/inactive/))
         	} else {
@@ -159,13 +166,17 @@ var WeekSelect = {
         	}
         }
     },
-    
+
     doSave: function(elem) {
-		if (elem.className.match(/inactive/)) {
-        	postAjax(this.tableName.match(/[^\/]*/)[0], this.postData, (function(result) { if (result.result) elem.className = 'active'; else this.refresh();}).bind(this) );
-        } else {
+		if (elem.className.match(/^active /) && !(this.postData.Anzahl === 0 && elem.className.match(/active1/)) ) {
             deleteAjax(this.tableName + '/Woche/' + this.postData.Woche, (function(result) { if (result.result) elem.className = 'inactive'; else this.refresh();}).bind(this) );
-        }    	
+        } else if (this.postData.Anzahl === 0) {
+        	postAjax(this.tableName.match(/[^\/]*/)[0], this.postData, (function(result) { if (result.result) elem.className = 'active active0'; else this.refresh();}).bind(this) );
+        } else if (this.postData.Anzahl === 1) {
+        	postAjax(this.tableName.match(/[^\/]*/)[0], this.postData, (function(result) { if (result.result) elem.className = 'active active1'; else this.refresh();}).bind(this) );
+        } else {
+        	postAjax(this.tableName.match(/[^\/]*/)[0], this.postData, (function(result) { if (result.result) elem.className = 'active '; else this.refresh();}).bind(this) );
+        }
     },
 
     toggleMulti: function(weeks) {
@@ -212,3 +223,4 @@ var WeekSelect = {
 
 
 };
+
