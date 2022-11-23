@@ -77,7 +77,7 @@ COLLATE utf8mb4_general_ci AS (
                  ModulInhalt.Produkt_ID,
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
                  IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
-                 IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, Benutzer.FleischAnteile - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
+                 IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, IFNULL(`BenutzerModulAbo`.`BezahltesModul`,0) - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
                  	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
                  	* ModulInhalt.Anzahl * IF(Modul.ID = 4, 0, Benutzer.Anteile)
              		* Modul.AnzahlProAnteil)
@@ -105,7 +105,6 @@ COLLATE utf8mb4_general_ci AS (
              WHERE
                     (( `BenutzerModulAbo`.ID IS NOT NULL )
                  OR ( Modul.ID <> 4 AND ((Modul.AnzahlProAnteil * Benutzer.Anteile) > 0) )
-                 OR ( Modul.ID = 4 /*Fleisch*/ AND Benutzer.FleischAnteile > 0 )
                  OR ( Modul.ID = 2 /*Milch*/ AND Benutzer.Anteile > 0 ))
                  AND (ModulInhalt.ID is null or ModulInhalt.HauptProdukt or ModulInhaltWoche.Anzahl > 0 or ModulInhaltDepot.Anzahl > 0)
            )
@@ -344,7 +343,6 @@ SET \@query = CONCAT('
 		   SUM(IF(NOT (Produkt LIKE \\'Gem_se\\'),0, Urlaub)) as `99.', pWoche,' Urlauber`,
 		  SUM(IF((NOT (Produkt LIKE \\'Gem_se\\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `97.Mitglieder`,
 		  SUM(IF((NOT (Produkt LIKE \\'Gem_se\\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.Anteile`,
-		  SUM(IF((NOT (Produkt LIKE \\'Gem_se\\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.FleischAnteileErlaubt`,
 		  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \\', \\') as `96.Kommentar`
 	FROM
 		(Select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,
@@ -460,7 +458,7 @@ BEGIN
    Subtotal int,
    Total int);
 
-  WHILE day <= curdate() DO
+  WHILE day <= (curdate() + interval 4 day) DO
   	SET pWoche = cast(yearweek((day - interval 4 day),1)/100 as decimal(6,2));
   	CALL BenutzerBestellung( pWoche, TRUE);
   	INSERT INTO BenutzerPunkteTemp SELECT pWoche,

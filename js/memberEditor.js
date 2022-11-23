@@ -326,9 +326,9 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
     	if (modules && userId) {
     		for (var i = 0; i < modules.length; i++) {
     			if (modules[i] && modules[i].ID && (modules[i].AnzahlProAnteil || modules[i].ID == 2)) {
-    	    		var anteile = modules[i].ID == 4 ? (data.FleischAnteile === '' ? 1 : data.FleischAnteile) : (data.Anteile === '' ? 1 : data.Anteile);
+    	    		var anteile = (data.Anteile === '' ? 1 : data.Anteile);
     	    		if (anteile) {
-    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(modules[i].AnzahlProAnteil), StartWoche: data.PunkteWoche ? data.PunkteWoche : sbs.selectedWeek, EndWoche: '9999.99'}, changeWeekEditor);
+    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(modules[i].AnzahlProAnteil), StartWoche: data.AnteileStartWoche ? data.AnteileStartWoche : sbs.selectedWeek, EndWoche: '9999.99', BezahltesModul: modules[i].ID == 4}, changeWeekEditor);
     				}
     			}
     		}

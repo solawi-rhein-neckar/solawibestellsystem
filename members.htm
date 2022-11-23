@@ -194,7 +194,7 @@ input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche { pointer-events: no
 		initUser(function() {
 	        if (SBS.user.Role_ID > 3) {
 				SBTedit.reload=loadTableBenutzer;
-		        SBTedit.columns = ['Name','wplast_name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpMit2ID','wpMit3ID','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpuser_email','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
+		        SBTedit.columns = ['Name','wplast_name','Depot_ID','Anteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpMit2ID','wpMit3ID','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpuser_email','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
 		        loadTableBenutzer();
 	        } else {
 	        	var sheet = (function() {
@@ -205,7 +205,7 @@ input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche { pointer-events: no
 				})();
 				sheet.insertRule("select.editor.inp_Depot_ID{pointer-events: none;color:#666;}", 0);
 	            SBTedit.reload=function(){getAjax('Benutzer', SBTedit.showTable);};
-	            SBTedit.columns = ['Name','Depot_ID','Anteile','FleischAnteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','MitName','AltName'];
+	            SBTedit.columns = ['Name','Depot_ID','Anteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','MitName','AltName'];
 	            SBTedit.reload();
 		        var filterContainer = document.getElementById('filterContainer');
 				var btn = document.createElement('button');
@@ -276,8 +276,8 @@ input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche { pointer-events: no
 			</table>
 		</div>
 
-		<br /> <br /> 
-		
+		<br /> <br />
+
 		<h2>FAQ Punkteberechnung</h2>
 		<ol>
 		<li><strong>

@@ -38,7 +38,7 @@ COLLATE utf8mb4_general_ci AS (
                  ModulInhalt.Produkt_ID,
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
                  IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
-                 IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, Benutzer.FleischAnteile - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
+                 IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, IFNULL(`BenutzerModulAbo`.`BezahltesModul`,0) - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
                  	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
                  	* ModulInhalt.Anzahl * IF(Modul.ID = 4, 0, Benutzer.Anteile)
              		* Modul.AnzahlProAnteil)
@@ -66,7 +66,6 @@ COLLATE utf8mb4_general_ci AS (
              WHERE
                     (( `BenutzerModulAbo`.ID IS NOT NULL )
                  OR ( Modul.ID <> 4 AND ((Modul.AnzahlProAnteil * Benutzer.Anteile) > 0) )
-                 OR ( Modul.ID = 4 /*Fleisch*/ AND Benutzer.FleischAnteile > 0 )
                  OR ( Modul.ID = 2 /*Milch*/ AND Benutzer.Anteile > 0 ))
                  AND (ModulInhalt.ID is null or ModulInhalt.HauptProdukt or ModulInhaltWoche.Anzahl > 0 or ModulInhaltDepot.Anzahl > 0)
            )

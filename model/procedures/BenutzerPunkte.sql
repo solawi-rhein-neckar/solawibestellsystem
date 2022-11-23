@@ -30,7 +30,7 @@ BEGIN
    Subtotal int,
    Total int);
 
-  WHILE day <= curdate() DO
+  WHILE day <= (curdate() + interval 4 day) DO
   	SET pWoche = cast(yearweek((day - interval 4 day),1)/100 as decimal(6,2));
   	CALL BenutzerBestellung( pWoche, TRUE);
   	INSERT INTO BenutzerPunkteTemp SELECT pWoche,
