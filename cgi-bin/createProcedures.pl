@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+﻿#!/usr/bin/perl
 use strict;
 use warnings;
 
@@ -14,7 +14,7 @@ use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!
 my $q = CGI::Simple->new;
 
 # get database handle
-my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=127.0.0.3", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => ($q->request_method() =~ /^POST$/) });
+my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=mysql", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8mb4 => 1 });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
 	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
@@ -35,7 +35,7 @@ if ( $q->request_method() =~ /^OPTIONS/ ) {
 			my $sth;
 
 			if ( $q->path_info =~ /^\/RECREATEPROCEDURES$/ ) {
-
+				$dbh->prepare("SET NAMES utf8mb4;")->execute();
 				$dbh->prepare("DROP PROCEDURE IF EXISTS `BenutzerBestellung`")->execute();
 				$dbh->prepare("
 CREATE PROCEDURE `BenutzerBestellung` (
@@ -46,7 +46,8 @@ READS SQL DATA
 SQL SECURITY INVOKER
 BEGIN
 DROP TEMPORARY TABLE IF EXISTS BenutzerBestellungenTemp;
-CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
+CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY CHARACTER SET utf8mb4
+COLLATE utf8mb4_general_ci AS (
    SELECT
    `u`.`Benutzer_ID` AS `Benutzer_ID`,
    `Benutzer`.`Name` AS `Benutzer`,

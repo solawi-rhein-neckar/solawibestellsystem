@@ -28,7 +28,7 @@ SELECT
    SUM( AnzahlModul ) AS `AnzahlModul`,
    SUM( `AnzahlZusatz` ) AS `AnzahlZusatz`,
    GREATEST(0, sum(Punkte)) AS `Punkte`,
-   max(IFNULL(Gutschrift,0)) as `Gutschrift`,
+   MAX(IFNULL(Gutschrift,0)) as `Gutschrift`,
     `Urlaub`
 
 FROM `BenutzerBestellungenTemp`

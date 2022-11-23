@@ -1,6 +1,7 @@
-#!/usr/bin/perl
+﻿#!/usr/bin/perl
 use strict;
 use warnings;
+use utf8;
 
 #
 # This is a minimal bridge between a javascript REST Client and a MySQL Database
@@ -62,7 +63,7 @@ use constant {
 my $q = CGI::Simple->new;
 
 # get database handle
-my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=mysql", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => 1 });
+my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=mysql", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8mb4 => 1 });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
 	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
@@ -92,6 +93,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	my $bc = $cookies{'sessionid'} ? $cookies{'sessionid'}->value : undef;
 	my $stbc = $dbh->prepare("SELECT * FROM `Benutzer` WHERE `Cookie` = ?");
 	$stbc->execute($bc);
+        $dbh->prepare("SET NAMES utf8mb4")->execute();
 	if ( my $user = $stbc->fetchrow_hashref ) { # is logged in: sessionid cookie verified
 
 		if ( $q->request_method() =~ /^GET$/ ) {
@@ -315,6 +317,15 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 								delete($row->{$key});
 							}
 						}
+					}
+
+					# FIX DUPLICATE UTF_8 ENCODING of COLUMN NAMES
+					my @keys = keys %$row;
+					foreach my $key (@keys) {
+						my $value = $row->{$key};
+						delete($row->{$key});
+						utf8::decode($key);
+						$row->{$key} = $value;
 					}
 
 					if ($row->{Passwort}) {

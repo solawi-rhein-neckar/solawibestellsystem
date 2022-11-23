@@ -7,7 +7,8 @@ READS SQL DATA
 SQL SECURITY INVOKER
 BEGIN
 DROP TEMPORARY TABLE IF EXISTS BenutzerBestellungenTemp;
-CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
+CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY CHARACTER SET utf8mb4
+COLLATE utf8mb4_general_ci AS (
    SELECT
    `u`.`Benutzer_ID` AS `Benutzer_ID`,
    `Benutzer`.`Name` AS `Benutzer`,
@@ -40,9 +41,9 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
                  IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, Benutzer.FleischAnteile - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
                  	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
                  	* ModulInhalt.Anzahl * IF(Modul.ID = 4, 0, Benutzer.Anteile)
-             		* IF(Modul.ID = 2 /*Milch*/,4,Modul.AnzahlProAnteil))
+             		* Modul.AnzahlProAnteil)
                  AS Gutschrift,
-                 `BenutzerModulAbo`.BezahltesModul or Modul.ID = 4 AS BezahltesModul,
+                 `BenutzerModulAbo`.BezahltesModul OR Modul.ID = 4 as BezahltesModul,
                  pWoche AS `Woche`
              FROM `Modul`
              JOIN Benutzer
