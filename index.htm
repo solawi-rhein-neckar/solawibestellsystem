@@ -15,6 +15,7 @@
 	<script src="js/solawiEditor.js"></script>
 	<script src="js/solawiTableEditor.js"></script>
 	<script src="js/solawiTable.js"></script>
+	<script src="js/solawiTableOnClick.js"></script>
 
 	<script src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
 	<script type="text/javascript" src="lib/FileSaver.min.js"></script>
@@ -41,17 +42,23 @@
     var SBS = SolawiBestellSystem();
     var SBTedit = SolawiTable(SBS, 'tableEdit', 'tableEditPath', true, true);
     var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, true);
-    SBTview.columns=['Woche','Benutzer_ID','Benutzer','Depot_ID','Depot','Produkt','Menge','Einheit','Anzahl','AnzahlZusatz','AnzahlModul','Modul','Urlaub','Beschreibung','Kommentar','Punkte','Gutschrift'];
-    var SBTmodule = SolawiTable(SBS, 'tableModule', 'tableModulePath', true, true);
-    var reloadEdit = SBTedit.reload;
-    SBTedit.reload = function() {
-        SBTview.reload();
-        reloadEdit();
-    }
+    SBTview.columns=['Woche','Benutzer_ID','Benutzer','Depot_ID','Depot','Produkt','Menge','Einheit','Anzahl','AnzahlZusatz','AnzahlModul','Modul','Urlaub','Beschreibung','Nr','Kommentar','Punkte','Gutschrift'];
+//     var SBTmodule = SolawiTable(SBS, 'tableModule', 'tableModulePath', true, true);
+    SBTview.setSortBy('Nr');
+
     SBTedit.setSortBy('Produkt_ID');
     SBTedit.setSortBy('Woche');
     var solawiEditor = SolawiEditor(SBS, SBTedit.reload, true);
     solawiEditor.setKeys(['Benutzer_ID','Produkt_ID','Anzahl','Woche','Kommentar']);
+
+    var SBTserie = SolawiTable(SBS, 'tableSerie', 'tableSeriePath', false, true, false, solawiEditor.showForBatchOrder);
+    var reloadEdit = SBTedit.reload;
+    SBTedit.reload = function() {
+        SBTview.reload();
+        reloadEdit();
+        SBTserie.reload();
+    }
+    solawiEditor.setOnEntitySaved(SBTedit.reload);
 
     //check login status
     getAjax('BenutzerView/MY', function(userResponse) {
@@ -84,20 +91,28 @@
 
             setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> ('
                     + weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
+            setHtmlContent('selectedWeek2', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> ('
+                    + weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
 
             setContent('Modul', SBS.user.Modul);
 
             getAjax('BenutzerBestellungView/Benutzer_ID/MY/Woche/' + SBS.selectedWeek, SBTview.showTable);
 
-            getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/' + SBS.selectedWeek, SBTedit.showTable);
+            getAjax('BenutzerZusatzBestellungView/Benutzer_ID/MY/Woche/' + SBS.selectedWeek, SBTedit.showTable);
 
-            getAjax('BenutzerModulAbo/Benutzer_ID/MY/Bis/' + SBS.week, SBTmodule.showTable);
+//             getAjax('BenutzerModulAbo/Benutzer_ID/MY/Bis/' + SBS.week, SBTmodule.showTable);
+
+            getAjax('BenutzerSerienBestellungView/MY', SBTserie.showTable);
 
             SBS.AbgeschlosseneWoche = SBS.date.getWeekYear() + '.' + SBS.date.getWeek();
             if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
                 document.getElementById('WocheAbgeschlossen').style.display = 'block';
+                document.getElementById('TauschButton').disabled = true;
+                document.getElementById('SerienButton').disabled = true;
             } else {
                 document.getElementById('WocheAbgeschlossen').style.display = 'none';
+                document.getElementById('TauschButton').removeAttribute('disabled');
+                document.getElementById('SerienButton').removeAttribute('disabled');
             }
 
             //getAjax('BenutzerUrlaub', SBTurlaub.showTable);
@@ -128,12 +143,18 @@
         SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
         setHtmlContent('selectedWeek', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> ('
                 + weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
+        setHtmlContent('selectedWeek2', ' ' + SBS.selectedWeek + '<span style="font-weight:normal"> ('
+                + weekToDate(SBS.selectedWeek, 4).toLocaleDateString() + ')</span>');
         getAjax('BenutzerBestellungView/Benutzer_ID/MY/Woche/' + SBS.selectedWeek, SBTview.showTable);
-        getAjax('BenutzerZusatzBestellung/Benutzer_ID/MY/Woche/' + SBS.selectedWeek, SBTedit.showTable);
+        getAjax('BenutzerZusatzBestellungView/Benutzer_ID/MY/Woche/' + SBS.selectedWeek, SBTedit.showTable);
         if (SBS.selectedWeek == SBS.AbgeschlosseneWoche) {
             document.getElementById('WocheAbgeschlossen').style.display = 'block';
+            document.getElementById('TauschButton').disabled = true;
+            document.getElementById('SerienButton').disabled = true;
         } else {
             document.getElementById('WocheAbgeschlossen').style.display = 'none';
+            document.getElementById('TauschButton').removeAttribute('disabled');
+            document.getElementById('SerienButton').removeAttribute('disabled');
         }
         document.getElementById('tableEdit').parentNode.className = 'table_center'; /*remove ganzes_Jahr class, which enables week display*/
         document.getElementById('btn_show_selected_week').style.display = 'none';
@@ -144,7 +165,7 @@
         changeWeek(0);
     }
     function showFullYear() {
-    	getAjax('BenutzerZusatzBestellung/OWN', SBTedit.showTable);
+    	getAjax('BenutzerZusatzBestellungView/OWN', SBTedit.showTable);
 	    document.getElementById('tableEdit').parentNode.className = 'table_center full_year';
     	document.getElementById('btn_show_selected_week').style.display = 'inline';
     	document.getElementById('btn_show_full_year').style.display = 'none';
@@ -298,9 +319,6 @@
 				<img src="pfeil.svg" alt=">" style="transform:rotate(180)" width="25" height="25">
 			</button>
 		</p>
-		<p>
-			<button onclick="resetWeek();">zurück zur aktuellen Woche</button>
-		</p>
 	</div>
 
 	<div class="table_center" id="table1_center">
@@ -316,7 +334,22 @@
 		<div id="infoPunkte" style="display:none">Die Punkte-Historie aus dem Vorjahr ist meist <b>nicht</b> ganz richtig, weil der Übertrag aus dem Vor-Vorjahr (e.g. 2019) nicht mehr im System ist, sobald wir den Übertrag für das nächste Jahr (e.g. 2021) eingetragen haben. Dieser Übertrag aus 2019 wurde aber bei der Berechnung deines Start-Wertes für 2021 berücksichtigt, und wir haben da auch ein Backup von wenn man es nochmal nachrechnen möchte!<br/>&#160;</div>
 		<table id="tablePunkte" cellspacing="0">
 		</table>
+	</div>
+
+	<div id="gesamt_lieferung2">
+		<p>
+			<button onclick="resetWeek();">zurück zur aktuellen Woche</button>
+		</p>
 		<br/>
+		<p>
+			<button class="pfeil_back" onclick="changeWeek(-1)">
+				<img src="pfeil.svg" alt="<" width="25" height="25">
+			</button>
+			KW <span id="selectedWeek2">00</span>
+			<button class="pfeil_forward" onclick="changeWeek(+1)">
+				<img src="pfeil.svg" alt=">" style="transform:rotate(180)" width="25" height="25">
+			</button>
+		</p>
 	</div>
 
 	<h2>Änderungen / Tauschen</h2>
@@ -346,7 +379,7 @@
 
 	<br/>
 	<div class="">
-		<button onclick="solawiEditor.showForAdding('BenutzerZusatzBestellung', {Benutzer_ID: SBS.user.ID})">Tauschen</button>
+		<button id="TauschButton" onclick="solawiEditor.showForAdding('BenutzerZusatzBestellung', {Benutzer_ID: SBS.user.ID})">Tauschen</button>
 	</div>
 
 	<br/>
@@ -354,9 +387,13 @@
 	<br/>
 
 	<div class="">
-		<button onclick="solawiEditor.showForBatchOrder({Benutzer_ID: SBS.user.ID})">Serien-Bestellung</button>
+		<button id="SerienButton" onclick="solawiEditor.showForBatchOrder({Benutzer_ID: SBS.user.ID})">Serien-Bestellung</button>
 	</div>
 
+	<div class="table_center" id="table3_center">
+		<table id="tableSerie" cellspacing="0">
+		</table>
+	</div>
 
 	<h1 id=Urlaub>Dein Urlaub</h1>
 	<div class="text_zentral">
@@ -369,7 +406,7 @@
 		Seite NEU LADEN (Taste F5), um die Lieferung für die aktuelle Woche zu
 		aktualisieren!)
 	</div>
-	<div class="table_center" id="table3_center">
+	<div class="table_center" id="table4_center">
 		<div id="tableUrlaub"></div>
 	</div>
 
@@ -383,7 +420,7 @@
 			LADEN (Taste F5), um die Bestellungen für die aktuelle Woche zu
 			aktualisieren!
 		</div>
-		<div class="table_center" id="table4_center">
+		<div class="table_center" id="table5_center">
 			<table id="tableModule" cellspacing="0">
 			</table>
 		</div>

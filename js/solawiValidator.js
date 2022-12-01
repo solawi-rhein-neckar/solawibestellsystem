@@ -17,10 +17,10 @@ function SolawiValidator(pSbs) {
     var responseCache;
 
 /**** public ****/
-    function validateEditorInput(data, id) {
+    function validateEditorInput(data, id, isBatch) {
     	lookupRowDataInResponseCacheForValidation(id, data);
 
-    	var result = validateEditorZusatzBestellung(data, id);
+    	var result = validateEditorZusatzBestellung(data, id, isBatch);
         if (result != null) {
         	return result;
         }
@@ -48,12 +48,12 @@ function SolawiValidator(pSbs) {
         return true;
     }
 
-    function validateEditorZusatzBestellung(data, id) {
+    function validateEditorZusatzBestellung(data, id, isBatch) {
     	if (data['Produkt_ID'] && sbs.tableCache['Produkt']) {
         	var min = -9;
         	var max = 9999;
             var row = sbs.tableCache['Produkt'][data['Produkt_ID']]
-            if (row) {
+            if (row && !isBatch) {
                 min = (row.AnzahlBestellung || row.AnzahlBestellung === 0 ? row.AnzahlBestellung * -1 : -9);
                 max = row.AnzahlZusatzBestellungMax - row.AnzahlZusatzBestellung;
             }

@@ -21,6 +21,7 @@ COLLATE utf8mb4_general_ci AS (
    `Produkt`.`Beschreibung`,
    `Produkt`.`Einheit`,
    `Produkt`.`Menge`,
+   `Produkt`.`Nr`,
    `u`.`Woche` AS `Woche`,
    `u`.`Kommentar` AS `Kommentar`,
    ( CASE WHEN NOT ISNULL(`BenutzerUrlaub`.`ID`) THEN 0 WHEN pInhalt = TRUE THEN `u`.`Lieferzahl` ELSE `u`.`Anzahl` END ) AS `Anzahl`,

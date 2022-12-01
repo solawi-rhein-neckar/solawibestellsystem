@@ -21,7 +21,8 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                 responseCache = pResponse;
             },
             setKeys: setKeys,
-            addCopyBtn: memberEditor && memberEditor.addCopyBtn
+            addCopyBtn: memberEditor && memberEditor.addCopyBtn,
+            setOnEntitySaved: function(func) {onEntitySaved = func;}
     };
 
     /* private vars */
@@ -73,7 +74,13 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
     }
 
     function showForBatchOrder(defaults) {
+    	if (defaults && defaults.target && defaults.target.dataId && defaults.target.dataId.match && defaults.target.dataId.match(/^.* x .*$/)) {
+    		defaults = {Produkt_ID: defaults.target.dataId.replace(/.* x /, ''), Anzahl: defaults.target.dataId.replace(/ x .*/, '')};
+    	}
         finishBatchOrder(initForAdding('BenutzerZusatzBestellung', defaults, {'Woche':1,'ID':1, 'ErstellZeitpunkt':1, 'AenderBenutzer_ID':1, 'AenderZeitpunkt':1}));
+        if (defaults.Anzahl && defaults['Produkt_ID']) {
+        	showBatchOrderWeekSelect({target:document.getElementById('editorBatchBtn'+editorSuffix)});
+        }
     }
 
     function initForAdding(pTableName, defaults, hiddenFields) {
@@ -112,6 +119,10 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                     inp.value = defaults['wpID'];
                 } else if (keys[j] == 'Name' && defaults['Name']) {
                     inp.value = defaults['Name'];
+                } else if (keys[j] == 'Produkt_ID' && defaults['Produkt_ID']) {
+                    inp.value = defaults['Produkt_ID'];
+                } else if (keys[j] == 'Anzahl' && defaults['Anzahl']) {
+                    inp.value = defaults['Anzahl'];
                 } else if (keys[j] == 'Benutzer_ID') {
                     inp.value = defaults['Benutzer_ID'] ? defaults['Benutzer_ID'] : sbs.user.ID;
                 }
@@ -197,7 +208,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
             if (row && (row.ID || row.ID === 0)  && ((!disableUnavailableProducts) || (!row.Nr) || row.AnzahlZusatzBestellungMax > 0 || row.Nr <= 900)) {
                 var opt = document.createElement("OPTION");
                 opt.value=row.ID;
-                opt.innerText=row.Name || row['display_name'] || row['user_email'];
+                opt.innerText=row.Punkte ? (row.Name + ' (' + row.Punkte + "Pkt)") : row.Name || row['display_name'] || row['user_email'];
                 opt.title='ID: ' + row.ID + (row['user_email'] ? (' - ' + row['user_email']) : '');
                 if (disableUnavailableProducts && (row.AnzahlZusatzBestellungMax < 0 || (row.AnzahlZusatzBestellung > 0 && row.AnzahlZusatzBestellungMax <= row.AnzahlZusatzBestellung) || (row.AnzahlZusatzBestellungMax == 0 && row.AnzahlBestellung <= 0) )) {
 
@@ -320,13 +331,13 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         });
     }
 
-    function validateAndProceed(event2, onSuccessCallback) {
+    function validateAndProceed(event2, onSuccessCallback, isBatch) {
         if (event2.keyCode == null /*blur*/ || event2.keyCode == 13 /*enter*/) {
             event2.target.disabled='disabled';
 
             var result = collectChangedInputData();
 
-            if (result.size == 0 || (tableValidator &&   ! tableValidator.validateEditorInput(result.data, result.id) )) {
+            if (result.size == 0 || (tableValidator &&   ! tableValidator.validateEditorInput(result.data, result.id, isBatch) )) {
                 if (result.size == 0) {
                     setContent('editError'+editorSuffix, 'Nichts geändert! - Abbrechen clicken');
                 }
@@ -375,13 +386,14 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
         }
         var linebreak = document.createElement("br")
         var btn = document.createElement("BUTTON");
-        btn.innerText="Serien-Bestellung";
+        btn.innerText="Liefer-Wochen auswählen";
         btn.style['margin-left'] = '5px';
         btn.style['margin-right'] = '10px';
+        btn.id='editorBatchBtn'+editorSuffix;
         btn.addEventListener('click', showBatchOrderWeekSelect);
 
         var btn2 = document.createElement("BUTTON");
-        btn2.innerText="Schließen";
+        btn2.innerText="Dialog schließen";
         btn2.addEventListener('click', function(){hide('blockui_edit'+editorSuffix);onEntitySaved();});
         edit.appendChild(linebreak);
         edit.appendChild(btn);
@@ -402,6 +414,13 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                 var inpEle = editor.children[i];
                 if (inpEle.nodeName == 'INPUT' || inpEle.nodeName == 'SELECT') {
                     inpEle.disabled='disabled';
+                } else if (inpEle.nodeName == 'DIV'){
+	                for (var j = 0; j < inpEle.children.length; j++) {
+	                    var inpEle2 = inpEle.children[j];
+		                if (inpEle2.nodeName == 'INPUT' || inpEle2.nodeName == 'SELECT') {
+		                    inpEle2.disabled='disabled';
+		                }
+	                }
                 }
             }
 
@@ -446,7 +465,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
             div.style.paddingTop="10px";
             div.innerHTML="Hinweis: schon vorhandene (Serien-)-Bestellungen werden hier nur angezeigt,<br/>wenn exakt die selbe Anzahl haben: Sind in einer Woche schon 2 Stück bestellt,<br/>sieht man dies hier nicht, falls hier 3 als Anzahl ausgewählt wurde.";
             editor.appendChild(div);
-        });
+        }, true);
     }
 
     return pub;

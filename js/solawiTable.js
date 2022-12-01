@@ -19,7 +19,7 @@
     No need to recreate the instance at anytime, to display another table just call SBT.showTable once again with another response.
     You will only need multiple instances to display multiple tables at the same time.
 */
-function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavailableProducts, pVerwalter) {
+function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavailableProducts, pVerwalter, pOnClickFunc) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
@@ -47,6 +47,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     var tableExtensions = [];
     if (pEditable) tableExtensions.push(SolawiTableEditor(sbs, pub, pDisableUnavailableProducts, pEditable));
     if (pVerwalter) tableExtensions.push(SolawiTableVerwalter(sbs, pub));
+    if (pOnClickFunc) tableExtensions.push(SolawiTableOnClick(sbs, pub, pOnClickFunc));
 
     /* private constants */
     const columnWeight = {};
@@ -68,6 +69,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         table.innerHTML = '';
         tablePath = path;
         tableName = path.match(/[^\/]*/)[0];
+        if (tableName.match(/^BenutzerZusatzBestellungView$/)) {
+        	tableName = 'BenutzerZusatzBestellung'; /* remove the 'view' at the end, so we can edit it */
+        }
         setContent(elemIdLabel, tablePath);
         table.className = tableName;
         var keys = null;

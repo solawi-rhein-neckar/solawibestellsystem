@@ -22,6 +22,7 @@ SELECT
    `Beschreibung`,
    `Einheit`,
    `Menge`,
+   `Nr`,
    `Woche`,
    CONVERT(GROUP_CONCAT( ( CASE WHEN(TRIM(`Kommentar`) = '') THEN NULL ELSE `Kommentar` END ) SEPARATOR ', ' ),char(255)) AS `Kommentar`,
   GREATEST(0, SUM(`Anzahl`)) AS Anzahl,
