@@ -247,7 +247,7 @@ inp.style.width='40px';
     }
 
     function sortResponse(response) {
-        if (sortByColumn1) {
+        if (sortByColumn1 && response && response.sort) {
             console.log('sorting by ' + sortByColumn1 + (sortByColumn2 ? (', then ' + sortByColumn2) : ''));
             response.sort(rowSortFunc);
         }

@@ -9,7 +9,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
 
     /*privat var needed inside pub*/
     var editorSuffix = pEditorSuffix === true || !pEditorSuffix ? '' : pEditorSuffix;
-    var memberEditor = editorSuffix ? MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) : null;
+    var memberEditor = editorSuffix && editorSuffix != 'Serie' ? MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) : null;
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
@@ -30,7 +30,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
     var sbs = pSbs;
     var onEntitySaved = pOnEntitySaved;
     var disableUnavailableProducts = pDisableUnavailableProducts;
-    var tableValidator = disableUnavailableProducts ? SolawiValidator(sbs) : null;
+    var tableValidator = disableUnavailableProducts ? SolawiValidator(sbs, editorSuffix) : null;
     var keys;
     var responseCache;
     var dataId;
@@ -426,7 +426,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
 
             var div = document.createElement("DIV");
             div.style.paddingTop="10px";
-            div.innerText="Nun nacheinander die Kalender-Wochen anwählen, für welche obige Bestellung gelten soll:";
+            div.innerText="Unten die Kalender-Wochen anwählen, für welche obige Bestellung gelten soll:";
             editor.appendChild(div);
 
         div = document.createElement("DIV");
@@ -463,7 +463,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
 
             div = document.createElement("DIV");
             div.style.paddingTop="10px";
-            div.innerHTML="Hinweis: schon vorhandene (Serien-)-Bestellungen werden hier nur angezeigt,<br/>wenn exakt die selbe Anzahl haben: Sind in einer Woche schon 2 Stück bestellt,<br/>sieht man dies hier nicht, falls hier 3 als Anzahl ausgewählt wurde.";
+            div.innerHTML="Hinweis: vorhandene (Serien-)-Bestellungen werden im Kalender angezeigt,<br/>wenn sie exakt die selbe Anzahl haben: Sind in einer Woche 2 Stück bestellt,<br/>sieht man dies hier nicht, falls oben 3 als Anzahl ausgewählt wurde.";
             editor.appendChild(div);
         }, true);
     }

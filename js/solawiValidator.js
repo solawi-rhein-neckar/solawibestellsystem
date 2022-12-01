@@ -4,7 +4,7 @@
 
     This file is meant to be used by solawiEditor.
 */
-function SolawiValidator(pSbs) {
+function SolawiValidator(pSbs, pEditorSuffix) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
@@ -15,6 +15,7 @@ function SolawiValidator(pSbs) {
     /* private vars */
     var sbs = pSbs;
     var responseCache;
+    var editorSuffix = pEditorSuffix ? pEditorSuffix : '';
 
 /**** public ****/
     function validateEditorInput(data, id, isBatch) {
@@ -38,11 +39,11 @@ function SolawiValidator(pSbs) {
 
     function validateEditorAnzahl(anzahl, min, max, name) {
     	if (typeof anzahl != 'undefined' && ((! anzahl) || anzahl == 0)) {
-            setContent('editError', 'Anzahl muss eingegeben werden!');
+            setContent('editError'+editorSuffix, 'Anzahl muss eingegeben werden!');
             return false;
         }
     	if (typeof anzahl != 'undefined' && (anzahl < min || anzahl > max)) {
-            setContent('editError', 'Anzahl zu ' + (anzahl < min ? 'gering' : 'groß') + '. Min: ' + min + ' / Max: ' + max + (name ? ' möglich für ' + name : ' möglich.'));
+            setContent('editError'+editorSuffix, 'Anzahl zu ' + (anzahl < min ? 'gering' : 'groß') + '. Min: ' + min + ' / Max: ' + max + (name ? ' möglich für ' + name : ' möglich.'));
             return false;
         }
         return true;
@@ -67,13 +68,13 @@ function SolawiValidator(pSbs) {
 	    	var min = 0;
 	    	var max = 9999;
 	        if (data['StartWoche'] > data['EndWoche']) {
-	            setContent('editError', 'Start muss vor Ende sein.');
+	            setContent('editError'+editorSuffix, 'Start muss vor Ende sein.');
 	            return false;
 	        }
 	        var row = sbs.tableCache['Modul'][data['Modul_ID']]
 	        if (row) {
 	        	if (row.WechselWochen && (((!id) && row.WechselWochen.indexOf(data['StartWoche'].substr(5)) < 0) || row.WechselWochen.indexOf(addWeek(data['EndWoche'], 1).substr(5)) < 0)) {
-	                setContent('editError', 'Ungültige Start/EndWoche für ' + row.Name + ', erlaubte StartWochen: ' + row.WechselWochen + ', EndWoche jeweils eins weniger.' );
+	                setContent('editError'+editorSuffix, 'Ungültige Start/EndWoche für ' + row.Name + ', erlaubte StartWochen: ' + row.WechselWochen + ', EndWoche jeweils eins weniger.' );
 	                return false;
 	        	}
 	        	/*if (row.AnzahlProAnteil != 0 && responseCache) {
