@@ -175,6 +175,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             solawiTableEdit = SolawiTable(sbs, 'benutzerEditorTable', 'benutzerEditorLabel', true, false);
             solawiTableView = SolawiTable(sbs, 'benutzerEditorTable', 'benutzerEditorLabel', false, false);
             solawiTableLiefer = SolawiTable(sbs, 'benutzerLieferTable', 'benutzerLieferLabel', false, false);
+            solawiTableLiefer.showSum = 'top';
             var stvrf = solawiTableValid.reload;
             solawiTableValid.reload=function() {stvrf(); solawiTableLiefer.reload();};
             var stvrf2 = solawiTableEdit.reload;
@@ -183,7 +184,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Abos';lieferTitle.innerText='Lieferung';seriesBtn.style.display='inline-block';
                 getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
                 getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
-                solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];
+                solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift', 'Saldo'];
                 getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
             };
             btn1.onclick=function() {
@@ -246,7 +247,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
 	        seriesBtn.style.display='inline-block';
 	        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
 	        getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
-            solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];
+            solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift','Saldo'];
 	        getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
 	        btnCtnr.appendChild(stornoCtnr);
             btnCtnr.style.textAlign = 'left';

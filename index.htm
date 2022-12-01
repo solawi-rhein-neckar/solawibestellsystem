@@ -42,7 +42,8 @@
     var SBS = SolawiBestellSystem();
     var SBTedit = SolawiTable(SBS, 'tableEdit', 'tableEditPath', true, true);
     var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, true);
-    SBTview.columns=['Woche','Benutzer_ID','Benutzer','Depot_ID','Depot','Produkt','Menge','Einheit','Anzahl','AnzahlZusatz','AnzahlModul','Modul','Urlaub','Beschreibung','Nr','Kommentar','Punkte','Gutschrift'];
+    SBTview.showSum = true;
+    SBTview.columns=['Woche','Benutzer_ID','Benutzer','Depot_ID','Depot','Produkt','Menge','Einheit','Anzahl','AnzahlZusatz','AnzahlModul','Modul','Urlaub','Beschreibung','Nr','Kommentar','Punkte','Gutschrift','Saldo'];
 //     var SBTmodule = SolawiTable(SBS, 'tableModule', 'tableModulePath', true, true);
     SBTview.setSortBy('Nr');
 

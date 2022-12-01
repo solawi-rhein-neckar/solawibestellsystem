@@ -113,6 +113,7 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             td.appendChild(table);
             td.appendChild(span);
             var viewLieferung = SolawiTable(sbs, 'editLieferungTable'+row['ID'], 'editLieferungLabel'+row['ID'], false, false);
+            viewLieferung.showSum = 'top';
             viewLieferung.setSortBy('Anzahl');
             viewLieferung.setSortBy('Produkt_ID');
             viewLieferung.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];

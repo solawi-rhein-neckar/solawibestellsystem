@@ -167,6 +167,7 @@ SELECT
    SUM( `AnzahlZusatz` ) AS `AnzahlZusatz`,
    GREATEST(0, sum(Punkte)) AS `Punkte`,
    MAX(IFNULL(Gutschrift,0)) as `Gutschrift`,
+   MAX(IFNULL(Gutschrift,0)) - GREATEST(0, sum(Punkte)) as `Saldo`,
     `Urlaub`
 
 FROM `BenutzerBestellungenTemp`

@@ -79,7 +79,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, edit
 
     function addDeleteButtonCell(tr, dataRow) {
         var delTd = document.createElement("TD");
-        if ((!disableUnavailableProducts) || ( (! (dataRow['StartWoche'] && dataRow['StartWoche'] < sbs.week) ) && (! (dataRow['Woche'] && (dataRow['Woche'] < addWeek(sbs.week, -1) || (sbs.week == sbs.AbgeschlosseneWoche && dataRow['Woche'] == sbs.AbgeschlosseneWoche) ) ) ) )) {
+        if (dataRow['ID'] && ((!disableUnavailableProducts) || ( (! (dataRow['StartWoche'] && dataRow['StartWoche'] < sbs.week) ) && (! (dataRow['Woche'] && (dataRow['Woche'] < addWeek(sbs.week, -1) || (sbs.week == sbs.AbgeschlosseneWoche && dataRow['Woche'] == sbs.AbgeschlosseneWoche) ) ) ) ))) {
             var delBtn = document.createElement("BUTTON");
             delBtn.innerText='-';
           delBtn.className="btn_minus"

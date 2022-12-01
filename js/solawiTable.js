@@ -32,7 +32,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         setSortBy: function(sortBy){sortByColumn2 = sortByColumn1; sortByColumn1 = sortBy;},
         columns: [],
         editorDefault: {},
-        editAtOnce: false
+        editAtOnce: false,
+        hideZeros: false,
+        showSum: false
     };
 
     /* private vars */
@@ -61,6 +63,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         }
 
         sortResponse(response);
+        if (pub.showSum) {
+        	calculateSum(response);
+        }
 
         responseCache = response;
         tableExtensions.forEach(function(ext){ext.setResponse(path, responseCache);});
@@ -246,6 +251,41 @@ inp.style.width='40px';
             console.log('sorting by ' + sortByColumn1 + (sortByColumn2 ? (', then ' + sortByColumn2) : ''));
             response.sort(rowSortFunc);
         }
+    }
+
+    function calculateSum(response) {
+    	if (response && response[0]) {
+    		var keys = Object.keys(response[0]).sort(columnSortFunc);
+    		var sum = {};
+    		for (var i = 0; i < response.length; i++) {
+    			var row = response[i];
+    			if ((keys && keys.length && row[keys[0]]) || pub.columns && pub.columns.length && row[pub.columns[0].replace(' ', '')] ) {
+	    			for (var j = 0; j < keys.length; j++) {
+	    				var key = keys[j];
+	    				if (key == 'Produkt_ID' || key == 'Produkt' || key == 'Name' || key == 'Id' || key == 'ID' || key == 'Nr' || key == '00.'+sbs.selectedWeek) {
+	    					sum[key] = key == 'Id' || key == 'ID' ? '' : 'SUMME';
+	    				} else if (row[key] && ! isNaN(row[key])) {
+	        				if (sum[key]) {
+	        					sum[key] += Number(row[key]);
+	        				} else {
+	        					sum[key] = Number(row[key]);
+	        				}
+	    				} else if (! sum[key]) {
+	    					sum[key] = '';
+	    				}
+	    			}
+    			}
+    		}
+			for (var j = 0; j < keys.length; j++) {
+				var key = keys[j];
+				sum[key] = String(sum[key]);
+			}
+    		if (pub.showSum !== true) {
+    			response.unshift(sum);
+    		} else {
+    			response.push(sum);
+    		}
+    	}
     }
 
     function rowSortFunc(a,b) {
