@@ -34,7 +34,9 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, edit
 						 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche']
 							: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
 						 	: ['Name']);
-    	addCreateButton(tr.firstChild);
+    	if (tableName != 'BenutzerZusatzBestellung') {
+    		addCreateButton(tr.firstChild);
+    	}
     	if (keys) {
     		addDeleteButtonColumnHeader(tr);
     		addWeekSelectColumnHeader(tr);

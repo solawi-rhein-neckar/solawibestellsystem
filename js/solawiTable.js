@@ -131,7 +131,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         var td = document.createElement("TD");
         table.appendChild(tr);
         tr.appendChild(td);
-        td.innerText = ' (empty) ';
+        td.innerText = ' (nichts eingetragen) ';
         return tr;
     }
 
