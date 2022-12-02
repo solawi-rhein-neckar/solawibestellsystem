@@ -37,8 +37,8 @@ function SolawiValidator(pSbs, pEditorSuffix) {
 
 /**** private ****/
 
-    function validateEditorAnzahl(anzahl, min, max, name) {
-    	if (typeof anzahl != 'undefined' && ((! anzahl) || anzahl == 0)) {
+    function validateEditorAnzahl(anzahl, min, max, name, allowZero) {
+    	if (typeof anzahl != 'undefined' && ((! anzahl) || ((!allowZero) && anzahl == 0))) {
             setContent('editError'+editorSuffix, 'Anzahl muss eingegeben werden!');
             return false;
         }
@@ -87,7 +87,7 @@ function SolawiValidator(pSbs, pEditorSuffix) {
 	        		}
 	        	}*/
 	        }
-	    	return validateEditorAnzahl(data['Anzahl'], min, max, row ? row.Name : '');
+	    	return validateEditorAnzahl(data['Anzahl'], min, max, row ? row.Name : '', true);
     	}
     	return null;
     }

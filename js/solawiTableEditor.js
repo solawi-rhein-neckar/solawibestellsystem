@@ -34,7 +34,8 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, edit
 						 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche']
 							: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
 						 	: ['Name']);
-    	if (tableName != 'BenutzerZusatzBestellung') {
+    	var tablePath = solawiTable.getTablePath();
+    	if (!tablePath || !tablePath.match || !tablePath.match(/BenutzerZusatzBestellungView.Benutzer_ID.MY.*/)) {
     		addCreateButton(tr.firstChild);
     	}
     	if (keys) {

@@ -183,13 +183,13 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             btn.onclick=function() {
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Abos';lieferTitle.innerText='Lieferung';seriesBtn.style.display='inline-block';
                 getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
-                getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
+                getAjax('BenutzerZusatzBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
                 solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift', 'Saldo'];
                 getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
             };
             btn1.onclick=function() {
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Alle Tausche';lieferTitle.innerText='';seriesBtn.style.display='none';
-                getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter(), solawiTableEdit.showTable)
+                getAjax('BenutzerZusatzBestellungView/Benutzer_ID/' + dataIdGetter(), solawiTableEdit.showTable)
             };
             btn2.onclick=function() {if(confirm('ACHTUNG! Hier können Abos RÜCKWIRKEND verändert werden! Bitte nur zur Fehlerkorrektur. Normalerweise sollte unter "Abos" das bestehende Abo beendet werden (EndWoche = Jetzt) und danach ein neues Abo ab heute angelegt werden!')){
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Abos rückwirkend manipulieren, Vorsicht!';lieferTitle.innerText='';seriesBtn.style.display='none';
@@ -246,7 +246,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
 	        lieferTitle.innerText = 'Lieferung';
 	        seriesBtn.style.display='inline-block';
 	        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
-	        getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
+	        getAjax('BenutzerZusatzBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
             solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift','Saldo'];
 	        getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
 	        btnCtnr.appendChild(stornoCtnr);
