@@ -34,7 +34,8 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         editorDefault: {},
         editAtOnce: false,
         hideZeros: false,
-        showSum: false
+        showSum: false,
+        sortResponse: sortResponse
     };
 
     /* private vars */
@@ -289,7 +290,10 @@ inp.style.width='40px';
     }
 
     function rowSortFunc(a,b) {
-        return a[sortByColumn1]===undefined ? (b[sortByColumn1]===undefined ? 0 : 1) : b[sortByColumn1]===undefined ? -1 :
+        return a[sortByColumn1]===undefined ? (b[sortByColumn1]===undefined ? (sortByColumn2 ? (
+    			a[sortByColumn2]===undefined ? (b[sortByColumn2]===undefined ? 0 : 1) : b[sortByColumn2]===undefined ? -1 :
+        			(a[sortByColumn2] < b[sortByColumn2] ? -1 : (a[sortByColumn2] > b[sortByColumn2] ? 1 : 0))          ) : 0 )
+        	: 1) : b[sortByColumn1]===undefined ? -1 :
         	(a[sortByColumn1] < b[sortByColumn1] ? -1 : a[sortByColumn1] > b[sortByColumn1] ? 1 : (sortByColumn2 ? (
     			a[sortByColumn2]===undefined ? (b[sortByColumn2]===undefined ? 0 : 1) : b[sortByColumn2]===undefined ? -1 :
     			(a[sortByColumn2] < b[sortByColumn2] ? -1 : (a[sortByColumn2] > b[sortByColumn2] ? 1 : 0))          ) : 0 )

@@ -19,13 +19,19 @@ function SolawiBestellSystem() {
     pub.disableUnavailableProducts = 0;
     pub.user = null;
 
+
     /* private constants */
     const tableCache = {'Modul':[],'Role':[],'Depot':[],'Produkt':[]};
+    const solawiTable = SolawiTable();
     pub.tableCache = tableCache;
+
+    solawiTable.setSortBy('Nr');
+    solawiTable.setSortBy('Name');
 
     /* public */
     function fillCache(tableName) {
         getAjax(tableName, function(resp) {
+            solawiTable.sortResponse(resp);
             tableCache[tableName] = [];
             // convert response (array) into hash (by ID)
             for(var i = 0; i < resp.length; i++) {
