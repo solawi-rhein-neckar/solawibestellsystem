@@ -74,19 +74,19 @@ SUM(
 						    Replace(Replace(`d02dbcf8`.`Modul`.`Name`, 'Kräutermodul', 'Kräuter'), 'Quarkmodul' , 'Quark, 400g')  AS `Produkt`,
 						    `d02dbcf8`.`Modul`.`Beschreibung` AS `Beschreibung`,
 						    '' AS `Einheit`,
-						    `d02dbcf8`.`Modul`.`AnzahlProAnteil` AS `Menge`,                            
+						    `d02dbcf8`.`Modul`.`AnzahlProAnteil` AS `Menge`,
 						    (
                                 `d02dbcf8`.`BenutzerModulAbo`.`Anzahl`
                             ) AS `Anzahl`,
                             pWoche AS `Woche`
                         FROM
-                           `d02dbcf8`.`BenutzerModulAbo` 
+                           `d02dbcf8`.`BenutzerModulAbo`
 		                JOIN `d02dbcf8`.`Modul` ON
 		                    (
 		                        (
 		                            `BenutzerModulAbo`.`Modul_ID` = `d02dbcf8`.`Modul`.`ID`
 		                        )
-		                    )                                   WHERE 
+		                    )                                   WHERE
                                (
                                             ISNULL(
                                                 `d02dbcf8`.`BenutzerModulAbo`.`StartWoche`
@@ -121,7 +121,7 @@ SUM(
 		                            `BenutzerZusatzBestellung`.`Produkt_ID` = `d02dbcf8`.`Produkt`.`ID`
 		                        )
 		                    )
-		                  WHERE    `d02dbcf8`.`BenutzerZusatzBestellung`.`Woche` = pWoche             
+		                  WHERE    `d02dbcf8`.`BenutzerZusatzBestellung`.`Woche` = pWoche
                     )
                 ) `u`
 
@@ -165,10 +165,10 @@ GROUP BY
 END$$
 
 CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `CreateDefaultModulAbosForUsersCreatedAfter` (IN `pDate` DATETIME)  MODIFIES SQL DATA
-INSERT INTO `BenutzerModulAbo`(`Benutzer_ID`, `Modul_ID`, `StartWoche`, `EndWoche`, `Anzahl`)  
+INSERT INTO `BenutzerModulAbo`(`Benutzer_ID`, `Modul_ID`, `StartWoche`, `EndWoche`, `Anzahl`)
 SELECT
    Benutzer.ID, Modul.ID, Benutzer.PunkteWoche, '9999.99', Case when Modul.ID = 2 then 3 * Benutzer.Anteile when Modul.ID = 4 then Modul.AnzahlProAnteil * Benutzer.FleischAnteile ELSE Modul.AnzahlProAnteil * Benutzer.Anteile end
-FROM 
+FROM
    Benutzer JOIN Modul
 WHERE
    Benutzer.ErstellZeitpunkt > pDate and (Modul.AnzahlProAnteil > 0 or Modul.ID = 2) and (Modul.ID != 4 or Benutzer.FleischAnteile > 0)$$
@@ -182,9 +182,9 @@ SET SESSION group_concat_max_len = 32000;
 SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('MAX(IF(Produkt = \'', Name, '\', Anzahl, 0)) AS `', Name, '`' ))  FROM Produkt ORDER BY Nr);
 
 SET @query = CONCAT('SELECT Depot, MAX(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `Milch`,', @query, ' , MAX(Urlaub) as `Urlauber`,
-(SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `Anteile`,GROUP_CONCAT(`subq`.Kommentar SEPARATOR \', \') as `Kommentar` FROM 
+(SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `Anteile`,GROUP_CONCAT(`subq`.Kommentar SEPARATOR \', \') as `Kommentar` FROM
 
-(select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellungenTemp`.`Depot` AS `Depot`,`BenutzerBestellungenTemp`.`Produkt` AS `Produkt`,`BenutzerBestellungenTemp`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,`BenutzerBestellungenTemp`.`Menge` AS `Menge`,`BenutzerBestellungenTemp`.`Woche` AS `Woche`,sum(`BenutzerBestellungenTemp`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`, 
+(select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellungenTemp`.`Depot` AS `Depot`,`BenutzerBestellungenTemp`.`Produkt` AS `Produkt`,`BenutzerBestellungenTemp`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,`BenutzerBestellungenTemp`.`Menge` AS `Menge`,`BenutzerBestellungenTemp`.`Woche` AS `Woche`,sum(`BenutzerBestellungenTemp`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`,
  GROUP_CONCAT(
         (
              CASE WHEN(`BenutzerBestellungenTemp`.`Kommentar` is NULL or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'\' or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'-\' or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) like \'Tausch\') THEN NULL ELSE concat((select name from Benutzer where Benutzer.ID = BenutzerBestellungenTemp.Benutzer_ID), case when Produkt is null or TRIM(Produkt) = \'\' or TRIM(Produkt) = \'-\' or TRIM(Produkt) = \'Kommentar\' THEN \'\' ELSE concat(\' \', Produkt) end, \': \', `BenutzerBestellungenTemp`.`Kommentar`)
@@ -215,8 +215,8 @@ SET @query = CONCAT('SELECT Depot as `00.',pWoche,'`, MAX(IF(Produkt = \'Milch, 
 (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `97.Mitglieder`,
 (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `98.Anteile`,
 (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`) as `98.FleischAnteileErlaubt`,
-  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`               
- FROM 
+  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`
+ FROM
 
 (select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellungenTemp`.`Depot` AS `Depot`,`BenutzerBestellungenTemp`.`Produkt` AS `Produkt`,`BenutzerBestellungenTemp`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,`BenutzerBestellungenTemp`.`Menge` AS `Menge`,`BenutzerBestellungenTemp`.`Woche` AS `Woche`,sum(`BenutzerBestellungenTemp`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`,GROUP_CONCAT(
         (
@@ -224,7 +224,7 @@ SET @query = CONCAT('SELECT Depot as `00.',pWoche,'`, MAX(IF(Produkt = \'Milch, 
         END
     ) SEPARATOR \', \'
 ) AS `Kommentar`
-                    
+
                     from `d02dbcf8`.`BenutzerBestellungenTemp` group by `BenutzerBestellungenTemp`.`Produkt`,`BenutzerBestellungenTemp`.`Woche`,`BenutzerBestellungenTemp`.`Depot_ID` order by `BenutzerBestellungenTemp`.`Depot`,`BenutzerBestellungenTemp`.`Produkt`) subq
 
  WHERE Woche = ', pWoche ,' GROUP BY Depot_ID');
@@ -265,20 +265,20 @@ SET SESSION group_concat_max_len = 32000;
 
 SET @query := (SELECT GROUP_CONCAT(DISTINCT CONCAT('SUM(IF(Produkt = \'', Name, '\', Anzahl, 0)) AS `', IF(Nr < 10,'0', ''), Nr, '.', Name, '`' ))  FROM Produkt ORDER BY Nr);
 
-SET @query = CONCAT('SELECT Benutzer as `00.',pWoche, ' ', (SELECT Name FROM Depot WHERE ID = pDepot),'`, SUM(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `06.Milch`,', @query, ' , SUM(Urlaub) as `99.',pWoche, ' Urlaub` ,  
-GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`               
- FROM 
-                    
-                    
+SET @query = CONCAT('SELECT Benutzer as `00.',pWoche, ' ', (SELECT Name FROM Depot WHERE ID = pDepot),'`, SUM(IF(Produkt = \'Milch, 0.5L\', Anzahl / 2, 0)) AS `06.Milch`,', @query, ' , SUM(Urlaub) as `99.',pWoche, ' Urlaub` ,
+GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`
+ FROM
+
+
 (select  `BenutzerBestellungenTemp`.`Benutzer` AS `Benutzer`, `BenutzerBestellungenTemp`.`Benutzer_ID` AS `Benutzer_ID`,`BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,`BenutzerBestellungenTemp`.`Depot` AS `Depot`,`BenutzerBestellungenTemp`.`Produkt` AS `Produkt`,`BenutzerBestellungenTemp`.`Beschreibung` AS `Beschreibung`,`BenutzerBestellungenTemp`.`Einheit` AS `Einheit`,`BenutzerBestellungenTemp`.`Menge` AS `Menge`,`BenutzerBestellungenTemp`.`Woche` AS `Woche`,sum(`BenutzerBestellungenTemp`.`Anzahl`) AS `Anzahl`,sum(`BenutzerBestellungenTemp`.`AnzahlModul`) AS `AnzahlModul`,sum(`BenutzerBestellungenTemp`.`AnzahlZusatz`) AS `AnzahlZusatz`,sum(`BenutzerBestellungenTemp`.`Urlaub`) AS `Urlaub`,GROUP_CONCAT(
         (
             CASE WHEN(`BenutzerBestellungenTemp`.`Kommentar` is NULL or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'\' or TRIM(`BenutzerBestellungenTemp`.`Kommentar`) = \'-\') THEN NULL ELSE concat((select name from Benutzer where Benutzer.ID = BenutzerBestellungenTemp.Benutzer_ID), case when Produkt is null or TRIM(Produkt) = \'\' or TRIM(Produkt) = \'-\' or TRIM(Produkt) = \'Kommentar\' THEN \'\' ELSE concat(\' \', Produkt) end, \': \', `BenutzerBestellungenTemp`.`Kommentar`)
         END
     ) SEPARATOR \', \'
 ) AS `Kommentar`
-                    
+
                     from `d02dbcf8`.`BenutzerBestellungenTemp` group by `BenutzerBestellungenTemp`.`Produkt`,`BenutzerBestellungenTemp`.`Woche`,`BenutzerBestellungenTemp`.`Benutzer_ID`,`BenutzerBestellungenTemp`.`Depot_ID` order by `BenutzerBestellungenTemp`.`Benutzer_ID`,`BenutzerBestellungenTemp`.`Depot`,`BenutzerBestellungenTemp`.`Produkt`) subq
-                    
+
                     WHERE Woche = ', pWoche ,' AND Depot_ID = ',pDepot,' GROUP BY Benutzer WITH ROLLUP');
 
 CALL BenutzerBestellungen(pWoche);
@@ -433,7 +433,7 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 	-- Check to see if the specified table exists
 	SET c := (SELECT COUNT(*) FROM information_schema.tables
-			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 				AND BINARY table_name = BINARY audit_table_name);
 	IF c <> 1 THEN
 		SET out_errors := CONCAT( out_errors, '\n', 'The table you specified `', audit_schema_name, '`.`', audit_table_name, '` does not exists.' );
@@ -443,7 +443,7 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 	-- Check audit and meta table exists
 	SET c := (SELECT COUNT(*) FROM information_schema.tables
-			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 				AND (BINARY table_name = BINARY 'zaudit' OR BINARY table_name = BINARY 'zaudit_meta') );
 	IF c <> 2 THEN
 		SET out_errors := CONCAT( out_errors, '\n', 'Audit table structure do not exists, please check or run the audit setup script again.' );
@@ -452,43 +452,43 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 	-- Check triggers exists
 	SET c := ( SELECT GROUP_CONCAT( TRIGGER_NAME SEPARATOR ', ') FROM information_schema.triggers
-			WHERE BINARY EVENT_OBJECT_SCHEMA = BINARY audit_schema_name 
-				AND BINARY EVENT_OBJECT_TABLE = BINARY audit_table_name 
+			WHERE BINARY EVENT_OBJECT_SCHEMA = BINARY audit_schema_name
+				AND BINARY EVENT_OBJECT_TABLE = BINARY audit_table_name
 				AND BINARY ACTION_TIMING = BINARY 'AFTER' AND BINARY TRIGGER_NAME NOT LIKE BINARY CONCAT('z', audit_table_name, '_%') GROUP BY EVENT_OBJECT_TABLE );
 	IF c IS NOT NULL AND LENGTH(c) > 0 THEN
 		SET out_errors := CONCAT( out_errors, '\n', 'MySQL 5 only supports one trigger per insert/update/delete action. Currently there are these triggers (', c, ') already assigned to `', audit_schema_name, '`.`', audit_table_name, '`. You must remove them before the audit trigger can be applied' );
 	END IF;
 
-	
 
-	-- Get the first primary key 
+
+	-- Get the first primary key
 	SET at_id1 := (SELECT COLUMN_NAME FROM information_schema.columns
-			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 				AND BINARY table_name = BINARY audit_table_name
 			AND column_key = 'PRI' LIMIT 1);
 
-	-- Get the second primary key 
+	-- Get the second primary key
 	SET at_id2 := (SELECT COLUMN_NAME FROM information_schema.columns
-			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+			WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 				AND BINARY table_name = BINARY audit_table_name
 			AND column_key = 'PRI' LIMIT 1,1);
 
 	-- Check at least one id exists
-	IF at_id1 IS NULL AND at_id2 IS NULL THEN 
+	IF at_id1 IS NULL AND at_id2 IS NULL THEN
 		SET out_errors := CONCAT( out_errors, '\n', 'The table you specified `', audit_schema_name, '`.`', audit_table_name, '` does not have any primary key.' );
 	END IF;
 
 
 
-	SET header := CONCAT( 
+	SET header := CONCAT(
 		'-- --------------------------------------------------------------------\n',
 		'-- MySQL Audit Trigger\n',
 		'-- Copyright (c) 2014 Du T. Dang. MIT License\n',
 		'-- https://github.com/hotmit/mysql-sp-audit\n',
-		'-- --------------------------------------------------------------------\n\n'		
+		'-- --------------------------------------------------------------------\n\n'
 	);
 
-	
+
 	SET trg_insert := CONCAT( 'DROP TRIGGER IF EXISTS `', audit_schema_name, '`.`z', audit_table_name, '_AINS`\n$$\n',
 						'CREATE TRIGGER `', audit_schema_name, '`.`z', audit_table_name, '_AINS` AFTER INSERT ON `', audit_schema_name, '`.`', audit_table_name, '` FOR EACH ROW \nBEGIN\n', header );
 	SET trg_update := CONCAT( 'DROP TRIGGER IF EXISTS `', audit_schema_name, '`.`z', audit_table_name, '_AUPD`\n$$\n',
@@ -506,12 +506,12 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 	-- [ Create Insert Statement Into Audit & Audit Meta Tables ]
 	-- ----------------------------------------------------------
 
-	SET stmt := CONCAT( 'INSERT IGNORE INTO `', audit_schema_name, '`.zaudit (user, table_name, pk1, ', CASE WHEN at_id2 IS NULL THEN '' ELSE 'pk2, ' END , 'action)  VALUE ( IFNULL( @zaudit_user, USER() ), ', 
+	SET stmt := CONCAT( 'INSERT IGNORE INTO `', audit_schema_name, '`.zaudit (user, table_name, pk1, ', CASE WHEN at_id2 IS NULL THEN '' ELSE 'pk2, ' END , 'action)  VALUE ( IFNULL( @zaudit_user, USER() ), ',
 		'''', audit_table_name, ''', ', 'NEW.`', at_id1, '`, ', IFNULL( CONCAT('NEW.`', at_id2, '`, ') , '') );
 
 	SET trg_insert := CONCAT( trg_insert, stmt, '''INSERT''); \n\n');
 
-	SET stmt := CONCAT( 'INSERT IGNORE INTO `', audit_schema_name, '`.zaudit (user, table_name, pk1, ', CASE WHEN at_id2 IS NULL THEN '' ELSE 'pk2, ' END , 'action)  VALUE ( IFNULL( @zaudit_user, USER() ), ', 
+	SET stmt := CONCAT( 'INSERT IGNORE INTO `', audit_schema_name, '`.zaudit (user, table_name, pk1, ', CASE WHEN at_id2 IS NULL THEN '' ELSE 'pk2, ' END , 'action)  VALUE ( IFNULL( @zaudit_user, USER() ), ',
 		'''', audit_table_name, ''', ', 'OLD.`', at_id1, '`, ', IFNULL( CONCAT('OLD.`', at_id2, '`, ') , '') );
 
 	SET trg_update := CONCAT( trg_update, stmt, '''UPDATE''); \n\n' );
@@ -522,16 +522,16 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 	SET trg_insert := CONCAT( trg_insert, stmt );
 	SET trg_update := CONCAT( trg_update, stmt );
 	SET trg_delete := CONCAT( trg_delete, stmt );
-	
+
 	SET stmt := CONCAT( 'INSERT IGNORE INTO `', audit_schema_name, '`.zaudit_meta (audit_id, col_name, old_value, new_value) VALUES \n' );
 	SET trg_insert := CONCAT( trg_insert, '\n', stmt );
 	SET trg_update := CONCAT( trg_update, '\n', stmt );
 	SET trg_delete := CONCAT( trg_delete, '\n', stmt );
 
-	SET stmt := ( SELECT GROUP_CONCAT(' (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', NULL, ',	
-						CASE WHEN INSTR( '|binary|varbinary|tinyblob|blob|mediumblob|longblob|', LOWER(DATA_TYPE) ) <> 0 THEN 
-							'''[UNSUPPORTED BINARY DATATYPE]''' 
-						ELSE 						
+	SET stmt := ( SELECT GROUP_CONCAT(' (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', NULL, ',
+						CASE WHEN INSTR( '|binary|varbinary|tinyblob|blob|mediumblob|longblob|', LOWER(DATA_TYPE) ) <> 0 THEN
+							'''[UNSUPPORTED BINARY DATATYPE]'''
+						ELSE
 							CONCAT('NEW.`', COLUMN_NAME, '`')
 						END,
 						'),'
@@ -545,7 +545,7 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 
 
-	SET stmt := ( SELECT GROUP_CONCAT('   (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', ', 
+	SET stmt := ( SELECT GROUP_CONCAT('   (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', ',
 						CASE WHEN INSTR( '|binary|varbinary|tinyblob|blob|mediumblob|longblob|', LOWER(DATA_TYPE) ) <> 0 THEN
 							'''[SAME]'''
 						ELSE
@@ -558,9 +558,9 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 							CONCAT('NEW.`', COLUMN_NAME, '`')
 						END,
 						'),'
-					SEPARATOR '\n') 
+					SEPARATOR '\n')
 					FROM information_schema.columns
-						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 							AND BINARY TABLE_NAME = BINARY audit_table_name );
 
 	SET stmt := CONCAT( TRIM( TRAILING ',' FROM stmt ), ';\n\nEND\n$$' );
@@ -568,16 +568,16 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 
 
-	SET stmt := ( SELECT GROUP_CONCAT('   (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', ', 
-						CASE WHEN INSTR( '|binary|varbinary|tinyblob|blob|mediumblob|longblob|', LOWER(DATA_TYPE) ) <> 0 THEN 
-							'''[UNSUPPORTED BINARY DATATYPE]''' 
-						ELSE 						
+	SET stmt := ( SELECT GROUP_CONCAT('   (zaudit_last_inserted_id, ''', COLUMN_NAME, ''', ',
+						CASE WHEN INSTR( '|binary|varbinary|tinyblob|blob|mediumblob|longblob|', LOWER(DATA_TYPE) ) <> 0 THEN
+							'''[UNSUPPORTED BINARY DATATYPE]'''
+						ELSE
 							CONCAT('OLD.`', COLUMN_NAME, '`')
 						END,
 						', NULL ),'
-					SEPARATOR '\n') 
+					SEPARATOR '\n')
 					FROM information_schema.columns
-						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
+						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
 							AND BINARY TABLE_NAME = BINARY audit_table_name );
 
 
@@ -585,14 +585,14 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 	SET trg_delete := CONCAT( trg_delete, stmt );
 
 	-- -----------------------------------------------
-	-- [ Generating Helper Views For The Audit Table ] 
+	-- [ Generating Helper Views For The Audit Table ]
 	-- -----------------------------------------------
 	SET stmt := CONCAT( 'DROP VIEW IF EXISTS `', audit_schema_name, '`.`zvw_audit_', audit_table_name, '_meta`\n$$\n',
 						'CREATE VIEW `', audit_schema_name, '`.`zvw_audit_', audit_table_name, '_meta` AS \n', header,
 						'SELECT za.audit_id, zm.audit_meta_id, za.user, \n',
 						'	za.pk1, za.pk2,\n',
 						'	za.action, zm.col_name, zm.old_value, zm.new_value, za.timestamp\n',
-						'FROM `', audit_schema_name, '`.zaudit za \n', 
+						'FROM `', audit_schema_name, '`.zaudit za \n',
 						'INNER JOIN `', audit_schema_name, '`.zaudit_meta zm ON za.audit_id = zm.audit_id \n',
 						'WHERE za.table_name = ''', audit_table_name, '''');
 
@@ -600,19 +600,19 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 
 	SET stmt := ( SELECT GROUP_CONCAT( 	'		MAX((CASE WHEN zm.col_name = ''', COLUMN_NAME, ''' THEN zm.old_value ELSE NULL END)) AS `', COLUMN_NAME, '_old`, \n',
-										'		MAX((CASE WHEN zm.col_name = ''', COLUMN_NAME, ''' THEN zm.new_value ELSE NULL END)) AS `', COLUMN_NAME, '_new`, \n' 
-						SEPARATOR '\n') 
+										'		MAX((CASE WHEN zm.col_name = ''', COLUMN_NAME, ''' THEN zm.new_value ELSE NULL END)) AS `', COLUMN_NAME, '_new`, \n'
+						SEPARATOR '\n')
 					FROM information_schema.columns
-						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name 
-							AND BINARY TABLE_NAME = BINARY audit_table_name 
+						WHERE BINARY TABLE_SCHEMA = BINARY audit_schema_name
+							AND BINARY TABLE_NAME = BINARY audit_table_name
 				);
-	SET stmt := TRIM( TRAILING ', \n' FROM stmt );		
+	SET stmt := TRIM( TRAILING ', \n' FROM stmt );
 	SET stmt := ( SELECT CONCAT( 	'DROP VIEW IF EXISTS `', audit_schema_name, '`.`zvw_audit_', audit_table_name, '`\n$$\n',
 									'CREATE VIEW `', audit_schema_name, '`.`zvw_audit_', audit_table_name, '` AS \n', header,
-									'SELECT za.audit_id, za.user, za.pk1, za.pk2,\n', 
-									'za.action, za.timestamp, \n', 
+									'SELECT za.audit_id, za.user, za.pk1, za.pk2,\n',
+									'za.action, za.timestamp, \n',
 									stmt , '\n',
-									'	FROM `', audit_schema_name, '`.zaudit za \n', 
+									'	FROM `', audit_schema_name, '`.zaudit za \n',
 									'	INNER JOIN `', audit_schema_name, '`.zaudit_meta zm ON za.audit_id = zm.audit_id \n'
 									'WHERE za.table_name = ''', audit_table_name, '''\n',
 									'GROUP BY zm.audit_id') );
@@ -622,34 +622,34 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_audit` (IN `audit_
 
 	-- SELECT trg_insert, trg_update, trg_delete, vw_audit, vw_audit_meta;
 
-	SET stmt = CONCAT( 
+	SET stmt = CONCAT(
 		'-- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n',
 		'-- --------------------------------------------------------------------\n',
 		'-- Audit Script For `',audit_schema_name, '`.`', audit_table_name, '`\n',
 		'-- Date Generated: ', NOW(), '\n',
 		'-- Generated By: ', CURRENT_USER(), '\n',
 		'-- BEGIN\n',
-		'-- --------------------------------------------------------------------\n\n'	
+		'-- --------------------------------------------------------------------\n\n'
 		'DELIMITER $$',
-		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` After Insert Trigger Code ]\n',		
+		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` After Insert Trigger Code ]\n',
 		'-- -----------------------------------------------------------\n',
 		trg_insert,
 		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` After Update Trigger Code ]\n',
 		'-- -----------------------------------------------------------\n',
 		trg_update,
-		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` After Delete Trigger Code ]\n',		
+		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` After Delete Trigger Code ]\n',
 		'-- -----------------------------------------------------------\n',
 		trg_delete,
-		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` Audit Meta View ]\n',		
+		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` Audit Meta View ]\n',
 		'-- -----------------------------------------------------------\n',
 		vw_audit_meta,
-		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` Audit View ]\n',		
+		'\n\n-- [ `',audit_schema_name, '`.`', audit_table_name, '` Audit View ]\n',
 		'-- -----------------------------------------------------------\n',
 		vw_audit,
 		'\n\n',
 		'-- --------------------------------------------------------------------\n',
 		'-- END\n',
-		'-- Audit Script For `',audit_schema_name, '`.`', audit_table_name, '`\n',		
+		'-- Audit Script For `',audit_schema_name, '`.`', audit_table_name, '`\n',
 		'-- --------------------------------------------------------------------\n\n',
 		'-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n'
 		);
@@ -665,8 +665,8 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_batch_audit` (IN `
 	DECLARE s, e, scripts, error_msgs LONGTEXT;
 	DECLARE audit_table_name VARCHAR(255);
 	DECLARE done INT DEFAULT FALSE;
-	DECLARE cursor_table_list CURSOR FOR SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
-		WHERE BINARY TABLE_TYPE = BINARY 'BASE TABLE' 
+	DECLARE cursor_table_list CURSOR FOR SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+		WHERE BINARY TABLE_TYPE = BINARY 'BASE TABLE'
 			AND BINARY TABLE_SCHEMA = BINARY audit_schema_name
 			AND LOCATE( BINARY CONCAT(TABLE_NAME, ','), BINARY CONCAT(audit_table_names, ',') ) > 0;
 
@@ -703,8 +703,8 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_batch_remove_audit
 	DECLARE s, scripts LONGTEXT;
 	DECLARE audit_table_name VARCHAR(255);
 	DECLARE done INT DEFAULT FALSE;
-	DECLARE cursor_table_list CURSOR FOR SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES 
-		WHERE BINARY TABLE_TYPE = BINARY 'BASE TABLE' 
+	DECLARE cursor_table_list CURSOR FOR SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES
+		WHERE BINARY TABLE_TYPE = BINARY 'BASE TABLE'
 			AND BINARY TABLE_SCHEMA = BINARY audit_schema_name
 			AND LOCATE( BINARY CONCAT(TABLE_NAME, ','), BINARY CONCAT(audit_table_names, ',') ) > 0;
 
@@ -742,7 +742,7 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_remove_audit` (IN 
 		'-- Date Generated: ', NOW(), '\n',
 		'-- Generated By: ', CURRENT_USER(), '\n',
 		'-- BEGIN\n',
-		'-- --------------------------------------------------------------------\n\n', 
+		'-- --------------------------------------------------------------------\n\n',
 		'DELIMITER $$\n\n',
 
 		'DROP TRIGGER IF EXISTS `', audit_schema_name, '`.`z', audit_table_name, '_AINS`\n$$\n',
@@ -755,7 +755,7 @@ CREATE DEFINER=`d02dbcf8`@`localhost` PROCEDURE `zsp_generate_remove_audit` (IN 
 		'\n\n',
 		'-- --------------------------------------------------------------------\n',
 		'-- END\n',
-		'-- Audit Removal Script For `',audit_schema_name, '`.`', audit_table_name, '`\n',		
+		'-- Audit Removal Script For `',audit_schema_name, '`.`', audit_table_name, '`\n',
 		'-- --------------------------------------------------------------------\n\n',
 		'-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$\n'
 	);
@@ -1185,6 +1185,44 @@ CREATE TABLE IF NOT EXISTS `Solawi` (
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
 
 -- --------------------------------------------------------
+
+--
+-- Tabellenstruktur für Tabelle `Woche`
+--
+
+CREATE TABLE `Woche` (
+  `ID` int(11) NOT NULL,
+  `Woche` decimal(6,2) NOT NULL,
+  `Jahr` int(11) NOT NULL,
+  `Kalenderwoche` int(11) NOT NULL,
+  `Donnerstag` int(11) NOT NULL,
+  `DonnerstagMonat` int(11) NOT NULL,
+  `DonnerstagDesMonats` int(11) NOT NULL,
+  `AenderZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `ErstellZeitpunkt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `AenderBenutzer_ID` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
+
+--
+-- Indizes der exportierten Tabellen
+--
+
+--
+-- Indizes für die Tabelle `Woche`
+--
+ALTER TABLE `Woche`
+  ADD PRIMARY KEY (`ID`);
+
+--
+-- AUTO_INCREMENT für exportierte Tabellen
+--
+
+--
+-- AUTO_INCREMENT für Tabelle `Woche`
+--
+ALTER TABLE `Woche`
+  MODIFY `ID` int(11) NOT NULL AUTO_INCREMENT;
+COMMIT;
 
 --
 -- Struktur des Views `BenutzerBestellView`
