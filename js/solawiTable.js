@@ -279,6 +279,7 @@ inp.style.width='40px';
     		}
 			for (var j = 0; j < keys.length; j++) {
 				var key = keys[j];
+				sum[key] = Math.round(sum[key]*1000000)/1000000;
 				sum[key] = String(sum[key]);
 			}
     		if (pub.showSum !== true) {
