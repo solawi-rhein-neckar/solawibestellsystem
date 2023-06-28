@@ -212,7 +212,8 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
                 opt.title='ID: ' + row.ID + (row['user_email'] ? (' - ' + row['user_email']) : '');
                 if (disableUnavailableProducts && (row.AnzahlZusatzBestellungMax < 0 || (row.AnzahlZusatzBestellung > 0 && row.AnzahlZusatzBestellungMax <= row.AnzahlZusatzBestellung) || (row.AnzahlZusatzBestellungMax == 0 && row.AnzahlBestellung <= 0) )) {
 
-                    opt.disabled='disabled';
+                    /*opt.disabled='disabled';*/
+                    opt.style="color:#666;background-color:#999;";
                     if (row.AnzahlZusatzBestellungMax <= 0) {
                         opt.innerText+=' (nur abo)';
                     } else {

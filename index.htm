@@ -39,8 +39,14 @@
 		}
 
 		function missingMailPart() {
-			return "stem" + "@" + "sola";
+			return "stem" + "@" + "lists.sola";
 		}
+
+		var ele = document.getElementById('missingUserEmail');
+		if (ele)
+			ele.href = "mailto:ag-bestellsy"
+					+ missingMailPart()
+					+ "wi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+";
 
 		function getCalendarId() {
 			return 6317652571 * 12;
@@ -89,7 +95,7 @@
 							ele.href = "mailto:ag-bestellsy"
 									+ missingMailPart()
 									+ "wi-rhein-neckar.org?subject=Fehlermeldung+Solawi+Bestellsystem+von+"
-									+ SBS.user.name;
+									+ SBS.user.Name;
 						ele = document.getElementById('calendarFrame');
 						if (ele)
 							ele.src = "https://teamup.com/ks" + getCalendarId()
@@ -320,8 +326,8 @@
 					Login erfolgreich, aber Benutzername <span id="missingUser"
 						style="color: red;"></span> wurde im Bestellsystem nicht gefunden.
 					<br /> Bitte Mail an Depotverwalter und <a id="missingUserEmail"
-						href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+">
-						ag-bestellsystem@solawi-rhein-neckar.org </a> schreiben.
+						href="mailto:ag-bestellsystem (at) lists.solawi-rhein-neckar (punkt) org">
+						ag-bestellsystem (at) lists.solawi-rhein-neckar (punkt) org </a> schreiben.
 				</div> <a href="admin.htm">Berichte und Admin-Bereich</a>
 		</form>
 		<br /> <br /> <br />
@@ -375,8 +381,8 @@
 
 			<ul>
 				<li>* Per Email an <a style="padding-left: 0;"
-					id="bugReportLink" href="#">bestellsystem (at)
-						solawi-rhein-neckar (punkt) org</a><br />&nbsp;
+					id="bugReportLink" href="#">ag-bestellsystem (at)
+						lists.solawi-rhein-neckar (punkt) org</a><br />&nbsp;
 				</li>
 				<li>* Direkt bei <a
 					style="padding-left: 0; text-decoration: underline;"
