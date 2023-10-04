@@ -51,7 +51,7 @@ table {
 #table>tr:first-child>td>span.TableHead {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
-  height: 4.5cm;
+  height: 5cm;
   width:1.2em;
   font-weight: bold;
   padding: 0 1px;
