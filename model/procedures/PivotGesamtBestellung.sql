@@ -1,14 +1,12 @@
-DROP PROCEDURE IF EXISTS `BenutzerBestellung`;
-CREATE PROCEDURE `BenutzerBestellung` (
-   IN `pWoche` DECIMAL(6,2),
-   IN `pInhalt` BOOLEAN
+DROP PROCEDURE IF EXISTS `PivotGesamtBestellung`;
+CREATE PROCEDURE `PivotGesamtBestellung`(
+	IN `pYear` DECIMAL(6,2)
 )
-READS SQL DATA
-SQL SECURITY INVOKER
+    READS SQL DATA
+    SQL SECURITY INVOKER
 BEGIN
 DROP TEMPORARY TABLE IF EXISTS BenutzerBestellungenTemp;
-CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY CHARACTER SET utf8mb4
-COLLATE utf8mb4_general_ci AS (
+CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp  AS (
    SELECT
    `u`.`Benutzer_ID` AS `Benutzer_ID`,
    `Benutzer`.`Name` AS `Benutzer`,
@@ -21,7 +19,6 @@ COLLATE utf8mb4_general_ci AS (
    `Produkt`.`Beschreibung`,
    `Produkt`.`Einheit`,
    `Produkt`.`Menge`,
-   `Produkt`.`Nr`,
    `u`.`Woche` AS `Woche`,
    `u`.`Kommentar` AS `Kommentar`,
    ( CASE WHEN NOT ISNULL(`BenutzerUrlaub`.`ID`) THEN 0 WHEN pInhalt = TRUE THEN `u`.`Lieferzahl` ELSE `u`.`Anzahl` END ) AS `Anzahl`,
@@ -39,13 +36,13 @@ COLLATE utf8mb4_general_ci AS (
                  ModulInhalt.Produkt_ID,
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
                  IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
-                 IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, IFNULL(`BenutzerModulAbo`.`BezahltesModul`,0) - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
+                 IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, Benutzer.FleischAnteile - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
                  	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
                  	* ModulInhalt.Anzahl * IF(Modul.ID = 4, 0, Benutzer.Anteile)
-             		* Modul.AnzahlProAnteil)
+             		* IF(Modul.ID = 2 /*Milch*/,4,Modul.AnzahlProAnteil))
                  AS Gutschrift,
-                 `BenutzerModulAbo`.BezahltesModul OR Modul.ID = 4 as BezahltesModul,
-                 pWoche AS `Woche`
+                 `BenutzerModulAbo`.BezahltesModul or Modul.ID = 4 AS BezahltesModul,
+                 IFNULL(ModulInhaltWoche.Woche,ModulInhaltDepot.Woche) AS `Woche`
              FROM `Modul`
              JOIN Benutzer
              LEFT JOIN `BenutzerModulAbo`
@@ -55,18 +52,25 @@ COLLATE utf8mb4_general_ci AS (
                  AND (  ISNULL(`BenutzerModulAbo`.`EndWoche`)  OR ( pWoche <= `BenutzerModulAbo`.`EndWoche` ) )
              LEFT JOIN ModulInhalt ON pInhalt = TRUE AND ModulInhalt.Modul_ID = Modul.ID
              LEFT JOIN ModulInhaltWoche
-             	ON ModulInhaltWoche.Woche = pWoche
+             	ON ((pWoche is null
+             		 AND (ISNULL(`BenutzerModulAbo`.`StartWoche`) OR ModulInhaltWoche.Woche >= `BenutzerModulAbo`.`StartWoche`)
+             		 AND (ISNULL(`BenutzerModulAbo`.`StartWoche`) OR ModulInhaltWoche.Woche >= `BenutzerModulAbo`.`StartWoche`)
+             	   ) OR ModulInhaltWoche.Woche = pWoche)
              	AND ModulInhaltWoche.ModulInhalt_ID = ModulInhalt.ID
              	AND (ModulInhaltWoche.Anzahl IS NOT NULL)
              	AND ( ISNULL(ModulInhaltWoche.Depot_ID) OR ModulInhaltWoche.Depot_ID = 0 )
              LEFT JOIN ModulInhaltWoche AS ModulInhaltDepot
-             	ON ModulInhaltDepot.Woche = pWoche
+				ON ((pWoche is null
+             		 AND (ISNULL(`BenutzerModulAbo`.`StartWoche`) OR ModulInhaltDepot.Woche >= `BenutzerModulAbo`.`StartWoche`)
+             		 AND (ISNULL(`BenutzerModulAbo`.`StartWoche`) OR ModulInhaltDepot.Woche >= `BenutzerModulAbo`.`StartWoche`)
+             	   ) OR ModulInhaltDepot.Woche = pWoche)
              	AND ModulInhaltDepot.ModulInhalt_ID = ModulInhalt.ID
              	AND (ModulInhaltDepot.Anzahl IS NOT NULL)
              	AND ( ModulInhaltDepot.Depot_ID = Benutzer.Depot_ID )
              WHERE
                     (( `BenutzerModulAbo`.ID IS NOT NULL )
                  OR ( Modul.ID <> 4 AND ((Modul.AnzahlProAnteil * Benutzer.Anteile) > 0) )
+                 OR ( Modul.ID = 4 /*Fleisch*/ AND Benutzer.FleischAnteile > 0 )
                  OR ( Modul.ID = 2 /*Milch*/ AND Benutzer.Anteile > 0 ))
                  AND (ModulInhalt.ID is null or ModulInhalt.HauptProdukt or ModulInhaltWoche.Anzahl > 0 or ModulInhaltDepot.Anzahl > 0)
            )
@@ -83,7 +87,7 @@ COLLATE utf8mb4_general_ci AS (
                  0 as BezahltesModul,
                  `BenutzerZusatzBestellung`.`Woche` AS `Woche`
              FROM `BenutzerZusatzBestellung`
-             WHERE `BenutzerZusatzBestellung`.`Woche` = pWoche
+             WHERE pWoche is null or `BenutzerZusatzBestellung`.`Woche` = pWoche
            )
         ) `u`
         JOIN `Benutzer` ON ( ( `u`.`Benutzer_ID` = `Benutzer`.`ID` ) )

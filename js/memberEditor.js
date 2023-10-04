@@ -175,6 +175,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             solawiTableEdit = SolawiTable(sbs, 'benutzerEditorTable', 'benutzerEditorLabel', true, false);
             solawiTableView = SolawiTable(sbs, 'benutzerEditorTable', 'benutzerEditorLabel', false, false);
             solawiTableLiefer = SolawiTable(sbs, 'benutzerLieferTable', 'benutzerLieferLabel', false, false);
+            solawiTableLiefer.showSum = 'top';
             var stvrf = solawiTableValid.reload;
             solawiTableValid.reload=function() {stvrf(); solawiTableLiefer.reload();};
             var stvrf2 = solawiTableEdit.reload;
@@ -182,13 +183,13 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             btn.onclick=function() {
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Abos';lieferTitle.innerText='Lieferung';seriesBtn.style.display='inline-block';
                 getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
-                getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
-                solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];
+                getAjax('BenutzerZusatzBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
+                solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift', 'Saldo'];
                 getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
             };
             btn1.onclick=function() {
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Alle Tausche';lieferTitle.innerText='';seriesBtn.style.display='none';
-                getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter(), solawiTableEdit.showTable)
+                getAjax('BenutzerZusatzBestellungView/Benutzer_ID/' + dataIdGetter(), solawiTableEdit.showTable)
             };
             btn2.onclick=function() {if(confirm('ACHTUNG! Hier können Abos RÜCKWIRKEND verändert werden! Bitte nur zur Fehlerkorrektur. Normalerweise sollte unter "Abos" das bestehende Abo beendet werden (EndWoche = Jetzt) und danach ein neues Abo ab heute angelegt werden!')){
                 solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Abos rückwirkend manipulieren, Vorsicht!';lieferTitle.innerText='';seriesBtn.style.display='none';
@@ -245,8 +246,8 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
 	        lieferTitle.innerText = 'Lieferung';
 	        seriesBtn.style.display='inline-block';
 	        getAjax('BenutzerModulAbo/Benutzer_ID/' + dataIdGetter() + "/Bis/" + sbs.week, solawiTableValid.showTable)
-	        getAjax('BenutzerZusatzBestellung/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
-            solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift'];
+	        getAjax('BenutzerZusatzBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableEdit.showTable)
+            solawiTableLiefer.columns = ['Produkt', 'Anzahl', 'AnzahlModul', 'Kommentar', 'Punkte', 'Gutschrift','Saldo'];
 	        getAjax('BenutzerBestellungView/Benutzer_ID/' + dataIdGetter() + "/Woche/" + sbs.selectedWeek, solawiTableLiefer.showTable)
 	        btnCtnr.appendChild(stornoCtnr);
             btnCtnr.style.textAlign = 'left';
@@ -326,9 +327,9 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
     	if (modules && userId) {
     		for (var i = 0; i < modules.length; i++) {
     			if (modules[i] && modules[i].ID && (modules[i].AnzahlProAnteil || modules[i].ID == 2)) {
-    	    		var anteile = modules[i].ID == 4 ? (data.FleischAnteile === '' ? 1 : data.FleischAnteile) : (data.Anteile === '' ? 1 : data.Anteile);
+    	    		var anteile = (data.Anteile === '' ? 1 : data.Anteile);
     	    		if (anteile) {
-    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(modules[i].AnzahlProAnteil), StartWoche: data.PunkteWoche ? data.PunkteWoche : sbs.selectedWeek, EndWoche: '9999.99'}, changeWeekEditor);
+    					postAjax('BenutzerModulAbo', {Benutzer_ID: userId, Modul_ID: modules[i].ID, Anzahl: anteile*(modules[i].AnzahlProAnteil), StartWoche: data.AnteileStartWoche ? data.AnteileStartWoche : sbs.selectedWeek, EndWoche: '9999.99', BezahltesModul: modules[i].ID == 4}, changeWeekEditor);
     				}
     			}
     		}

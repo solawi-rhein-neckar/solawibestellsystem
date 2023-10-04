@@ -4,7 +4,7 @@
 
     This file is meant to be used by solawiEditor.
 */
-function SolawiValidator(pSbs) {
+function SolawiValidator(pSbs, pEditorSuffix) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
@@ -15,12 +15,13 @@ function SolawiValidator(pSbs) {
     /* private vars */
     var sbs = pSbs;
     var responseCache;
+    var editorSuffix = pEditorSuffix ? pEditorSuffix : '';
 
 /**** public ****/
-    function validateEditorInput(data, id) {
+    function validateEditorInput(data, id, isBatch) {
     	lookupRowDataInResponseCacheForValidation(id, data);
 
-    	var result = validateEditorZusatzBestellung(data, id);
+    	var result = validateEditorZusatzBestellung(data, id, isBatch);
         if (result != null) {
         	return result;
         }
@@ -36,24 +37,24 @@ function SolawiValidator(pSbs) {
 
 /**** private ****/
 
-    function validateEditorAnzahl(anzahl, min, max, name) {
-    	if (typeof anzahl != 'undefined' && ((! anzahl) || anzahl == 0)) {
-            setContent('editError', 'Anzahl muss eingegeben werden!');
+    function validateEditorAnzahl(anzahl, min, max, name, allowZero) {
+    	if (typeof anzahl != 'undefined' && ((! anzahl) || ((!allowZero) && anzahl == 0))) {
+            setContent('editError'+editorSuffix, 'Anzahl muss eingegeben werden!');
             return false;
         }
     	if (typeof anzahl != 'undefined' && (anzahl < min || anzahl > max)) {
-            setContent('editError', 'Anzahl zu ' + (anzahl < min ? 'gering' : 'groß') + '. Min: ' + min + ' / Max: ' + max + (name ? ' möglich für ' + name : ' möglich.'));
+            setContent('editError'+editorSuffix, 'Anzahl zu ' + (anzahl < min ? 'gering' : 'groß') + '. Min: ' + min + ' / Max: ' + max + (name ? ' möglich für ' + name : ' möglich.'));
             return false;
         }
         return true;
     }
 
-    function validateEditorZusatzBestellung(data, id) {
+    function validateEditorZusatzBestellung(data, id, isBatch) {
     	if (data['Produkt_ID'] && sbs.tableCache['Produkt']) {
         	var min = -9;
         	var max = 9999;
             var row = sbs.tableCache['Produkt'][data['Produkt_ID']]
-            if (row) {
+            if (row && !isBatch) {
                 min = (row.AnzahlBestellung || row.AnzahlBestellung === 0 ? row.AnzahlBestellung * -1 : -9);
                 max = row.AnzahlZusatzBestellungMax - row.AnzahlZusatzBestellung;
             }
@@ -67,13 +68,13 @@ function SolawiValidator(pSbs) {
 	    	var min = 0;
 	    	var max = 9999;
 	        if (data['StartWoche'] > data['EndWoche']) {
-	            setContent('editError', 'Start muss vor Ende sein.');
+	            setContent('editError'+editorSuffix, 'Start muss vor Ende sein.');
 	            return false;
 	        }
 	        var row = sbs.tableCache['Modul'][data['Modul_ID']]
 	        if (row) {
 	        	if (row.WechselWochen && (((!id) && row.WechselWochen.indexOf(data['StartWoche'].substr(5)) < 0) || row.WechselWochen.indexOf(addWeek(data['EndWoche'], 1).substr(5)) < 0)) {
-	                setContent('editError', 'Ungültige Start/EndWoche für ' + row.Name + ', erlaubte StartWochen: ' + row.WechselWochen + ', EndWoche jeweils eins weniger.' );
+	                setContent('editError'+editorSuffix, 'Ungültige Start/EndWoche für ' + row.Name + ', erlaubte StartWochen: ' + row.WechselWochen + ', EndWoche jeweils eins weniger.' );
 	                return false;
 	        	}
 	        	/*if (row.AnzahlProAnteil != 0 && responseCache) {
@@ -86,7 +87,7 @@ function SolawiValidator(pSbs) {
 	        		}
 	        	}*/
 	        }
-	    	return validateEditorAnzahl(data['Anzahl'], min, max, row ? row.Name : '');
+	    	return validateEditorAnzahl(data['Anzahl'], min, max, row ? row.Name : '', true);
     	}
     	return null;
     }

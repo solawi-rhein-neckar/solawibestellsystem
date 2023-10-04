@@ -34,7 +34,10 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, edit
 						 	: tableName == 'BenutzerModulAbo' 	? ['Benutzer_ID', 'Modul_ID', 'Anzahl', 'Kommentar', 'StartWoche', 'EndWoche']
 							: tableName == 'BenutzerUrlaub' 	? ['Benutzer_ID', 'Woche']
 						 	: ['Name']);
-    	addCreateButton(tr.firstChild);
+    	var tablePath = solawiTable.getTablePath();
+    	if (!tablePath || !tablePath.match || !tablePath.match(/BenutzerZusatzBestellungView.Benutzer_ID.MY.*/)) {
+    		addCreateButton(tr.firstChild);
+    	}
     	if (keys) {
     		addDeleteButtonColumnHeader(tr);
     		addWeekSelectColumnHeader(tr);
@@ -79,7 +82,7 @@ function SolawiTableEditor(pSbs, pSolawiTable, pDisableUnavailableProducts, edit
 
     function addDeleteButtonCell(tr, dataRow) {
         var delTd = document.createElement("TD");
-        if ((!disableUnavailableProducts) || ( (! (dataRow['StartWoche'] && dataRow['StartWoche'] < sbs.week) ) && (! (dataRow['Woche'] && (dataRow['Woche'] < addWeek(sbs.week, -1) || (sbs.week == sbs.AbgeschlosseneWoche && dataRow['Woche'] == sbs.AbgeschlosseneWoche) ) ) ) )) {
+        if (dataRow['ID'] && ((!disableUnavailableProducts) || ( (! (dataRow['StartWoche'] && dataRow['StartWoche'] < sbs.week) ) && (! (dataRow['Woche'] && (dataRow['Woche'] < addWeek(sbs.week, -1) || (sbs.week == sbs.AbgeschlosseneWoche && dataRow['Woche'] == sbs.AbgeschlosseneWoche) ) ) ) ))) {
             var delBtn = document.createElement("BUTTON");
             delBtn.innerText='-';
           delBtn.className="btn_minus"

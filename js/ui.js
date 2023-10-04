@@ -34,13 +34,18 @@ function initUser(initTablesFunction) {
 	SBS.fillCache('wp');
 }
 
+function missingMailPart() {
+	return "stem" + "@" + "lists.sola";
+}
+
+
 function onSuccessfulLogin(result,path){
 	if (!(!result || !result.user || !result.match || result.match == '0E0')){
 		window.setTimeout(function(){document.location.reload();},333);
 	} else if (result && result.user) {
 		setContent('missingUser', result.user);
 		show('userMissing');
-		document.getElementById('missingUserEmail').href='mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+'+result.user;
+		document.getElementById('missingUserEmail').href='mailto:ag-bestellsy' + missingMailPart() + 'wi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+'+result.user;
 	} else {
 		show('loginError');
 	}
@@ -130,8 +135,8 @@ document.write('<div id="blockui_post" \
 				<br /> \
 				Bitte Mail an Depotverwalter und \
 					<a  id="missingUserEmail" \
-						href="mailto:ag-bestellsystem@solawi-rhein-neckar.org?subject=Solawi+Bestellsystem+fehlender+Benutzer+"> \
-						ag-bestellsystem@solawi-rhein-neckar.org \
+						href="mailto:ag-bestellsystem (at) lists.solawi-rhein-neckar (punkt) org"> \
+						ag-bestellsystem (at) lists.solawi-rhein-neckar (punkt) org \
 					</a> \
 				schreiben. \
 			</div> \

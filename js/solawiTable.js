@@ -19,7 +19,7 @@
     No need to recreate the instance at anytime, to display another table just call SBT.showTable once again with another response.
     You will only need multiple instances to display multiple tables at the same time.
 */
-function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavailableProducts, pVerwalter) {
+function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavailableProducts, pVerwalter, pOnClickFunc) {
 
     /* public methods, this hash will be returned by this function, see last line: */
     const pub = {
@@ -32,7 +32,10 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         setSortBy: function(sortBy){sortByColumn2 = sortByColumn1; sortByColumn1 = sortBy;},
         columns: [],
         editorDefault: {},
-        editAtOnce: false
+        editAtOnce: false,
+        hideZeros: false,
+        showSum: false,
+        sortResponse: sortResponse
     };
 
     /* private vars */
@@ -47,6 +50,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
     var tableExtensions = [];
     if (pEditable) tableExtensions.push(SolawiTableEditor(sbs, pub, pDisableUnavailableProducts, pEditable));
     if (pVerwalter) tableExtensions.push(SolawiTableVerwalter(sbs, pub));
+    if (pOnClickFunc) tableExtensions.push(SolawiTableOnClick(sbs, pub, pOnClickFunc));
 
     /* private constants */
     const columnWeight = {};
@@ -60,6 +64,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         }
 
         sortResponse(response);
+        if (pub.showSum) {
+        	calculateSum(response);
+        }
 
         responseCache = response;
         tableExtensions.forEach(function(ext){ext.setResponse(path, responseCache);});
@@ -68,6 +75,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         table.innerHTML = '';
         tablePath = path;
         tableName = path.match(/[^\/]*/)[0];
+        if (tableName.match(/^BenutzerZusatzBestellungView$/)) {
+        	tableName = 'BenutzerZusatzBestellung'; /* remove the 'view' at the end, so we can edit it */
+        }
         setContent(elemIdLabel, tablePath);
         table.className = tableName;
         var keys = null;
@@ -122,7 +132,7 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         var td = document.createElement("TD");
         table.appendChild(tr);
         tr.appendChild(td);
-        td.innerText = ' (empty) ';
+        td.innerText = ' (nichts eingetragen) ';
         return tr;
     }
 
@@ -238,14 +248,53 @@ inp.style.width='40px';
     }
 
     function sortResponse(response) {
-        if (sortByColumn1) {
+        if (sortByColumn1 && response && response.sort) {
             console.log('sorting by ' + sortByColumn1 + (sortByColumn2 ? (', then ' + sortByColumn2) : ''));
             response.sort(rowSortFunc);
         }
     }
 
+    function calculateSum(response) {
+    	if (response && response[0]) {
+    		var keys = Object.keys(response[0]).sort(columnSortFunc);
+    		var sum = {};
+    		for (var i = 0; i < response.length; i++) {
+    			var row = response[i];
+    			if ((keys && keys.length && row[keys[0]]) || pub.columns && pub.columns.length && row[pub.columns[0].replace(' ', '')] ) {
+	    			for (var j = 0; j < keys.length; j++) {
+	    				var key = keys[j];
+	    				if (key == 'Produkt_ID' || key == 'Produkt' || key == 'Name' || key == 'Id' || key == 'ID' || key == 'Nr' || key == '00.'+sbs.selectedWeek) {
+	    					sum[key] = key == 'Id' || key == 'ID' ? '' : 'SUMME';
+	    				} else if (row[key] && ! isNaN(row[key])) {
+	        				if (sum[key]) {
+	        					sum[key] += Number(row[key]);
+	        				} else {
+	        					sum[key] = Number(row[key]);
+	        				}
+	    				} else if (! sum[key]) {
+	    					sum[key] = '';
+	    				}
+	    			}
+    			}
+    		}
+			for (var j = 0; j < keys.length; j++) {
+				var key = keys[j];
+				sum[key] = Math.round(sum[key]*1000000)/1000000;
+				sum[key] = String(sum[key]);
+			}
+    		if (pub.showSum !== true) {
+    			response.unshift(sum);
+    		} else {
+    			response.push(sum);
+    		}
+    	}
+    }
+
     function rowSortFunc(a,b) {
-        return a[sortByColumn1]===undefined ? (b[sortByColumn1]===undefined ? 0 : 1) : b[sortByColumn1]===undefined ? -1 :
+        return a[sortByColumn1]===undefined ? (b[sortByColumn1]===undefined ? (sortByColumn2 ? (
+    			a[sortByColumn2]===undefined ? (b[sortByColumn2]===undefined ? 0 : 1) : b[sortByColumn2]===undefined ? -1 :
+        			(a[sortByColumn2] < b[sortByColumn2] ? -1 : (a[sortByColumn2] > b[sortByColumn2] ? 1 : 0))          ) : 0 )
+        	: 1) : b[sortByColumn1]===undefined ? -1 :
         	(a[sortByColumn1] < b[sortByColumn1] ? -1 : a[sortByColumn1] > b[sortByColumn1] ? 1 : (sortByColumn2 ? (
     			a[sortByColumn2]===undefined ? (b[sortByColumn2]===undefined ? 0 : 1) : b[sortByColumn2]===undefined ? -1 :
     			(a[sortByColumn2] < b[sortByColumn2] ? -1 : (a[sortByColumn2] > b[sortByColumn2] ? 1 : 0))          ) : 0 )

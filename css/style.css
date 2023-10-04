@@ -505,13 +505,16 @@ div.table_center {
   max-width: 325px;
 }
 #table4_center {
+  max-width: 325px;
+}
+#table5_center {
   max-width: 603px;
 }
 */
 
   div.editorLabel, .col_ErstellZeitpunkt, .col_AenderZeitpunkt, .col_AenderBenutzer_ID, .inp_Woche, .inp_Benutzer_ID, .col_Benutzer_ID, .col_Depot_ID, #table .col_Produkt_ID {display: none;}
   #table .col_Anzahl, .col_Produkt { font-weight: bold; }
-  .col_ID > div {display: none;}
+  .col_ID > div, div#table2_center > table#tableEdit > tr > td > button.btn_plus {display: none;}
   .inp_Woche, .inp_Benutzer_ID { color:#CCC;
                            pointer-events:none;
 }

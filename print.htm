@@ -21,6 +21,7 @@
         var SBS = SolawiBestellSystem();
         var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, true);
 	SBTview.hideZeros = true;
+	SBTview.showSum = 'top';
 
         //check login status
         getAjax('BenutzerView/MY', function(userResponse) {

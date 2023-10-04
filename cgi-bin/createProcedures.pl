@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+﻿#!/usr/bin/perl
 use strict;
 use warnings;
 
@@ -14,7 +14,7 @@ use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!
 my $q = CGI::Simple->new;
 
 # get database handle
-my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=127.0.0.3", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8 => ($q->request_method() =~ /^POST$/) });
+my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=mysql", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8mb4 => 1 });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
 	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
@@ -35,7 +35,7 @@ if ( $q->request_method() =~ /^OPTIONS/ ) {
 			my $sth;
 
 			if ( $q->path_info =~ /^\/RECREATEPROCEDURES$/ ) {
-
+				$dbh->prepare("SET NAMES utf8mb4;")->execute();
 				$dbh->prepare("DROP PROCEDURE IF EXISTS `BenutzerBestellung`")->execute();
 				$dbh->prepare("
 CREATE PROCEDURE `BenutzerBestellung` (
@@ -46,7 +46,8 @@ READS SQL DATA
 SQL SECURITY INVOKER
 BEGIN
 DROP TEMPORARY TABLE IF EXISTS BenutzerBestellungenTemp;
-CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
+CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY CHARACTER SET utf8mb4
+COLLATE utf8mb4_general_ci AS (
    SELECT
    `u`.`Benutzer_ID` AS `Benutzer_ID`,
    `Benutzer`.`Name` AS `Benutzer`,
@@ -59,6 +60,7 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
    `Produkt`.`Beschreibung`,
    `Produkt`.`Einheit`,
    `Produkt`.`Menge`,
+   `Produkt`.`Nr`,
    `u`.`Woche` AS `Woche`,
    `u`.`Kommentar` AS `Kommentar`,
    ( CASE WHEN NOT ISNULL(`BenutzerUrlaub`.`ID`) THEN 0 WHEN pInhalt = TRUE THEN `u`.`Lieferzahl` ELSE `u`.`Anzahl` END ) AS `Anzahl`,
@@ -76,7 +78,7 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
                  ModulInhalt.Produkt_ID,
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
                  IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
-                 IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, Benutzer.FleischAnteile - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
+                 IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, IFNULL(`BenutzerModulAbo`.`BezahltesModul`,0) - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
                  	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
                  	* ModulInhalt.Anzahl * IF(Modul.ID = 4, 0, Benutzer.Anteile)
              		* Modul.AnzahlProAnteil)
@@ -104,7 +106,6 @@ CREATE TEMPORARY TABLE IF NOT EXISTS BenutzerBestellungenTemp ENGINE=MEMORY AS (
              WHERE
                     (( `BenutzerModulAbo`.ID IS NOT NULL )
                  OR ( Modul.ID <> 4 AND ((Modul.AnzahlProAnteil * Benutzer.Anteile) > 0) )
-                 OR ( Modul.ID = 4 /*Fleisch*/ AND Benutzer.FleischAnteile > 0 )
                  OR ( Modul.ID = 2 /*Milch*/ AND Benutzer.Anteile > 0 ))
                  AND (ModulInhalt.ID is null or ModulInhalt.HauptProdukt or ModulInhaltWoche.Anzahl > 0 or ModulInhaltDepot.Anzahl > 0)
            )
@@ -158,6 +159,7 @@ SELECT
    `Beschreibung`,
    `Einheit`,
    `Menge`,
+   `Nr`,
    `Woche`,
    CONVERT(GROUP_CONCAT( ( CASE WHEN(TRIM(`Kommentar`) = '') THEN NULL ELSE `Kommentar` END ) SEPARATOR ', ' ),char(255)) AS `Kommentar`,
   GREATEST(0, SUM(`Anzahl`)) AS Anzahl,
@@ -165,6 +167,7 @@ SELECT
    SUM( `AnzahlZusatz` ) AS `AnzahlZusatz`,
    GREATEST(0, sum(Punkte)) AS `Punkte`,
    MAX(IFNULL(Gutschrift,0)) as `Gutschrift`,
+   MAX(IFNULL(Gutschrift,0)) - GREATEST(0, sum(Punkte)) as `Saldo`,
     `Urlaub`
 
 FROM `BenutzerBestellungenTemp`
@@ -343,7 +346,6 @@ SET \@query = CONCAT('
 		   SUM(IF(NOT (Produkt LIKE \\'Gem_se\\'),0, Urlaub)) as `99.', pWoche,' Urlauber`,
 		  SUM(IF((NOT (Produkt LIKE \\'Gem_se\\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Count(*) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `97.Mitglieder`,
 		  SUM(IF((NOT (Produkt LIKE \\'Gem_se\\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(Anteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.Anteile`,
-		  SUM(IF((NOT (Produkt LIKE \\'Gem_se\\')) OR BenutzerId <> (SELECT Min(ID) FROM Benutzer Where Benutzer.Depot_ID = subq.Depot_ID),0, (SELECT Sum(FleischAnteile) FROM Benutzer where Benutzer.Depot_ID = `subq`.`Depot_ID`))) as `98.FleischAnteileErlaubt`,
 		  GROUP_CONCAT(`subq`.Kommentar SEPARATOR \\', \\') as `96.Kommentar`
 	FROM
 		(Select `BenutzerBestellungenTemp`.`Depot_ID` AS `Depot_ID`,
@@ -459,7 +461,7 @@ BEGIN
    Subtotal int,
    Total int);
 
-  WHILE day <= curdate() DO
+  WHILE day <= (curdate() + interval 4 day) DO
   	SET pWoche = cast(yearweek((day - interval 4 day),1)/100 as decimal(6,2));
   	CALL BenutzerBestellung( pWoche, TRUE);
   	INSERT INTO BenutzerPunkteTemp SELECT pWoche,
@@ -515,6 +517,28 @@ BEGIN
 
   SELECT * FROM BenutzerPunkteTemp;
 END;")->execute();
+
+$dbh->prepare("DROP PROCEDURE IF EXISTS `FillWeekTable`;
+")->execute();
+$dbh->prepare("CREATE PROCEDURE `FillWeekTable` ()
+READS SQL DATA
+SQL SECURITY INVOKER
+BEGIN
+ DECLARE pWoche DECIMAL(6,2);
+
+  DECLARE day DATETIME DEFAULT '2018-01-04 12:00';
+
+  WHILE day <= '2068-01-01 00:00' DO
+    SET pWoche = cast(yearweek((day - interval 3 day),1)/100 as decimal(6,2));
+
+    INSERT INTO Woche(Woche,Jahr,Kalenderwoche,Donnerstag,DonnerstagMonat,DonnerstagDesMonats) VALUES (pWoche,year(day),weekofyear(day),day(day),month(day),FLOOR((DayOfMonth(day)-1)/7)+1);
+
+
+    SET day = date_add(day, interval 7 day);
+
+  END WHILE;
+END")->execute();
+
 			}
 
 		} else {
@@ -529,7 +553,6 @@ END;")->execute();
 	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
 	print encode_json({result v 0, reason => "path contains forbidden characters"});
 }
-
 
 # close database handle
 $dbh->disconnect
