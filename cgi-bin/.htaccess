@@ -1,0 +1,22 @@
+
+Options +ExecCGI
+AddHandler cgi-script .cgi .pl
+
+
+
+
+# Umleitung Typo3-Seiten
+Redirect 301 /de/startseite http://www.solawi-rhein-neckar.org/public/
+Redirect 301 /de/impressum http://www.solawi-rhein-neckar.org/public/impressum
+Redirect 301 /de/mitglied-werden http://www.solawi-rhein-neckar.org/public/mitgliedschaft
+Redirect 301 /de/solawi-in-heidelberg/popup-gemueseliste http://www.solawi-rhein-neckar.org/public/gemuese
+Redirect 301 /de/solawi-in-heidelberg http://www.solawi-rhein-neckar.org/public/auf-einen-blick
+Redirect 301 /de/was-ist-solidarische-landwirtschaft http://www.solawi-rhein-neckar.org/public/idee
+Redirect 301 /de/bilder-und-videos http://www.solawi-rhein-neckar.org/public/videos
+Redirect 301 /de/weiterfuehrende-informationen http://www.solawi-rhein-neckar.org/public/haeufige-fragen/
+Redirect 301 /de/kontakt http://www.solawi-rhein-neckar.org/public/kontakt/
+Redirect 301 /de/presse http://www.solawi-rhein-neckar.org/public/aktuell/
+Redirect 301 /de/downloads http://www.solawi-rhein-neckar.org/intern/
+
+
+
