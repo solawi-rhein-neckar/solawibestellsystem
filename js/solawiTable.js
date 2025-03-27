@@ -145,17 +145,19 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         var div = document.createElement("DIV");
         div.dataValue = value;
 
-        if (pub.hideZeros && value != null && value != undefined && value.match && value.match(/^-?[0-9]+[.][0459][09]([1-9]|[1-9][0-9]|[0-9][1-9]|[0-9][1-9][05]|[1-9][0-9][05]|[0-9][0-9][5])$/)) {
-             var v = value.match(/^-?[0-9]+[.][45]/) ? Math.round(value * 2) / 2 : Math.round(value);
-             var z = Math.round((value - v) * 20000)/2;
-             if (z > 0 || z < 0) {
-                 div.title = 'Tausch: ' + z;
-                 div.className = 'hat_tausch';
-             }
-             value = v < 0 ? v * -1 : v;
-        } else if (pub.hideZeros && value != null && value != undefined && value.match && value.match(/^[0-9]+[.][05]0+$/)) {
-            value = value.match(/^[0-9]+[.][5]0+$/) ? Math.round(value * 2) / 2 : Math.round(value);
-
+        if (pub.hideZeros && value != null && value != undefined) {
+			var roundedValue = Number(value).toFixed(5);
+			if (roundedValue.match && roundedValue.match(/^-?[0-9]+[.][0459][09]([1-9]|[1-9][0-9]|[0-9][1-9]|[0-9][1-9][05]|[1-9][0-9][05]|[0-9][0-9][5])$/)) {
+	             var v = roundedValue.match(/^-?[0-9]+[.][45]/) ? Math.round(roundedValue * 2) / 2 : Math.round(roundedValue);
+	             var z = Math.round((roundedValue - v) * 20000)/2;
+	             if (z > 0 || z < 0) {
+	                 div.title = 'Tausch: ' + z;
+	                 div.className = 'hat_tausch';
+	             }
+	             value = v < 0 ? v * -1 : v;
+	        } else if (roundedValue.match && roundedValue.match(/^[0-9]+[.][05]0+$/)) {
+	            value = roundedValue.match(/^[0-9]+[.][5]0+$/) ? Math.round(roundedValue * 2) / 2 : Math.round(roundedValue);
+	        }
         }
 
 
