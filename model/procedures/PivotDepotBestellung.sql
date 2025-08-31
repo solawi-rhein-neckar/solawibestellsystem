@@ -18,6 +18,8 @@ SET @query = CONCAT('
 		   SUM( IF(Produkt = \'Milch, 0.5L\', cast(IF(AnzahlZusatz is not null, Anzahl/2 + (AnzahlZusatz/2 * 0.0001), Anzahl/2) as decimal(10,5)), 0) ) AS `06.Milch`,',
 		   @query, ',
 		   SUM(Urlaub) as `99.',pWoche, ' Urlaub`,
+		   (SELECT Sum(Anteile) FROM Benutzer where Benutzer.ID = `subq`.`Benutzer_ID`) as `98.Anteile`,
+		   (SELECT Sum(Anteile) FROM Benutzer where Benutzer.ID = `subq`.`Benutzer_ID`) as `01.Anteile`,
 		   GROUP_CONCAT(`subq`.Kommentar SEPARATOR \'; \') as `96.Kommentar`
 	FROM
 		(Select `BenutzerBestellungenTemp`.`Benutzer` AS `Benutzer`,
