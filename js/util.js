@@ -228,7 +228,7 @@ function downloadDepotbestellungen(response, path) {
 							function(cell, colNumber) {
 								console.log('Depotbestellungen: Cell ' + colNumber + ' = ' + cell.value);
 								if (cell.value) {
-									columns[colNumber] = cell.value.replace('Anteile', 'Gemüse');
+									columns[colNumber] = cell.value;
 									if (colNumber > lastColumn) {
 										lastColumn = colNumber;
 									}
