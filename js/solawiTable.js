@@ -140,6 +140,9 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         var value = dataRow[key];
         var td = document.createElement("TD");
         td.className='col_'+key;
+        if (pub.hideZeros && pub.sum && ( (!pub.sum[key]) || pub.sum[key] == 0 || pub.sum[key] == '')) {
+			td.className='hidden ' + td.className;
+		}
         tr.appendChild(td);
 
         var div = document.createElement("DIV");
@@ -223,6 +226,9 @@ inp.style.width='40px';
             tr.appendChild(td);
             td.appendChild(span);
             td.className='col_'+keys[j];
+	        if (pub.hideZeros && pub.sum && ( (!pub.sum[keys[j]]) || pub.sum[keys[j]] == 0 || pub.sum[keys[j]] == '')) {
+				td.className='hidden ' + td.className;
+			}
             span.className = "TableHead";
             if (columns[j].match(/^[A-Za-z1-9öäüÖÄÜ]+_ID_[0-9][0-9]?$/)) {
                 span.innerText = columns[j].replace(/_ID_.*/, '');
@@ -291,6 +297,7 @@ inp.style.width='40px';
     		} else {
     			response.push(sum);
     		}
+    		pub.sum = sum;
     	}
     }
 
