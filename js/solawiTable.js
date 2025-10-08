@@ -140,10 +140,11 @@ function SolawiTable(pSbs, pElemIdTable, pElemIdLabel, pEditable, pDisableUnavai
         var value = dataRow[key];
         var td = document.createElement("TD");
         td.className='col_'+key;
-        if (pub.hideZeros && pub.sum && ( (!pub.sum[key]) || pub.sum[key] == 0 || pub.sum[key] == '')) {
+        if (pub.hideZeros && pub.sum && ( (!pub.sum[key]) || pub.sum[key] == 0 || pub.sum[key] == '') && ((!key.endsWith) || !key.endsWith('Kommentar'))) {
 			td.className='hidden ' + td.className;
-		}
-        tr.appendChild(td);
+		} else {
+        	tr.appendChild(td);
+    	}
 
         var div = document.createElement("DIV");
         div.dataValue = value;
@@ -223,12 +224,13 @@ inp.style.width='40px';
         for (var j = 0; j < columns.length; j++) {
             var td = document.createElement("TD");
             var span = document.createElement("SPAN");
-            tr.appendChild(td);
+	        if (pub.hideZeros && pub.sum && ( (!pub.sum[keys[j]]) || pub.sum[keys[j]] == 0 || pub.sum[keys[j]] == '') && ((!keys[j].endsWith) || !keys[j].endsWith('Kommentar'))) {
+				td.className='hidden ' + td.className;
+			} else {
+	            tr.appendChild(td);
+			}
             td.appendChild(span);
             td.className='col_'+keys[j];
-	        if (pub.hideZeros && pub.sum && ( (!pub.sum[keys[j]]) || pub.sum[keys[j]] == 0 || pub.sum[keys[j]] == '')) {
-				td.className='hidden ' + td.className;
-			}
             span.className = "TableHead";
             if (columns[j].match(/^[A-Za-z1-9öäüÖÄÜ]+_ID_[0-9][0-9]?$/)) {
                 span.innerText = columns[j].replace(/_ID_.*/, '');
@@ -271,7 +273,7 @@ inp.style.width='40px';
     			if ((keys && keys.length && row[keys[0]]) || pub.columns && pub.columns.length && row[pub.columns[0].replace(' ', '')] ) {
 	    			for (var j = 0; j < keys.length; j++) {
 	    				var key = keys[j];
-	    				if (key == 'Produkt_ID' || key == 'Produkt' || key == 'Name' || key == 'Id' || key == 'ID' || key == 'Nr' || key == '00.'+sbs.selectedWeek) {
+	    				if (key == 'Produkt_ID' || key == 'Produkt' || key == 'Name' || key == 'Id' || key == 'ID' || key == 'Nr' || key == '00.'+sbs.selectedWeek || (key.startsWith && key.startsWith('00.'+sbs.selectedWeek))) {
 	    					sum[key] = key == 'Id' || key == 'ID' ? '' : 'SUMME';
 	    				} else if (row[key] && ! isNaN(row[key])) {
 	        				if (sum[key]) {
