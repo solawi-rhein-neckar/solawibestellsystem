@@ -137,3 +137,7 @@ div.fixedHeaderTable>table>tr:nth-child(1n+2)>td:first-child {
 div.hat_tausch {
   font-weight:bolder;
 }
+
+.hidden {
+	display: none;	
+}

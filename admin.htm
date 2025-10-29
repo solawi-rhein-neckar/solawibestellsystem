@@ -138,6 +138,9 @@ div.hat_tausch {
 .PivotDepotBestellung>tr:nth-child(2n)>td:nth-child(2n+1), .PivotSolawiBestellung>tr:nth-child(2n)>td:nth-child(2n+1){
 	background-color: var(--Farbe5);
 }
+.hidden {
+display:none;
+}
 
 </style>
 	<script src="js/util.js"></script>
@@ -162,6 +165,7 @@ div.hat_tausch {
         var SBTedit = SolawiTable(SBS, 'table', 'tablePath', true, false);
         var SBTview = SolawiTable(SBS, 'tableEdit', 'tableEditPath', false, false);
         SBTview.hideZeros = true;
+        SBTview.showSum = 'top';
         var SBTmeta = SolawiTable(SBS, 'table', 'tablePath', true, false, true);
         var SBTpunkte = SolawiTable(SBS, 'tablePunkte', 'tablePunktePath', false, false);
         SBTmeta.setSortBy('Name');

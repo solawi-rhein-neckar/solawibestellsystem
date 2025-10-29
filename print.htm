@@ -27,7 +27,12 @@
         getAjax('BenutzerView/MY', function(userResponse) {
             if (userResponse.length > 0) {
                 SBS.user = userResponse[0];
-                getAjax(document.location.hash.replace(/^#/, '') + "/" + SBS.selectedWeek, SBTview.showTable);
+				if (document.location.hash.indexOf('/Depot_ID/') > 0) {
+					var hashes = document.location.hash.replace(/^#/, '').split('/Depot_ID/');
+                	getAjax(hashes[0] + "/Woche/" + SBS.selectedWeek + "/Depot_ID/" + hashes[1], SBTview.showTable);
+				} else {
+                	getAjax(document.location.hash.replace(/^#/, '') + "/" + SBS.selectedWeek, SBTview.showTable);
+				}
             }
         });
     </script>

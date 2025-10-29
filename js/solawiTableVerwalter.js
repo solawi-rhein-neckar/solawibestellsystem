@@ -204,6 +204,13 @@ function SolawiTableVerwalter(pSbs, pSolawiTable) {
             button.innerText = 'liste';
             button.onclick = function() {getAjax('PivotDepotBestellung/Woche/'+sbs.selectedWeek+'/Depot_ID/'+row['ID'], window.SBTview.showTable);};
             tr.insertBefore(wtd, tr.childNodes[2]);
+            
+            var link = document.createElement("A");
+            link.innerText = 'print';
+            link.target = '_blank';
+            link.href = 'print.htm#PivotDepotBestellung/Depot_ID/'+row['ID'];
+            wtd.appendChild(link);
+
         }
     }
 

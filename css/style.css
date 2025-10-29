@@ -570,3 +570,7 @@ select.editor.inp_Produkt_ID {
       border: 2px solid darkgrey;
       padding: 7px 7px;
   }
+
+.hidden {
+	display: none;	
+}
