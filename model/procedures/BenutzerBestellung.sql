@@ -40,7 +40,7 @@ COLLATE utf8mb4_general_ci AS (
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
                  IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
                  IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, IFNULL(`BenutzerModulAbo`.`BezahltesModul`,0) - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
-                 	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
+                 	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), IF(Modul.ID = 4, 0, NULL), IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
                  	* ModulInhalt.Anzahl * IF(Modul.ID = 4, 0, Benutzer.Anteile)
              		* Modul.AnzahlProAnteil)
                  AS Gutschrift,
