@@ -64,7 +64,7 @@ SET @query = CONCAT('
    WHILE pYear != 2025 or pWoche != 27 DO
          IF pWoche = 53 THEN SET pWoche=1; SET pYear=pYear+1; END IF;
 
-         CALL BenutzerBestellung( CONCAT(pYear,IF(pWoche < 10, '.0', '.'), pWoche), FALSE);
+         CALL BenutzerBestellung( CONCAT(pYear,IF(pWoche < 10, '.0', '.'), pWoche), TRUE);
 
 		IF pYear = 2024 AND pWoche = 27 THEN   CREATE TEMPORARY TABLE IF NOT EXISTS GesamtBestellungenTemp  CHARACTER SET utf8mb4 AS (SELECT `Benutzer_ID`, `Benutzer`,`Depot_ID`,`Depot`,Modul,Produkt_ID,Produktname,Produkt,`Beschreibung`,`Einheit`,`Menge`,`Nr`,`Woche`,Kommentar,`Anzahl`,`AnzahlModul`,`AnzahlZusatz`,`Punkte`,Gutschrift,`Urlaub` FROM BenutzerBestellungenTemp); END IF;
 
