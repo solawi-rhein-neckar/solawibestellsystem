@@ -229,30 +229,31 @@ display:none;
 				<span id="selectedWeek" style="font-weight: bold;">00</span>
 				<button onclick="changeWeek(+1)">&gt;&gt;</button> <br />
 
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerView', SBTview.showTable);">AbosNächsteLieferung</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerModulAbo/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerModulAbo</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('ModulInhaltView/Woche/'+SBS.selectedWeek, SBTview.showTable);">ModulInhalt</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('BenutzerBestellungView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellung</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">DepotBestellungen</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">GesamtBestellungen</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotDepotBestellung/'+SBS.selectedWeek, SBTview.showTable);">PivotDepotBest.</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotSolawiBestellung/'+SBS.selectedWeek, SBTview.showTable);">PivotBestellung</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotGesamtBestellung/'+SBS.selectedWeek, SBTview.showTable);">Pivot_GESAMT_Bestellung</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();SBTview.hideZeros = false;getAjax('BenutzerView', SBTview.showTable);">AbosNächsteLieferung</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();SBTview.hideZeros = false;getAjax('BenutzerModulAbo/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerModulAbo</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();SBTview.hideZeros = false;getAjax('ModulInhaltView/Woche/'+SBS.selectedWeek, SBTview.showTable);">ModulInhalt</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();SBTview.hideZeros = false;getAjax('BenutzerBestellungView/Woche/'+SBS.selectedWeek, SBTview.showTable);">BenutzerBestellung</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();SBTview.hideZeros = false;getAjax('DepotBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">DepotBestellungen</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();SBTview.hideZeros = false;getAjax('GesamtBestellView/Woche/'+SBS.selectedWeek, SBTview.showTable);">GesamtBestellungen</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();SBTview.hideZeros = false;getAjax('PivotDepotBestellung/'+SBS.selectedWeek, SBTview.showTable);">PivotDepotBest.</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();SBTview.hideZeros = false;getAjax('PivotSolawiBestellung/'+SBS.selectedWeek, SBTview.showTable);">PivotBestellung</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();SBTview.hideZeros = false;getAjax('PivotGesamtBestellung/'+SBS.selectedWeek, SBTview.showTable);">Pivot_GESAMT_Bestellung</button>
 				<button	onclick="getAjax('PivotExportBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);">DOWNLOAD
 					Bestellungen</button> <a target="_blank" href="print.htm#PivotSolawiBestellung">Bestellung_Drucken</a>
 				<a target="_blank" href="print.htm#PivotDepotBestellung">DepotBest._Drucken</a>
 			</span> <span
 				style="display: inline-block; max-width: 42%; vertical-align: top;">
 				<b>Bearbeiten </b> <br />
-				<button	onclick="SBTview.reset();SBTedit.reset();getAjax('Depot', SBTmeta.showTable);">Depot</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('ID');getAjax('Modul', SBTedit.showTable);">Modul</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Produkt_ID');SBTedit.setSortBy('Modul_ID');getAjax('ModulInhalt', SBTedit.showTable);">ModulInhalt</button>
-				<button	onclick="SBTedit.reset();SBTmeta.reset();getAjax('PivotModulInhalt/'+SBS.selectedWeek, SBTview.showTable);">PivotModulInhalt</button>				<!--button onclick="SBS.reset();getAjax('ModulInhaltWoche', SBTedit.showTable);">ModulInhaltWoche</button-->
-				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('Nr');getAjax('Produkt', SBTedit.showTable);">Produkt</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Name');SBTedit.setSortBy('Name');getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Modul_ID');SBTedit.setSortBy('Benutzer_ID');getAjax('BenutzerModulAbo', SBTedit.showTable);">BenutzerModulAbo</button>
-				<button onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Benutzer_ID');SBTedit.setSortBy('Woche');getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">BenutzerZusatzBestellung</button>
-				<button	onclick="SBTview.reset();SBTmeta.reset();SBTedit.setSortBy('Benutzer_ID');SBTedit.setSortBy('Woche');getAjax('BenutzerUrlaub', SBTedit.showTable);">BenutzerUrlaub</button>
+				<button	onclick="SBTview.reset();SBTedit.reset();SBTview.hideZeros = true;getAjax('Depot', SBTmeta.showTable);">Depot</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTview.hideZeros = false;SBTedit.setSortBy('Name');SBTedit.setSortBy('ID');getAjax('Modul', SBTedit.showTable);">Modul</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTview.hideZeros = false;SBTedit.setSortBy('Produkt_ID');SBTedit.setSortBy('Modul_ID');getAjax('ModulInhalt', SBTedit.showTable);">ModulInhalt</button>
+				<button	onclick="SBTedit.reset();SBTmeta.reset();SBTview.hideZeros = false;getAjax('PivotModulInhalt/'+SBS.selectedWeek, SBTview.showTable);">PivotModulInhalt</button>				<!--button onclick="SBS.reset();getAjax('ModulInhaltWoche', SBTedit.showTable);">ModulInhaltWoche</button-->
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTview.hideZeros = false;SBTedit.setSortBy('Name');SBTedit.setSortBy('Nr');getAjax('Produkt', SBTedit.showTable);">Produkt</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTview.hideZeros = false;SBTedit.setSortBy('Name');SBTedit.setSortBy('Name');getAjax('Benutzer', SBTedit.showTable);">Benutzer</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTview.hideZeros = false;SBTedit.setSortBy('Modul_ID');SBTedit.setSortBy('Benutzer_ID');getAjax('BenutzerModulAbo', SBTedit.showTable);">BenutzerModulAbo</button>
+				<button onclick="SBTview.reset();SBTmeta.reset();SBTview.hideZeros = false;SBTedit.setSortBy('Benutzer_ID');SBTedit.setSortBy('Woche');getAjax('BenutzerZusatzBestellung', SBTedit.showTable);">BenutzerZusatzBestellung</button>
+				<button onclick="SBTview.reset();SBTmeta.reset();SBTview.hideZeros = false;SBTedit.setSortBy('Benutzer_ID');getAjax('BenutzerZusatzBestellung/Woche/'+SBS.selectedWeek, SBTedit.showTable);">BenutzerZusatzBestellungWoche</button>
+				<button	onclick="SBTview.reset();SBTmeta.reset();SBTview.hideZeros = false;SBTedit.setSortBy('Benutzer_ID');SBTedit.setSortBy('Woche');getAjax('BenutzerUrlaub', SBTedit.showTable);">BenutzerUrlaub</button>
 			</span>
 		</div>
 
