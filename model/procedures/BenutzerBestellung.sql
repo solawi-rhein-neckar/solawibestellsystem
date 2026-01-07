@@ -39,12 +39,13 @@ COLLATE utf8mb4_general_ci AS (
                  ModulInhalt.Produkt_ID,
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
                  IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
-                 IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, IFNULL(`BenutzerModulAbo`.`BezahltesModul`,0) - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
-                 	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), IF(Modul.ID = 4, 0, NULL), IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
-                 	* ModulInhalt.Anzahl * IF(Modul.ID = 4, 0, Benutzer.Anteile)
+                 /* sonderbehandlung fuer fleisch (id 4) deaktiviert ab 2026 durch angabe einer unrealistisch großen modul-id 44444 (an 2 stellen) die wir nie haben werden:*/
+                 IF(Modul.ID = 44444 and ModulInhalt.HauptProdukt, IFNULL(`BenutzerModulAbo`.`BezahltesModul`,0) - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
+                 	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), IF(Modul.ID = 44444, 0, NULL), IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
+                 	* ModulInhalt.Anzahl * IF(Modul.ID = 4 OR (`BenutzerModulAbo`.BezahltesModul != 0 AND `BenutzerModulAbo`.BezahltesModul != 1), /* 0 */ `BenutzerModulAbo`.BezahltesModul, Benutzer.Anteile)
              		* Modul.AnzahlProAnteil)
                  AS Gutschrift,
-                 `BenutzerModulAbo`.BezahltesModul OR Modul.ID = 4 as BezahltesModul,
+                 `BenutzerModulAbo`.BezahltesModul = 1 /*OR Modul.ID = 4 neu 2026: fleisch (und auch bezahltesModul = 0.5 oder bezahltesModul = 2 etc) gilt nie als bezahlt. Stattdessen wird bezahlte Menge gutgeschrieben (siehe oben)*/ AND Modul.ID != 4 as BezahltesModul,
                  pWoche AS `Woche`
              FROM `Modul`
              JOIN Benutzer
