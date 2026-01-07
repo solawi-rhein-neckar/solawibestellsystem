@@ -116,7 +116,7 @@ Date.prototype.getWeekYear = function() {
 function weekToDate(yearWeekSeparatedByDot, dayOfWeek) {
     var year = Math.floor(yearWeekSeparatedByDot);
     var week = (yearWeekSeparatedByDot - year) * 100;
-    var date = new Date(year, 0, 4, 12, 0, 0);
+    var date = new Date(year, 0, 3, 12, 0, 0);
     return new Date(date.getTime() + ((week-1) * 86400000 * 7) + ((dayOfWeek - date.getDay()) * 86400000));
 }
 
