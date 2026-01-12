@@ -187,8 +187,12 @@ display:none;
 
         function changeWeek(count) {
             SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
-            setContent('selectedWeek', SBS.selectedWeek);
-            setContent('selectedWeek0', SBS.selectedWeek);
+            setHtmlContent('selectedWeek', SBS.selectedWeek+ '<span style="font-weight:normal"> ('
+					+ weekToDate(SBS.selectedWeek, 4).toLocaleDateString()
+					+ ')</span>');
+            setHtmlContent('selectedWeek0', SBS.selectedWeek+ '<span style="font-weight:normal"> ('
+					+ weekToDate(SBS.selectedWeek, 4).toLocaleDateString()
+					+ ')</span>');
             if (SBTview.getTableName() && SBTview.getTablePath()) {
                 if (SBTview.getTablePath().match(/PivotDepotBestellung.Woche.[0-9.]+.Depot_ID.[0-9]+/)) {
                     getAjax(SBTview.getTablePath().replace(/Woche.[0-9.]+/, 'Woche/'+SBS.selectedWeek), SBTview.showTable);

@@ -143,8 +143,10 @@ document.write('<div id="blockui_post" \
 		</form> \
 		<br /> \
 		<br /> \
-		<a style="padding-left: 20px;" href="index.htm">Zurück zur Startseite</a><br /> \
-	</div> \
+		<a style="padding-left: 20px;" href="index.htm">Zurück zur Startseite</a><br /><br /><br /><br /> \
+		'+
+		(document.location.href.indexOf('members.htm') > 0 ? '<a style="padding-left: 20px;font-size:13px;" href="admin.htm">zur Admin-Seite</a>' : document.location.href.indexOf('admin.htm') > 0 ? '<a style="padding-left: 20px;font-size:13px;" href="members.htm">zur Mitgliederverwaltung</a>' : '')
+		+'</div> \
   \
 	<div id="warning" style="color: red"></div> \
 ');
