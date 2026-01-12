@@ -31,7 +31,8 @@ BEGIN
        sum(IFNULL(b.Gutschrift,0)) - GREATEST(0, sum(b.Punkte))
        + IF(pWoche < Benutzer.AnteileStartWoche, Benutzer.PunkteStart,
             IFNULL((Select t.Total FROM BenutzerPunkteTemp2 as t Where t.Benutzer_ID = b.Benutzer_ID),0)  )
-     FROM `BenutzerBestellungenTemp` as b JOIN Benutzer ON Benutzer.ID = Benutzer_ID
+     FROM (SELECT Benutzer_ID, Benutzer, GREATEST(0, sum(Punkte)) as Punkte, max(IFNULL(Gutschrift,0)) + SUM(IFNULL(BezahltePunkte,0)) as Gutschrift FROM `BenutzerBestellungenTemp` GROUP BY `Benutzer_ID`,`Benutzer`,IFNuLL(Produkt,Modul)) as b
+     JOIN Benutzer ON Benutzer.ID = Benutzer_ID
      WHERE `pBenutzer` IS NULL OR `pBenutzer` = b.Benutzer_ID
      Group by b.Benutzer_ID;TRUNCATE BenutzerPunkteTemp2;
      INSERT INTO BenutzerPunkteTemp2 SELECT * FROM BenutzerPunkteTemp WHERE Woche = pWoche;SET day = date_add(day, interval 7 day);END WHILE;UPDATE Benutzer SET PunkteStand = (Select Total FROM BenutzerPunkteTemp Where Woche = pWoche And BenutzerPunkteTemp.Benutzer_ID = Benutzer.ID),

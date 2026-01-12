@@ -27,8 +27,10 @@ COLLATE utf8mb4_general_ci AS (
    ( CASE WHEN NOT ISNULL(`BenutzerUrlaub`.`ID`) THEN 0 WHEN pInhalt = TRUE THEN `u`.`Lieferzahl` ELSE `u`.`Anzahl` END ) AS `Anzahl`,
    CASE WHEN(`u`.`Quelle` = 1) THEN `u`.`Anzahl` ELSE 0 END AS `AnzahlModul`,
    CASE WHEN(`u`.`Quelle` = 2) THEN `u`.`Anzahl` ELSE 0 END AS `AnzahlZusatz`,
-   case when (`u`.`BezahltesModul` = 0) then (`u`.`Lieferzahl` * `Produkt`.`Punkte`) else 0 end AS `Punkte`,
+/*   case when (`u`.`BezahltesModul` = 0) then (`u`.`Lieferzahl` * `Produkt`.`Punkte`) else 0 end AS `Punkte`,*/
+   `u`.`Lieferzahl` * `Produkt`.`Punkte` AS `Punkte`,
    `u`.`Gutschrift` * `Produkt`.`Punkte` AS Gutschrift,
+   `u`.`BezahltesModul` * `Produkt`.`Punkte` AS BezahltePunkte,
    ( `BenutzerUrlaub`.`ID` IS NOT NULL ) AS `Urlaub`
    FROM (
            (SELECT
@@ -39,13 +41,17 @@ COLLATE utf8mb4_general_ci AS (
                  ModulInhalt.Produkt_ID,
                  ( IFNULL(`BenutzerModulAbo`.`Anzahl`,0) ) AS `Anzahl`,
                  IFNULL(`BenutzerModulAbo`.`Anzahl`,0) * IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))  * ModulInhalt.Anzahl AS Lieferzahl,
-                 /* sonderbehandlung fuer fleisch (id 4) deaktiviert ab 2026 durch angabe einer unrealistisch großen modul-id 44444 (an 2 stellen) die wir nie haben werden:*/
-                 IF(Modul.ID = 44444 and ModulInhalt.HauptProdukt, IFNULL(`BenutzerModulAbo`.`BezahltesModul`,0) - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
-                 	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), IF(Modul.ID = 44444, 0, NULL), IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
-                 	* ModulInhalt.Anzahl * IF(Modul.ID = 4 OR (`BenutzerModulAbo`.BezahltesModul != 0 AND `BenutzerModulAbo`.BezahltesModul != 1), /* 0 */ `BenutzerModulAbo`.BezahltesModul, Benutzer.Anteile)
+                 /* vor 2026 war BezahltesModul ein Boolean, keine Anzahl. Außerdem Sonderbehandlung für Fleisch (Modul.ID = 4). Ab 2026 ist BezahltesModul eine Anzahl. Muss daher als Separate Spalte ausgegeben werden, da Gutschrift -> Max (nicht pro Abo) während BezahltePunke -> Sum (wie Punkte)
+                  * IF(Modul.ID = 4 and ModulInhalt.HauptProdukt, IFNULL(`BenutzerModulAbo`.`BezahltesModul`,0) - IFNULL(`BenutzerModulAbo`.`Anzahl`,0), 0) +
+                 	(IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), IF(Modul.ID = 4, 0, NULL), IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
+                 	* ModulInhalt.Anzahl * IF(Modul.ID = 4, 0, Benutzer.Anteile)
              		* Modul.AnzahlProAnteil)
                  AS Gutschrift,
-                 `BenutzerModulAbo`.BezahltesModul = 1 /*OR Modul.ID = 4 neu 2026: fleisch (und auch bezahltesModul = 0.5 oder bezahltesModul = 2 etc) gilt nie als bezahlt. Stattdessen wird bezahlte Menge gutgeschrieben (siehe oben)*/ AND Modul.ID != 4 as BezahltesModul,
+                 `BenutzerModulAbo`.BezahltesModul OR Modul.ID = 4 as BezahltesModul,*/
+                 IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
+                 	* ModulInhalt.Anzahl * Benutzer.Anteile * Modul.AnzahlProAnteil AS Gutschrift,
+                 IF(ISNULL(ModulInhaltWoche.Anzahl) AND ISNULL(ModulInhaltDepot.Anzahl), NULL, IFNULL(ModulInhaltWoche.Anzahl,0) + IFNULL(ModulInhaltDepot.Anzahl, 0))
+                    * IFNULL(`BenutzerModulAbo`.`BezahltesModul`,0) AS BezahltesModul,
                  pWoche AS `Woche`
              FROM `Modul`
              JOIN Benutzer

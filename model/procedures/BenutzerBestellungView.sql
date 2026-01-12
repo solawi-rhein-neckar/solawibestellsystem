@@ -29,8 +29,8 @@ SELECT
    SUM( AnzahlModul ) AS `AnzahlModul`,
    SUM( `AnzahlZusatz` ) AS `AnzahlZusatz`,
    GREATEST(0, sum(Punkte)) AS `Punkte`,
-   MAX(IFNULL(Gutschrift,0)) as `Gutschrift`,
-   MAX(IFNULL(Gutschrift,0)) - GREATEST(0, sum(Punkte)) as `Saldo`,
+   MAX(IFNULL(Gutschrift,0)) + SUM(IFNULL(BezahltePunkte,0)) as `Gutschrift`,
+   MAX(IFNULL(Gutschrift,0)) + SUM(IFNULL(BezahltePunkte,0)) - GREATEST(0, sum(Punkte)) as `Saldo`,
     `Urlaub`
 
 FROM `BenutzerBestellungenTemp`
@@ -42,7 +42,7 @@ GROUP BY `Benutzer_ID`,
    `Benutzer`,
    `Depot_ID`,
    `Depot`,
-   IFNuLL(Produkt,Modul),
+   IFNULL(Produkt,Modul),
    `Woche`,
    `Urlaub`
 order by benutzer_ID, modul, produkt;
