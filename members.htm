@@ -250,7 +250,9 @@ input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche { pointer-events: no
 
         function changeWeek(count) {
             SBS.selectedWeek = addWeek(SBS.selectedWeek, count);
-            setHtmlContent('selectedWeek0', '<span title="weekToDate(SBS.selectedWeek, 4).toLocaleDateString()">' +  SBS.selectedWeek + '</span>');
+            setHtmlContent('selectedWeek0', '<span title="weekToDate(SBS.selectedWeek, 4).toLocaleDateString()">' +  SBS.selectedWeek + '</span>'+ '<span style="font-weight:normal"> ('
+					+ weekToDate(SBS.selectedWeek, 4).toLocaleDateString()
+					+ ')</span>');
             if (SBTview.getTableName() && SBTview.getTablePath()) {
                 if (SBTview.getTablePath().match(/PivotDepotBestellung.Woche.[0-9.]+.Depot_ID.[0-9]+/)) {
                     getAjax(SBTview.getTablePath().replace(/Woche.[0-9.]+/, 'Woche/'+SBS.selectedWeek), SBTview.showTable) ;
