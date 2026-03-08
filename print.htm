@@ -30,6 +30,9 @@
 				if (document.location.hash.indexOf('/Depot_ID/') > 0) {
 					var hashes = document.location.hash.replace(/^#/, '').split('/Depot_ID/');
                 	getAjax(hashes[0] + "/Woche/" + SBS.selectedWeek + "/Depot_ID/" + hashes[1], SBTview.showTable);
+				} else if (document.location.hash.indexOf('/Woche/') > 0) {
+   					var hashes = document.location.hash.replace(/^#/, '').split('/Woche/');
+                   	getAjax(hashes[0] + "/" + hashes[1], SBTview.showTable);
 				} else {
                 	getAjax(document.location.hash.replace(/^#/, '') + "/" + SBS.selectedWeek, SBTview.showTable);
 				}

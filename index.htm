@@ -558,7 +558,7 @@
 				<li><a href="#"
 					onclick="getAjax('PivotExportBestellung/'+SBS.selectedWeek, downloadDepotbestellungen);event.preventDefault();return false;">
 						Download als Exceltabelle </a> <br></li>
-				<li><a target="_blank" href="print.htm#PivotDepotBestellung">Bestellübersicht
+				<li><a target="_blank" href="print.htm#PivotDepotBestellung" onclick="event.target.href='print.htm#PivotDepotBestellung/Woche/'+SBS.selectedWeek;">Bestellübersicht
 						Depot</a><br></li>
 				<li style="display: none;" id="onlyDepotManageLink2"><a
 					href="members.htm">Depotverwaltung_NEU</a></li>

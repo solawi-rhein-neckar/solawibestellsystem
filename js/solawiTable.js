@@ -191,7 +191,7 @@ inp.style.width='40px';
             div.appendChild(inp);
 
         } else {
-            div.innerText = value === undefined || value === null || value === '' ? '-' : pub.hideZeros && (value === 0 || value === '0' || value === '0.0') ? '' : value;
+            div.innerText = value === undefined || value === null || value === '' ? '-' : pub.hideZeros && (value === 0 || value === '0' || value === '0.0') ? '' : key === 'Punkte' && value != '0' ? ('-' + value) : value;
         }
 
 
@@ -273,7 +273,7 @@ inp.style.width='40px';
     			if ((keys && keys.length && row[keys[0]]) || pub.columns && pub.columns.length && row[pub.columns[0].replace(' ', '')] ) {
 	    			for (var j = 0; j < keys.length; j++) {
 	    				var key = keys[j];
-	    				if (key == 'Produkt_ID' || key == 'Produkt' || key == 'Name' || key == 'Id' || key == 'ID' || key == 'Nr' || key == '00.'+sbs.selectedWeek || (key.startsWith && key.startsWith('00.'+sbs.selectedWeek))) {
+	    				if (key == 'Produkt_ID' || key == 'Produkt' || key == 'Name' || key == 'Id' || key == 'ID' || key == 'Nr' || key == '00.'+sbs.selectedWeek || (key.startsWith && key.startsWith('00.20'))) {
 	    					sum[key] = key == 'Id' || key == 'ID' ? '' : 'SUMME';
 	    				} else if (row[key] && ! isNaN(row[key])) {
 	        				if (sum[key]) {

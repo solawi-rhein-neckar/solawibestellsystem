@@ -63,7 +63,7 @@ use constant {
 my $q = CGI::Simple->new;
 
 # get database handle
-my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=mysql", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8mb4 => 1 });
+my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=mysql", "db208674_361", "9JCuiss8cPza8bH",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8mb4 => 1 });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
 	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
@@ -196,6 +196,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					$sth->execute($id, $id);
 				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column =~ /^Bis$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `EndWoche` >= ?");
+					$sth->execute($id);
+				} elsif ( $table =~ /^BenutzerZusatzBestellung$/ ) {
+					$sth = $dbh->prepare("SELECT *, (SELECT Depot_ID FROM Benutzer WHERE Benutzer.ID = Benutzer_ID) as Depot_ID FROM `$table` WHERE `$column` >= ?");
 					$sth->execute($id);
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ?");
