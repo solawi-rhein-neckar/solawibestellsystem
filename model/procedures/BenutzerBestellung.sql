@@ -28,7 +28,7 @@ COLLATE utf8mb4_general_ci AS (
    CASE WHEN(`u`.`Quelle` = 1) THEN `u`.`Anzahl` ELSE 0 END AS `AnzahlModul`,
    CASE WHEN(`u`.`Quelle` = 2) THEN `u`.`Anzahl` ELSE 0 END AS `AnzahlZusatz`,
 /*   case when (`u`.`BezahltesModul` = 0) then (`u`.`Lieferzahl` * `Produkt`.`Punkte`) else 0 end AS `Punkte`,*/
-   `u`.`Lieferzahl` * `Produkt`.`Punkte` AS `Punkte`,
+   ( CASE WHEN NOT ISNULL(`BenutzerUrlaub`.`ID`) THEN 0 ELSE `u`.`Lieferzahl` END ) * `Produkt`.`Punkte` AS `Punkte`,
    `u`.`Gutschrift` * `Produkt`.`Punkte` AS Gutschrift,
    `u`.`BezahltesModul` * `Produkt`.`Punkte` AS BezahltePunkte,
    ( `BenutzerUrlaub`.`ID` IS NOT NULL ) AS `Urlaub`
