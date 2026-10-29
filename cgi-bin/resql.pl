@@ -138,7 +138,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( $table =~ /^BenutzerPunkteUpdate$/ ||  $table =~ /^BenutzerPunkte$/) {
 					$dbh->{AutoCommit} = 1;
 					$sth = $dbh->prepare("CALL $table(?)");
-					$sth->execute($user->{Role_ID} <= R_USER ? $user->{ID} : $id == 'null' || $id == 'NULL' ? undef : $id);
+					$sth->execute($user->{Role_ID} <= R_USER ? $user->{ID} : $id eq 'null' || $id eq 'NULL' ? undef : $id);
 				} elsif ( $user->{Role_ID} <= R_USER && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `ID` = ? AND `Benutzer_ID` = ?");
 					$sth->execute($id, $user->{ID});
@@ -184,7 +184,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 					$sth->execute($id,undef,$user->{Depot_ID});
 				} elsif ( $table =~ /^BenutzerPunkteView$/ ||  $table =~ /^BenutzerPunkte$/) {
 					$sth = $dbh->prepare("CALL $table(?, ?)");
-					$sth->execute($user->{Role_ID} <= R_USER ? $user->{ID} : $id == 'null' || $id == 'NULL' ? undef : $id, $column);
+					$sth->execute($user->{Role_ID} <= R_USER ? $user->{ID} : $id eq 'null' || $id eq 'NULL' ? undef : $id, $column);
 				} elsif ( ($user->{Role_ID} == R_DEPOT) && $table =~ /.*Benutzer.*/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `Benutzer_ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
 					$sth->execute($id, $user->{Depot_ID});
@@ -197,6 +197,9 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( $table =~ /^BenutzerModulAbo$/ && $column =~ /^Bis$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `EndWoche` >= ?");
 					$sth->execute($id);
+				} elsif ( $table =~ /^BenutzerZusatzBestellung$/ ) {
+					$sth = $dbh->prepare("SELECT *, (SELECT Depot_ID FROM Benutzer WHERE Benutzer.ID = Benutzer_ID) as Depot_ID FROM `$table` WHERE `$column` = ?");
+					$sth->execute($id);
 				} else {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ?");
 					$sth->execute($id);
@@ -205,14 +208,14 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			} elsif ( $q->path_info =~ /^\/([a-zA-Z]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)$/ ) {
 				my $table = $1;
 				my $column = $2;
-				my $id = $column == 'Benutzer_ID' && $3 == 'MY' ? $user->{ID} : $3;
+				my $id = $column eq 'Benutzer_ID' && $3 eq 'MY' ? $user->{ID} : $3;
 				my $column2 = $4;
 				my $id2 = $5;
 
 				if ( $user->{Role_ID} <= R_USER && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `ID` = ?");
 					$sth->execute($id, $id2, $user->{ID});
-				} elsif ( $user->{Role_ID} <= R_USER && $table =~ /^BenutzerBestellungView$/ && $column2 == 'Woche' && $column == 'Benutzer_ID') {
+				} elsif ( $user->{Role_ID} <= R_USER && $table =~ /^BenutzerBestellungView$/ && $column2 eq 'Woche' && $column eq 'Benutzer_ID') {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id2,$user->{ID},undef);
 				} elsif ( $user->{Role_ID} <= R_USER && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
@@ -227,10 +230,10 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 				} elsif ( ($user->{Role_ID} == R_DEPOT) && $table =~ /^Benutzer(View)?$/ ) {
 					$sth = $dbh->prepare("SELECT * FROM `$table` WHERE `$column` = ? AND `$column2` = ? AND `ID` in ( SELECT ID FROM Benutzer WHERE Depot_ID = ?)");
 					$sth->execute($id, $id2, $user->{Depot_ID});
-				} elsif ( $user->{Role_ID} >= R_DEPOT && $table =~ /^BenutzerBestellungView$/ && $column2 == 'Woche' && $column == 'Benutzer_ID') {
+				} elsif ( $user->{Role_ID} >= R_DEPOT && $table =~ /^BenutzerBestellungView$/ && $column2 eq 'Woche' && $column eq 'Benutzer_ID') {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id2,$id,undef);
-				} elsif ( $user->{Role_ID} >= R_DEPOT && $table =~ /^BenutzerBestellungView$/ && $column2 == 'Woche' && $column == 'Depot_ID') {
+				} elsif ( $user->{Role_ID} >= R_DEPOT && $table =~ /^BenutzerBestellungView$/ && $column2 eq 'Woche' && $column eq 'Depot_ID') {
 					$sth = $dbh->prepare("CALL $table(?,?,?)");
 					$sth->execute($id2,undef,$id);
 				} elsif ( $user->{Role_ID} == R_DEPOT && $table =~ /^BenutzerModulAbo$/ && $column2 =~ /^Woche$/ ) {
@@ -258,7 +261,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			} elsif ( $q->path_info =~ /^\/([a-zA-Z]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)$/ ) {
 				my $table = $1;
 				my $column = $2;
-				my $id = $column == 'Benutzer_ID' && $3 == 'MY' ? $user->{ID} : $3;
+				my $id = $column eq 'Benutzer_ID' && $3 eq 'MY' ? $user->{ID} : $3;
 				my $column2 = $4;
 				my $id2 = $5;
 				my $column3 = $6;
@@ -503,7 +506,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			} elsif ( $q->path_info =~ /^\/([a-zA-Z]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)$/ ) {
 				my $table = $1;
 				my $column = $2;
-				my $id = $column == 'Benutzer_ID' && $3 == 'MY' ? $user->{ID} : $3;
+				my $id = $column eq 'Benutzer_ID' && $3 eq 'MY' ? $user->{ID} : $3;
 				my $column2 = $4;
 				my $id2 = $5;
 
@@ -528,7 +531,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			} elsif ( $q->path_info =~ /^\/([a-zA-Z]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)$/ ) {
 				my $table = $1;
 				my $column = $2;
-				my $id = $column == 'Benutzer_ID' && $3 == 'MY' ? $user->{ID} : $3;
+				my $id = $column eq 'Benutzer_ID' && $3 eq 'MY' ? $user->{ID} : $3;
 				my $column2 = $4;
 				my $id2 = $5;
 				my $column3 = $6;
@@ -555,7 +558,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 			} elsif ( $q->path_info =~ /^\/([a-zA-Z]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)\/([a-zA-Z0-9_]+)\/([a-zA-Z0-9_.-]+)$/ ) {
 				my $table = $1;
 				my $column = $2;
-				my $id = $column == 'Benutzer_ID' && $3 == 'MY' ? $user->{ID} : $3;
+				my $id = $column eq 'Benutzer_ID' && $3 eq 'MY' ? $user->{ID} : $3;
 				my $column2 = $4;
 				my $id2 = $5;
 				my $column3 = $6;
