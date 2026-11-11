@@ -52,6 +52,8 @@ use POSIX qw(strftime);
 
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!!: displays (non-syntax) errors and warning in html
 
+use SolawiSitzung; # Sitzungen je Gerät, Anmeldung über die Website (Mail-Link)
+
 use constant {
     R_PROD   => 1,
     R_USER   => 2,
@@ -94,11 +96,13 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	# user does not want to login -> check if logged in (sessionid cookie)
 	my %cookies = CGI::Simple::Cookie->fetch;
 	my $bc = $cookies{'sessionid'} ? $cookies{'sessionid'}->value : undef;
-	$bc = undef unless defined $bc && $bc =~ /^[0-9][0-9.e-]{7,40}$/; # nur IDs aus rand(): ein leerer Wert traf sonst jedes leere Benutzer.Cookie
-	my $stbc = $dbh->prepare("SELECT * FROM `Benutzer` WHERE `Cookie` = ?");
-	$stbc->execute($bc);
+	my $user = SolawiSitzung::benutzer($dbh, $bc); # BenutzerSitzung (one row per device) or, old login, Benutzer.Cookie
         $dbh->prepare("SET NAMES utf8mb4")->execute();
-	if ( my $user = $stbc->fetchrow_hashref ) { # is logged in: sessionid cookie verified
+	if ( $user && !SolawiSitzung::tabelle_erlaubt($user, $q->request_method(), $q->path_info) ) {
+		# BenutzerSitzung never, BenutzerZugang (mail addresses) below Role 4 only own rows (GET .../MY or .../OWN)
+		print encode_json({result => 0, reason => "no access right " . $q->path_info});
+
+	} elsif ( $user ) { # is logged in: sessionid cookie verified
 
 		if ( $q->request_method() =~ /^GET$/ ) {
 

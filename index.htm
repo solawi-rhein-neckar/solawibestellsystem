@@ -14,6 +14,7 @@
 <script src="js/solawiTableEditor.js"></script>
 <script src="js/solawiTable.js"></script>
 <script src="js/solawiTableOnClick.js"></script>
+<script src="js/anmeldung.js"></script>
 
 <script src="lib/exceljs.min.js"></script>
 <script type="text/javascript" src="lib/FileSaver.min.js"></script>
@@ -181,9 +182,11 @@
 								.addTo(document.getElementById('tableUrlaub'));
 
 					} else {
-						show('loginform');
-						hide('logoutbtn');
-						hide('content');
+						solawiAnmeldung.versuchen(function() { // erst die Anmeldung der Website übernehmen (Mail-Link)
+							show('loginform');
+							hide('logoutbtn');
+							hide('content');
+						});
 					}
 				});
 
@@ -299,7 +302,7 @@
 	<div id="logoutfrombg"></div>
 	<div id="logoutform">
 		<button id="logoutbtn"
-			onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('content');">Abmelden</button>
+			onclick="solawiAnmeldung.abmelden(function(){show('loginform'); hide('logoutbtn');hide('content');});">Abmelden</button>
 		<div id="messages"></div>
 	</div>
 
@@ -308,7 +311,12 @@
 			action='/cgi-bin/wp.php/login'>
 			<img style="width: 200px; margin-bottom: 2em;"
 				src="img/solawi-logo.png"
-				alt="Logo Solawi"> <input type='text' id='inpName' name='name'
+				alt="Logo Solawi">
+				<a class="loginbutton maillink" href="/anmelden/?ziel=bestellung/index.htm"
+					onclick="this.href = solawiAnmeldung.link();">Anmelden mit Mail-Link</a>
+				<p class="message hinweis">Mailadresse eingeben, Link aus der Mail anklicken, fertig. Oder wie bisher mit Benutzername und Passwort:</p>
+				<div class="message" id="anmeldungMehrdeutig">Deine Mailadresse gehört zu mehr als einem Anteil. Bitte schreib kurz an die AG Bestellsystem, dann ordnen wir sie richtig zu.</div>
+				<input type='text' id='inpName' name='name'
 				placeholder='Name' /> <br /> <input type='password' id='inpPass'
 				name='password' placeholder='Passwort' /> <br /> <input
 				class="loginbutton" type='submit' value='Anmelden'

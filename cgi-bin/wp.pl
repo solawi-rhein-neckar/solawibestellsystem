@@ -19,6 +19,7 @@ use Encode;
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!!: displays (non-syntax) errors and warning in html
 
 use Authen::Passphrase::PHPass;
+use SolawiSitzung; # Sitzungen je Gerät, Anmeldung über die Website (Mail-Link)
 
 my $q = CGI::Simple->new;
 
@@ -31,8 +32,48 @@ if ( $q->request_method() =~ /^OPTIONS/ ) {
 }
 
 
+# user is logged in on the website (mail link, cookie mg_s) -> take over that login, no password, no second mail
+if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/web\/?$/ ) {
+
+	my %kopf = ('Cache-Control' => 'no-store', "content-type" => "application/json");
+	if (!SolawiSitzung::herkunft_ok()) {
+		print $q->header({%kopf, status => '403 Forbidden'});
+		print encode_json({result => "forbidden", match => -1});
+	} else {
+		my $login = SolawiSitzung::login_web($dbh, $dbh2);
+		if ($login && $login->{benutzer}) {
+			print $q->header({%kopf, cookie => [SolawiSitzung::cookie_kopf($SolawiSitzung::COOKIE, $login->{id}, $login->{sekunden})]});
+			print encode_json({result => "success", match => 1, user => $login->{benutzer}->{Name}});
+		} elsif ($login && $login->{fehler}) {
+			print $q->header(\%kopf);
+			print encode_json({result => $login->{fehler}, match => -1});
+		} else {
+			print $q->header(\%kopf);
+			print encode_json({result => "not logged in on website", match => -1});
+		}
+	}
+
+# logout: this device only (other devices stay logged in), and on the website too (else login/web would log in again)
+} elsif ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/logout\/?$/ ) {
+
+	my %kopf = ('Cache-Control' => 'no-store', "content-type" => "application/json");
+	if (!SolawiSitzung::herkunft_ok()) {
+		print $q->header({%kopf, status => '403 Forbidden'});
+		print encode_json({result => "forbidden"});
+	} else {
+		my %cookies = CGI::Simple::Cookie->fetch;
+		SolawiSitzung::beenden($dbh, $cookies{'sessionid'} ? $cookies{'sessionid'}->value : undef);
+		SolawiSitzung::logout_web();
+		print $q->header({%kopf, cookie => [
+			SolawiSitzung::cookie_kopf($SolawiSitzung::COOKIE, '', -1),
+			SolawiSitzung::cookie_kopf($SolawiSitzung::WEB_COOKIE, '', -1),
+			SolawiSitzung::cookie_kopf($SolawiSitzung::WEB_COOKIE, '', -1, '/mitglieder/'),
+		]});
+		print encode_json({result => "success"});
+	}
+
 # user wants to login?
-if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
+} elsif ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 
 	my $sessionid = rand();
 	my $body = decode_json($q->param( 'POSTDATA' ));
@@ -72,10 +113,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	# user does not want to login -> check if logged in (sessionid cookie)
 	my %cookies = CGI::Simple::Cookie->fetch;
 	my $bc = $cookies{'sessionid'} ? $cookies{'sessionid'}->value : undef;
-	$bc = undef unless defined $bc && $bc =~ /^[0-9][0-9.e-]{7,40}$/; # nur IDs aus rand(): ein leerer Wert traf sonst jedes leere Benutzer.Cookie
-	my $stbc = $dbh->prepare("SELECT * FROM `Benutzer` WHERE `Cookie` = ?");
-	$stbc->execute($bc);
-	if ( my $user = $stbc->fetchrow_hashref ) { # is logged in: sessionid cookie verified
+	if ( my $user = SolawiSitzung::benutzer($dbh, $bc) ) { # is logged in: sessionid cookie verified (BenutzerSitzung or, old login, Benutzer.Cookie)
 		if ($user->{Role_ID} >= 4 && $q->request_method() =~ /^GET$/ ) {
 
 			if ( $q->path_info =~ /^\/syncUsers$/ ) {
