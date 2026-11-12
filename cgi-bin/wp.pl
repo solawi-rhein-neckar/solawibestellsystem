@@ -72,6 +72,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	# user does not want to login -> check if logged in (sessionid cookie)
 	my %cookies = CGI::Simple::Cookie->fetch;
 	my $bc = $cookies{'sessionid'} ? $cookies{'sessionid'}->value : undef;
+	$bc = undef unless defined $bc && $bc =~ /^[0-9][0-9.e-]{7,40}$/; # nur IDs aus rand(): ein leerer Wert traf sonst jedes leere Benutzer.Cookie
 	my $stbc = $dbh->prepare("SELECT * FROM `Benutzer` WHERE `Cookie` = ?");
 	$stbc->execute($bc);
 	if ( my $user = $stbc->fetchrow_hashref ) { # is logged in: sessionid cookie verified
