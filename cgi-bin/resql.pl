@@ -82,7 +82,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	my $pw = (defined $body->{password} && !ref($body->{password})) ? "$body->{password}" : '';
 	my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE `Name` = ? AND BINARY `Passwort` = BINARY ? AND TRIM(`Passwort`) <> ''");
 	$stl->execute($sessionid, $body->{name}, $pw) if $pw =~ /\S/;
-	my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
+	my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid, -path=>'/', -secure=>1, -httponly=>1, -samesite=>'Lax' ); # wie die neuen Sitzungen; Abmelden geht über wp.php/logout
 
 	# print http header with cookies
 	print $q->header( {'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',cookie => [$cookie], "content-type" => "application/json"} );

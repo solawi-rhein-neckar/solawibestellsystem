@@ -122,6 +122,7 @@ sub ersetze {
 my $dsn = sub { my ($name) = ($& =~ /database=(\w+)/); qq{DBI->connect("DBI:mysql:database=$name;mysql_socket=$SOCK", "root", ""} };
 ersetze("$CGI/wp.pl", qr/DBI->connect\("DBI:mysql:database=\w+;host=mysql", "\w+", "[^"]*"/, $dsn, 2);
 ersetze("$CGI/resql.pl", qr/DBI->connect\("DBI:mysql:database=\w+;host=mysql", "\w+", "[^"]*"/, $dsn, 1);
+ersetze("$CGI/createProcedures.pl", qr/DBI->connect\("DBI:mysql:database=\w+;host=mysql", "\w+", "[^"]*"/, $dsn, 1);
 ersetze("$CGI/SolawiSitzung.pm", qr/our \$PHP\s*=\s*'[^']*';/, sub { "our \$PHP = '$PHP';" }, 1);
 ersetze("$CGI/SolawiSitzung.pm", qr/our \$BRUECKE\s*=\s*'[^']*';/, sub { "our \$BRUECKE = \$ENV{TEST_BRUECKE} || '$ATTRAPPE';" }, 1);
 
@@ -323,6 +324,11 @@ $r = cgi(skript => 'wp', methode => 'POST', pfad => '/login', body => { name => 
 is($r->{json}{result}, 'success', 'wp.pl Passwort-Login: success');
 my $alt = cookie_aus($r, 'sessionid');
 like($alt // '', qr/^0\.\d+/, 'alte Sitzung (rand()) in Benutzer.Cookie');
+my ($alt_kopf) = grep { /^sessionid=/ } @{ $r->{cookies} };
+like($alt_kopf // '', qr/;\s*path=\/(;|$)/i, 'Cookie des Passwort-Logins: Path=/');
+like($alt_kopf // '', qr/;\s*secure(;|$)/i, '… Secure');
+like($alt_kopf // '', qr/;\s*HttpOnly(;|$)/i, '… HttpOnly (Abmelden geht über /logout)');
+like($alt_kopf // '', qr/;\s*SameSite=Lax(;|$)/i, '… SameSite=Lax');
 is(name_von(eigene($alt)), 'Anna Test', 'resql mit alter Sitzung: Anna');
 is(name_von(eigene($sid5)), 'Anna Test', 'neue Sitzungen gelten daneben weiter');
 $r = cgi(skript => 'wp', methode => 'POST', pfad => '/login', body => { name => 'Anna_Test', password => 'falsch' });
@@ -330,6 +336,36 @@ is($r->{json}{result}, 'wrong pw', 'falsches Passwort: wrong pw');
 $r = cgi(skript => 'wp', methode => 'POST', pfad => '/logout', body => {}, cookies => { sessionid => $alt });
 is(zeilen("SELECT Cookie FROM Benutzer WHERE ID = 1"), '', 'logout mit alter Sitzung leert Benutzer.Cookie');
 like(eigene($alt)->{json}{reason} // '', qr/not authenticated/, 'und sie gilt nicht mehr');
+
+note('9b Leere Sitzungs-IDs und Passwort-Login über resql.pl');
+# Benutzer.Cookie ist jetzt bei allen leer (nie angemeldet bzw. abgemeldet). Der Parser liefert für "&" einen leeren
+# Wert, für "+" ein Leerzeichen; MySQL vergleicht ' ' und '' als gleich.
+foreach my $w ('&', '+', '%20', '%C2%AD', '0') {
+	like(eigene($w)->{json}{reason} // '', qr/not authenticated/, "Cookie sessionid=$w: abgewiesen");
+}
+$r = cgi(skript => 'resql', methode => 'POST', pfad => '/login', body => { name => 'Carla Orga', password => '' });
+is($r->{json}{result}, 0, 'resql /login mit leerem Passwort (Benutzer.Passwort leer): 0');
+like(eigene(cookie_aus($r, 'sessionid'))->{json}{reason} // '', qr/not authenticated/, '… und das Cookie gilt nicht');
+$r = cgi(skript => 'resql', methode => 'POST', pfad => '/login', body => { name => 'Bert Test', password => 'geheim-klartext' });
+is($r->{json}{result}, 1, 'resql /login mit richtigem Passwort: 1');
+my ($resql_kopf) = grep { /^sessionid=/ } @{ $r->{cookies} };
+like($resql_kopf // '', qr/HttpOnly.*SameSite=Lax|SameSite=Lax.*HttpOnly/i, '… Cookie mit HttpOnly und SameSite=Lax');
+is(name_von(eigene(cookie_aus($r, 'sessionid'))), 'Bert Test', '… Bert ist angemeldet');
+foreach my $pw ('GEHEIM-KLARTEXT', 'geheim-klartext ') {
+	$r = cgi(skript => 'resql', methode => 'POST', pfad => '/login', body => { name => 'Bert Test', password => $pw });
+	is($r->{json}{result}, 0, "resql /login mit '$pw': 0 (exakt verglichen)");
+}
+
+note('9c createProcedures.pl kennt die neuen Sitzungen');
+# GET auf einen unbekannten Pfad: angemeldet → leere Antwort, sonst "not authenticated". Ändert nichts an der Datenbank.
+foreach my $fall ([$sid5, 'neue Sitzung', 0], ['&', 'leerer Wert', 1], [undef, 'ohne Cookie', 1]) {
+	my ($wert, $was, $abgewiesen) = @$fall;
+	$r = cgi(skript => 'createProcedures', pfad => '/NICHTS', defined $wert ? (cookies => { sessionid => $wert }) : ());
+	if ($abgewiesen) { like($r->{roh}, qr/not authenticated/, "createProcedures.pl, $was: abgewiesen"); }
+	else { unlike($r->{roh}, qr/not authenticated/, "createProcedures.pl, $was: angemeldet"); }
+	(my $m = $r->{stderr}) =~ s/^.*Issuing rollback\(\) due to DESTROY without explicit disconnect\(\).*\n?//mg;
+	is($m, '', "createProcedures.pl, $was: keine Fehlermeldung");
+}
 
 note('10 Brücke fehlt (z. B. Mitgliederbereich noch nicht live)');
 $r = login_web($WEB{anna}, bruecke => "$TMP/gibt-es-nicht.php");

@@ -89,7 +89,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/web\/?$/ ) 
 		if ($ppr->match(Encode::encode("utf-8",$body->{password}))) {
 			my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE `wpID` = ? or `wpMitID` = ?");
 			my $rows = $stl->execute($sessionid, $row2->{ID}, $row2->{ID});
-			my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
+			my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid, -path=>'/', -secure=>1, -httponly=>1, -samesite=>'Lax' ); # wie die neuen Sitzungen; Abmelden geht über /logout
 
 			# print http header with cookies
 			print $q->header( {cookie => [$cookie], "content-type" => "application/json"} );

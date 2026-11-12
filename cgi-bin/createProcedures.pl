@@ -10,6 +10,7 @@ use Time::Local;
 use POSIX qw(strftime);
 
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!!: displays (non-syntax) errors and warning in html
+use SolawiSitzung; # Sitzungen je Gerät (BenutzerSitzung), im Übergang auch Benutzer.Cookie
 
 my $q = CGI::Simple->new;
 
@@ -26,10 +27,7 @@ if ( $q->request_method() =~ /^OPTIONS/ ) {
 	# check if logged in (sessionid cookie)
 	my %cookies = CGI::Simple::Cookie->fetch;
 	my $bc = $cookies{'sessionid'} ? $cookies{'sessionid'}->value : undef;
-	$bc = undef unless defined $bc && $bc =~ /^[0-9][0-9.e-]{7,40}$/; # nur IDs aus rand(): ein leerer Wert traf sonst jedes leere Benutzer.Cookie
-	my $stbc = $dbh->prepare("SELECT * FROM `Benutzer` WHERE `Cookie` = ?");
-	$stbc->execute($bc);
-	if ( my $user = $stbc->fetchrow_hashref ) { # is logged in: sessionid cookie verified
+	if ( my $user = SolawiSitzung::benutzer($dbh, $bc) ) { # is logged in: sessionid cookie verified
 
 		if ( $q->request_method() =~ /^GET$/ ) {
 
