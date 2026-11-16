@@ -116,6 +116,28 @@ form .message {
 form div.message {
   margin-bottom: 1em;
 }
+form .message.hinweis {
+  display: block;
+  color: #4d3b27;
+  padding-bottom: 1em;
+}
+a.loginbutton.maillink {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0 0 15px;
+  padding: 15px;
+  background: #679b14;
+  color: #FFFFFF;
+  font-size: 14px;
+  text-align: center;
+  text-decoration: none;
+  text-transform: uppercase;
+}
+a.loginbutton.maillink:hover, a.loginbutton.maillink:focus {
+  background: #4d3b27;
+  color: #FFFFFF;
+}
 form .message a {
   color: #c31212;
   font-weight:600;
