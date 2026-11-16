@@ -66,7 +66,7 @@ my $q = CGI::Simple->new;
 my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=mysql", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8mb4 => 1 });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
-	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json"});
 }
 
 
@@ -75,22 +75,26 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 
 	my $sessionid = rand();
 	my $body = decode_json($q->param( 'POSTDATA' ));
-	my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE `Name` = ? and `Passwort` = ?");
-	$stl->execute($sessionid, $body->{name}, $body->{password});
+	# Passwort exakt vergleichen (BINARY) und nie leer: ein leeres Passwort traf sonst jedes leere Benutzer.Passwort,
+	# und ohne BINARY galten "abc" und "ABC " als gleich (Sortierung _ci, Leerzeichen am Ende zählen nicht)
+	my $pw = (defined $body->{password} && !ref($body->{password})) ? "$body->{password}" : '';
+	my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE `Name` = ? AND BINARY `Passwort` = BINARY ? AND TRIM(`Passwort`) <> ''");
+	$stl->execute($sessionid, $body->{name}, $pw) if $pw =~ /\S/;
 	my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
 
 	# print http header with cookies
-	print $q->header( {'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',cookie => [$cookie], "content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"} );
-	print encode_json({result => $stl->rows()});
+	print $q->header( {'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',cookie => [$cookie], "content-type" => "application/json"} );
+	print encode_json({result => ($pw =~ /\S/ ? $stl->rows() : 0)});
 	$dbh->commit();
 
 } elsif ( $q->path_info =~  /^[a-zA-Z0-9\/._ -]*$/) {
 	# print http header
-	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json"});
 
 	# user does not want to login -> check if logged in (sessionid cookie)
 	my %cookies = CGI::Simple::Cookie->fetch;
 	my $bc = $cookies{'sessionid'} ? $cookies{'sessionid'}->value : undef;
+	$bc = undef unless defined $bc && $bc =~ /^[0-9][0-9.e-]{7,40}$/; # nur IDs aus rand(): ein leerer Wert traf sonst jedes leere Benutzer.Cookie
 	my $stbc = $dbh->prepare("SELECT * FROM `Benutzer` WHERE `Cookie` = ?");
 	$stbc->execute($bc);
         $dbh->prepare("SET NAMES utf8mb4")->execute();
@@ -609,7 +613,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	}
 
 } else {
-	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({"content-type" => "application/json"});
 	print encode_json({result => 0, reason => "path contains forbidden characters"});
 }
 
