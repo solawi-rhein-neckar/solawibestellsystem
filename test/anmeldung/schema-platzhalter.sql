@@ -1,6 +1,6 @@
--- PLATZHALTER bis zum Schema-Dump der AG (mysqldump --no-data --routines --triggers): nur die Tabellen, die Login und Sitzung
--- brauchen, nach model/db_schema_mysql.sql (Stand 2020) plus den Spalten, die wp.pl auf dem Server nutzt (wpID, wpMitID,
--- wpMit2ID, wpMit3ID). Mit dem echten Dump: test/anmeldung/lauf.pl --schema <dump.sql>.
+-- PLATZHALTER für Läufe ohne den Schema-Dump vom Server: nur die Tabellen, die Login und Sitzung brauchen, nach
+-- model/db_schema_mysql.sql (Stand 2020) plus den Spalten, die wp.pl auf dem Server nutzt (wpID, wpMitID, wpMit2ID, wpMit3ID).
+-- Mit dem echten Dump (mysqldump --no-data --routines --triggers): test/anmeldung/lauf.pl --schema <dump.sql>.
 
 CREATE TABLE `Role` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,

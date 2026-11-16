@@ -13,8 +13,9 @@
 -- Beide Namen beginnen mit "Benutzer", damit die Regeln in resql.pl greifen (Mitglieder sehen nur eigene Zeilen). Zusätzlich
 -- sperrt resql.pl BenutzerSitzung ganz und BenutzerZugang bis auf das Lesen der eigenen Zeilen (siehe SolawiSitzung::tabelle_erlaubt).
 --
--- Typen wie Benutzer.ID im Repo-Schema (int(11)), Zeichensatz wie die übrigen Tabellen. VOR DEM EINSPIELEN gegen den Schema-Dump
--- prüfen: Fremdschlüssel brauchen exakt denselben Typ wie Benutzer.ID.
+-- Typen und Zeichensatz wie Benutzer auf dem Server (Schema-Dump vom 13.11.2026 geprüft): Benutzer.ID int(11) mit Vorzeichen,
+-- InnoDB, utf8 mit utf8_german2_ci. Die Fremdschlüssel passen damit; test/anmeldung/lauf.pl --schema <dump> spielt sie ein.
+-- Keine Audit-Trigger für BenutzerSitzung: eine Zeile je Anmeldung, und die Prüfsumme gehört nicht ins Audit.
 
 CREATE TABLE IF NOT EXISTS `BenutzerZugang` (
   `ID` int(11) NOT NULL AUTO_INCREMENT,

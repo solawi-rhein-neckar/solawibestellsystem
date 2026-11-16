@@ -82,9 +82,42 @@ sub sql_datei {
 	my ($db, $datei) = @_;
 	system("'$MYSQL' --no-defaults -uroot -S '$SOCK' $db < '$datei'") == 0 or BAIL_OUT("Einspielen von $datei in $db ging nicht");
 }
+# Für den Dump: Einzelne Prozeduren, die MySQL 5.7 noch annahm, lehnt MySQL 8 ab. --force überspringt sie; was fehlt, steht
+# im Testlauf. Tabellen, Trigger und Views, die der Test braucht, müssen da sein (prüft das Einspielen der neuen Tabellen).
+sub sql_datei_nachsichtig {
+	my ($db, $datei) = @_;
+	system("'$MYSQL' --no-defaults --force -uroot -S '$SOCK' $db < '$datei' 2> '$TMP/schema-fehler.log'");
+	open(my $fh, '<', "$TMP/schema-fehler.log") or die $!;
+	my @fehler = grep { /^ERROR/ } <$fh>;
+	close($fh);
+	note(scalar(@fehler) . ' Anweisung(en) des Schemas von MySQL 8 abgelehnt und übersprungen:') if @fehler;
+	note('  ' . substr($_, 0, 110)) foreach @fehler;
+}
+# Der Dump vom Server stammt aus MySQL 5.7: Dessen sql_mode NO_AUTO_CREATE_USER kennt MySQL 8 nicht mehr, und Trigger, Views
+# und Prozeduren laufen als DEFINER, den es in der Test-MySQL erst geben muss. Angepasst wird eine Kopie im Temp-Ordner.
+sub schema_fuer_test {
+	my ($datei) = @_;
+	open(my $fh, '<:raw', $datei) or BAIL_OUT("$datei: $!");
+	my $t = do { local $/; <$fh> };
+	close($fh);
+	my $modus = ($t =~ s/,NO_AUTO_CREATE_USER\b|\bNO_AUTO_CREATE_USER,?//g) || 0;
+	my %definer = map { $_ => 1 } ($t =~ /DEFINER=(`[^`]+`@`[^`]+`)/g);
+	foreach my $d (sort keys %definer) {
+		$root->do("CREATE USER IF NOT EXISTS $d");
+		$root->do("GRANT ALL ON db208674_361.* TO $d");
+	}
+	note("Schema für MySQL 8 angepasst: NO_AUTO_CREATE_USER $modus-mal entfernt, " . scalar(keys %definer) . ' DEFINER angelegt') if $modus || %definer;
+	open($fh, '>:raw', "$TMP/schema.sql") or die $!;
+	print $fh $t;
+	close($fh);
+	return "$TMP/schema.sql";
+}
 $root->do("CREATE DATABASE db208674_361 DEFAULT CHARACTER SET utf8 COLLATE utf8_german2_ci");
 $root->do("CREATE DATABASE db208674_220 DEFAULT CHARACTER SET utf8mb4");
-sql_datei('db208674_361', $SCHEMA);
+sql_datei_nachsichtig('db208674_361', schema_fuer_test($SCHEMA));
+note('Trigger: ' . $root->selectrow_array("SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = 'db208674_361'")
+	. ', Prozeduren: ' . $root->selectrow_array("SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = 'db208674_361'")
+	. ', Views: ' . $root->selectrow_array("SELECT COUNT(*) FROM information_schema.VIEWS WHERE TABLE_SCHEMA = 'db208674_361'"));
 sql_datei('db208674_361', "$REPO/model/BenutzerZugangSitzung.sql");
 $root->do("CREATE TABLE db208674_220.wp_users (ID bigint(20) unsigned NOT NULL AUTO_INCREMENT, user_login varchar(60) NOT NULL, user_pass varchar(255) NOT NULL, user_email varchar(100) NOT NULL, PRIMARY KEY (ID)) ENGINE=InnoDB");
 
@@ -94,12 +127,16 @@ $root->do("CREATE TABLE db208674_220.wp_users (ID bigint(20) unsigned NOT NULL A
 #   Benutzer 3 Carla (Orga, Rolle 4), Zugang: eine Adresse
 #   Benutzer 4 Dora (Mitglied), WordPress wpID 104
 my $db = DBI->connect("DBI:mysql:database=db208674_361;mysql_socket=$SOCK", 'root', '', { RaiseError => 1, AutoCommit => 1, mysql_enable_utf8mb4 => 1 });
+# Testdaten nur mit den Spalten, die der Test braucht. Weitere Pflichtfelder ohne Standardwert im echten Schema (z. B. Role.Nr,
+# Depot.KurzName) bekommen ohne strikten Modus ihren leeren Standardwert; danach gilt wieder der Modus des Servers.
+$db->do("SET SESSION sql_mode = ''");
 $db->do("INSERT INTO Role (ID, Name) VALUES (1,'Packteam'),(2,'Mitglied'),(3,'Depotverwaltung'),(4,'Orga'),(5,'Admin')");
 $db->do("INSERT INTO Depot (ID, Name) VALUES (1,'Testdepot')");
 $db->do("INSERT INTO Benutzer (ID, Name, Passwort, Cookie, Role_ID, Depot_ID, wpID, wpMitID, wpMit2ID) VALUES
 	(1,'Anna Test','','',2,1,101,102,NULL),(2,'Bert Test','geheim-klartext','',2,1,103,NULL,104),(3,'Carla Orga','','',4,1,105,NULL,NULL),(4,'Dora Test','','',2,1,104,NULL,NULL)");
 $db->do("INSERT INTO BenutzerZugang (ID, Benutzer_ID, Email, Bezeichnung) VALUES
 	(1,1,'anna.zugang\@example.org','Hauptmitglied'),(2,1,'anna.handy\@example.org','Mit-Mitglied'),(3,3,'carla\@example.org',NULL)");
+$db->do("SET SESSION sql_mode = DEFAULT");
 my $hash = Authen::Passphrase::PHPass->new(cost => 8, salt => 'Testsalz', passphrase => 'anna-passwort')->as_crypt;
 my $wp = DBI->connect("DBI:mysql:database=db208674_220;mysql_socket=$SOCK", 'root', '', { RaiseError => 1, AutoCommit => 1 });
 $wp->do("INSERT INTO wp_users (ID, user_login, user_pass, user_email) VALUES (101,'Anna_Test',?,'anna\@example.org'),(102,'Anna_Mit','x','mit-anna\@example.org'),(103,'Bert_Test','x','bert\@example.org'),(104,'Dora_Test','x','dora\@example.org'),(105,'Carla_Orga','x','carla-wp\@example.org')", undef, $hash);
@@ -226,6 +263,11 @@ my ($max) = $sc =~ /Max-Age=(\d+)/;
 ok(abs($max - 14 * 86400) < 120, 'Cookie: Max-Age = Rest der Website-Anmeldung (14 Tage)');
 is(zeilen('SELECT COUNT(*) FROM BenutzerSitzung WHERE IDHash = SHA2(?, 256) AND Benutzer_ID = 1 AND BenutzerZugang_ID = 1', $sid1), 1, 'BenutzerSitzung: Zeile mit Prüfsumme, Benutzer 1, Zugang 1');
 is(zeilen('SELECT COUNT(*) FROM BenutzerSitzung WHERE IDHash = ?', $sid1), 0, 'die Sitzungs-ID selbst steht nirgends in der Datenbank');
+SKIP: {
+	skip('Schema ohne Audit-Tabellen (Platzhalter)', 1)
+		unless zeilen("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'db208674_361' AND TABLE_NAME = 'zaudit_meta'");
+	is(zeilen('SELECT COUNT(*) FROM zaudit_meta WHERE old_value LIKE ? OR new_value LIKE ?', "%$sid1%", "%$sid1%"), 0, '… auch nicht im Audit (zaudit_meta)');
+}
 ok(zeilen('SELECT ABS(TIMESTAMPDIFF(SECOND, GueltigBis, NOW() + INTERVAL 14 DAY)) < 120 FROM BenutzerSitzung WHERE IDHash = SHA2(?, 256)', $sid1), 'GueltigBis = Ende der Website-Anmeldung');
 is(name_von(eigene($sid1)), 'Anna Test', 'resql Benutzer/OWN mit der neuen Sitzung: Anna');
 is(zeilen("SELECT Cookie FROM Benutzer WHERE ID = 1"), '', 'Benutzer.Cookie bleibt unberührt');

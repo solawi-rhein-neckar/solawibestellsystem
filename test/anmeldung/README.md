@@ -14,6 +14,11 @@ perl test/anmeldung/lauf.pl --web <ordner>        # zusätzlich gegen die echte 
 BEHALTEN=1 perl test/anmeldung/lauf.pl            # Temp-Ordner (Logs der Test-MySQL) bleibt liegen
 ```
 
+Der Dump vom Server stammt aus MySQL 5.7. Der Test spielt eine angepasste Kopie ein: ohne den sql_mode `NO_AUTO_CREATE_USER`
+(gibt es in MySQL 8 nicht mehr) und mit dem DEFINER der Trigger und Views als Benutzer der Test-MySQL. Anweisungen, die MySQL 8
+trotzdem ablehnt (Stand 13.11.2026: drei Prozeduren, `BenutzerBestellungen`, `BenutzerBestellungenX`, `BenutzerBestellungXX`),
+überspringt er und nennt sie am Anfang des Laufs. Die Anmeldung braucht keine davon.
+
 ## Was es braucht
 
 - `mysqld` und `mysql` (MySQL 8.4 LTS; der Server hat 5.7, die neuen Tabellen nutzen nichts, was 5.7 nicht kann). Mac:
