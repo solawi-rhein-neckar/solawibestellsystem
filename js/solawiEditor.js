@@ -70,7 +70,7 @@ function SolawiEditor(pSbs, pOnEntitySaved, pDisableUnavailableProducts, pEditor
     }
 
     function showForAdding(pTableName, defaults) {
-        finishEditor(initForAdding(pTableName, defaults, {'NOTES':1,'ID':1, 'ErstellZeitpunkt':1, 'AenderBenutzer_ID':1, 'AenderZeitpunkt':1}));
+        finishEditor(initForAdding(pTableName, defaults, {'NOTES':1,'Zugang':1,'ID':1, 'ErstellZeitpunkt':1, 'AenderBenutzer_ID':1, 'AenderZeitpunkt':1})); /* Zugang: Mailadressen, eigener Knopf "Mailadressen" im Editor */
     }
 
     function showForBatchOrder(defaults) {

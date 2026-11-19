@@ -1,6 +1,7 @@
 package SolawiSitzung;
 use strict;
 use warnings;
+use utf8; # Meldungen mit Umlauten (resql.pl gibt sie als JSON aus)
 
 #
 # Sitzungen des Bestellsystems und Anmeldung über die Website (Mail-Link), Webteam 11.11.2026.
@@ -13,6 +14,8 @@ use warnings;
 #   login_web() fragt per open2 die Website (mitglieder/_intern/bestellsystem.php, PHP), ob die Anmeldung gilt und zu welcher
 #   der mitgeschickten Adressen sie gehört. Adressen und Cookie gehen über stdin, nichts über die Kommandozeile.
 # - Übergang: Sitzungen aus dem Passwort-Login (Benutzer.Cookie, rand()) gelten weiter, bis der Passwort-Login abgeschaltet wird.
+# - Mailadressen je Anteil stehen in BenutzerZugang. Orga und Admin pflegen sie in members.htm (resql.pl -> zugang_schreiben).
+#   WordPress zählt für die Anmeldung nur noch, solange BenutzerZugang leer ist (kandidaten).
 #
 # Kein Modul außer Perl-Kern und DBI (Digest::SHA fehlt auf dem Server, deshalb rechnet MySQL die Prüfsummen).
 #
@@ -123,8 +126,10 @@ sub beenden {
 	$dbh->commit();
 }
 
-# Adressen, die das Bestellsystem kennt: [zugang_id, benutzer_id, email], BenutzerZugang zuerst.
-# Übergang ($dbh_wp gesetzt): dazu die Adressen aus wp_users, zugeordnet über wpID/wpMitID/wpMit2ID/wpMit3ID (zugang_id 0).
+# Adressen, die das Bestellsystem kennt: [zugang_id, benutzer_id, email].
+# Regel: Steht in BenutzerZugang mindestens eine Adresse, zählt nur BenutzerZugang. Wer dort entfernt wird, kommt auch über
+# WordPress nicht mehr herein. Nur solange BenutzerZugang ganz leer ist (vor model/BenutzerZugangFuellen.pl), gilt der Übergang:
+# die Adressen aus wp_users, zugeordnet über wpID/wpMitID/wpMit2ID/wpMit3ID (zugang_id 0), wenn $dbh_wp gesetzt ist.
 sub kandidaten {
 	my ($dbh, $dbh_wp) = @_;
 	my @k;
@@ -133,7 +138,7 @@ sub kandidaten {
 	while (my $r = $st->fetchrow_arrayref) {
 		push(@k, [$r->[0], $r->[1], $r->[2]]);
 	}
-	if ($dbh_wp) {
+	if ($dbh_wp && !@k) {
 		my %anteil;    # wp_users.ID -> [Benutzer.ID, ...]
 		my $sb = $dbh->prepare("SELECT * FROM `Benutzer`");
 		$sb->execute();
@@ -219,6 +224,7 @@ sub herkunft_ok {
 
 # Darf resql.pl diese Tabelle für diesen Benutzer und diese Methode bedienen?
 # BenutzerSitzung nie (Prüfsummen der Sitzungen); BenutzerZugang (Mailadressen) für Rollen unter Orga (4) nur die eigenen Zeilen lesen.
+# Orga und Admin schreiben BenutzerZugang nur über zugang_schreiben (resql.pl leitet POST und DELETE dorthin, siehe zugang_pfad).
 sub tabelle_erlaubt {
 	my ($user, $methode, $pfad) = @_;
 	my ($tabelle) = ($pfad || '') =~ m{^/([a-zA-Z]+)};
@@ -228,6 +234,133 @@ sub tabelle_erlaubt {
 		return ($methode eq 'GET' && $pfad =~ m{^/[a-zA-Z]+/(MY|OWN)$}) ? 1 : 0;
 	}
 	return 1;
+}
+
+# Pfad zeigt auf BenutzerZugang (auch in anderer Schreibweise, MySQL kann Tabellennamen ohne Unterschied der Groß-/Kleinschreibung
+# auflösen)?
+sub zugang_pfad {
+	my ($pfad) = @_;
+	my ($tabelle) = ($pfad || '') =~ m{^/([a-zA-Z]+)};
+	return defined $tabelle && lc($tabelle) eq lc($T_ZUGANG) ? 1 : 0;
+}
+
+# Mailadresse in der Form, in der sie in BenutzerZugang steht: getrimmt, Kleinbuchstaben, höchstens 254 Zeichen. '' = taugt nicht.
+# Wie mg_email_normal() der Website (mitglieder/_intern/tuer.php), nur strenger: nur ASCII, Teile aus Punkt-Atomen, Domain mit
+# Endung aus Buchstaben. Was hier durchgeht, nimmt auch die Website an (test/anmeldung/lauf.pl prüft das gegen PHP).
+sub email_normal {
+	my ($roh) = @_;
+	return '' unless defined $roh && !ref($roh);
+	my $e = lc("$roh");
+	$e =~ s/^\s+|\s+$//g;
+	return '' if $e eq '' || length($e) > 254;
+	my $atom  = qr/[a-z0-9!#\$%&*+\/=?^_`{|}~-]+/;
+	my $label = qr/[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?/;
+	return '' unless $e =~ /^($atom(?:\.$atom)*)\@(?:$label\.)+[a-z]{2,63}$/;
+	return '' if length($1) > 64;
+	return $e;
+}
+
+# Antwort, wenn eine Adresse nicht gespeichert wird, weil sie ungültig ist oder schon bei irgendeinem Anteil steht. Bewusst dieselbe:
+# Die Antwort verrät nicht, ob oder wo es eine Adresse schon gibt.
+our $ZUGANG_NICHT = 'Nicht gespeichert: Adresse ungültig oder schon vergeben.';
+
+# BenutzerZugang schreiben (resql.pl, nur Orga und Admin). Eigene Prüfung statt des allgemeinen Codes:
+#   POST   /BenutzerZugang        neue Adresse   {Benutzer_ID, Email, Bezeichnung}
+#   POST   /BenutzerZugang/<ID>   ändern         {Email, Bezeichnung, Benutzer_ID}, jedes Feld nur, wenn es sich ändern soll
+#   DELETE /BenutzerZugang/<ID>   entfernen
+# Eine Adresse gibt es nur einmal über alle Anteile. Die Antwort enthält keine SQL-Fehler, Abfragen oder Werte. Ändern sich Adresse
+# oder Anteil, oder wird die Adresse entfernt, enden die Sitzungen, die über diese Adresse angemeldet sind.
+# Gibt den Hash für die JSON-Antwort zurück: {result => 1, type => insert|update|delete[, id]} oder {result => 0, reason => …}.
+sub zugang_schreiben {
+	my ($dbh, $user, $methode, $pfad, $body) = @_;
+	return { result => 0, reason => "no access right $pfad" } unless $user && $user->{Role_ID} >= 4;
+	return { result => 0, reason => "unknown path $pfad" } unless ($pfad || '') =~ m{^/[a-zA-Z]+(?:/([0-9]{1,10}))?/?$};
+	my $id = $1;
+
+	if ($methode eq 'DELETE') {
+		return { result => 0, reason => "unknown path $pfad" } unless $id;
+		my $n = eval {
+			# AenderBenutzer_ID vor dem Löschen setzen, damit das Audit weiß, wer es war (wie resql.pl bei DELETE)
+			$dbh->prepare("UPDATE `$T_ZUGANG` SET `AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `ID` = ?")->execute($user->{ID}, $id);
+			my $d = $dbh->prepare("DELETE FROM `$T_ZUGANG` WHERE `ID` = ?");
+			$d->execute($id);
+			my $rows = $d->rows();
+			$dbh->commit();
+			$rows;
+		};
+		if (!defined $n) {
+			eval { $dbh->rollback() };
+			return { result => 0, type => 'delete', reason => 'Nicht entfernt.' };
+		}
+		return $n > 0 ? { result => 1, type => 'delete' } : { result => 0, type => 'delete', reason => 'Adresse nicht gefunden.' };
+	}
+
+	return { result => 0, reason => "supported request methods: POST, DELETE" } unless $methode eq 'POST';
+	return { result => 0, reason => $ZUGANG_NICHT } unless ref($body) eq 'HASH';
+	my %neu;
+	if (exists $body->{Email} || !$id) {
+		my $e = email_normal($body->{Email});
+		return { result => 0, reason => $ZUGANG_NICHT } if $e eq '';
+		$neu{Email} = $e;
+	}
+	if (exists $body->{Bezeichnung}) {
+		my $b = defined $body->{Bezeichnung} && !ref($body->{Bezeichnung}) ? "$body->{Bezeichnung}" : '';
+		$b =~ s/[\x00-\x1f\x7f]+/ /g;
+		$b =~ s/^\s+|\s+$//g;
+		return { result => 0, reason => 'Nicht gespeichert: Bezeichnung zu lang (höchstens 100 Zeichen).' } if length($b) > 100;
+		$neu{Bezeichnung} = $b eq '' ? undef : $b;
+	}
+	if (exists $body->{Benutzer_ID} || !$id) {
+		my $b = $body->{Benutzer_ID};
+		my $gibt_es = defined $b && !ref($b) && "$b" =~ /^[1-9][0-9]{0,9}$/
+			&& $dbh->selectrow_array("SELECT COUNT(*) FROM `Benutzer` WHERE `ID` = ?", undef, "$b");
+		return { result => 0, reason => 'Nicht gespeichert: Anteil nicht gefunden.' } unless $gibt_es;
+		$neu{Benutzer_ID} = "$b" + 0;
+	}
+
+	if (!$id) {
+		return { result => 0, reason => $ZUGANG_NICHT } if _zugang_vergeben($dbh, $neu{Email}, 0);
+		my $neue_id = eval {
+			my $st = $dbh->prepare("INSERT INTO `$T_ZUGANG` (`Benutzer_ID`, `Email`, `Bezeichnung`, `AenderBenutzer_ID`) VALUES (?, ?, ?, ?)");
+			$st->execute($neu{Benutzer_ID}, $neu{Email}, $neu{Bezeichnung}, $user->{ID});
+			my $i = $st->{mysql_insertid};
+			$dbh->commit();
+			$i;
+		};
+		if (!$neue_id) {
+			eval { $dbh->rollback() };    # z. B. dieselbe Adresse gleichzeitig von zwei Seiten (eindeutiger Schlüssel)
+			return { result => 0, type => 'insert', reason => $ZUGANG_NICHT };
+		}
+		return { result => 1, type => 'insert', id => $neue_id + 0 };
+	}
+
+	my $alt = $dbh->selectrow_hashref("SELECT `Benutzer_ID`, `Email` FROM `$T_ZUGANG` WHERE `ID` = ?", undef, $id);
+	return { result => 0, type => 'update', reason => 'Adresse nicht gefunden.' } unless $alt;
+	return { result => 0, type => 'update', reason => 'Nichts geändert.' } unless %neu;
+	return { result => 0, type => 'update', reason => $ZUGANG_NICHT } if defined $neu{Email} && _zugang_vergeben($dbh, $neu{Email}, $id);
+	my @spalten = sort keys %neu;
+	my $ok = eval {
+		$dbh->prepare("UPDATE `$T_ZUGANG` SET " . join('', map { "`$_` = ?, " } @spalten) . "`AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `ID` = ?")
+			->execute((map { $neu{$_} } @spalten), $user->{ID}, $id);
+		if ((defined $neu{Email} && lc($neu{Email}) ne lc($alt->{Email})) || (defined $neu{Benutzer_ID} && $neu{Benutzer_ID} != $alt->{Benutzer_ID})) {
+			# andere Adresse oder anderer Anteil: Wer über die alte Zuordnung angemeldet ist, ist es nicht mehr
+			$dbh->prepare("DELETE FROM `$T_SITZUNG` WHERE `BenutzerZugang_ID` = ?")->execute($id);
+		}
+		$dbh->commit();
+		1;
+	};
+	if (!$ok) {
+		eval { $dbh->rollback() };
+		return { result => 0, type => 'update', reason => $ZUGANG_NICHT };
+	}
+	return { result => 1, type => 'update' };
+}
+
+# Steht diese Adresse schon in BenutzerZugang (bei irgendeinem Anteil, außer in Zeile $ausser)?
+sub _zugang_vergeben {
+	my ($dbh, $email, $ausser) = @_;
+	my ($n) = $dbh->selectrow_array("SELECT COUNT(*) FROM `$T_ZUGANG` WHERE `Email` = ? AND `ID` <> ?", undef, $email, $ausser || 0);
+	return $n ? 1 : 0;
 }
 
 1;

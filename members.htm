@@ -45,7 +45,18 @@ input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche { pointer-events: no
     var SBTview = SolawiTable(SBS, 'table', 'tablePath', false, false);
     SBTview.hideZeros = true;
 
-        function loadTableBenutzer(){getAjax('wp', function (response, path) {
+        /* Mailadressen je Anteil (BenutzerZugang) für die Spalte "Zugang", dann die Liste */
+        function loadTableBenutzer(){getAjax('BenutzerZugang', function (zugaenge) {
+            var zugangVon = {};
+            if (zugaenge && zugaenge.forEach) {
+                zugaenge.forEach(function(z) {
+                    (zugangVon[z.Benutzer_ID] = zugangVon[z.Benutzer_ID] || []).push(z.Email);
+                });
+            }
+            loadTableBenutzerWp(zugangVon);
+        });}
+
+        function loadTableBenutzerWp(zugangVon){getAjax('wp', function (response, path) {
             var byWpId = {};
 	        for (var j = 0; j < response.length; j++) {
 				byWpId[response[j].ID] = response[j];
@@ -54,6 +65,10 @@ input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche { pointer-events: no
 		        for (var i = 0; i < response2.length; i++) {
 		            var usr = response2[i];
 		            usr.NOTES = '';
+		            usr.Zugang = (zugangVon[usr.ID] || []).sort().join(', ');
+		            if (!usr.Zugang) {
+		                usr.NOTES += ' !KEIN_ZUGANG! ';
+		            }
 		            if (usr.wpID) {
 		                var wpUsr = byWpId[usr.wpID];
 		                if (wpUsr) {
@@ -195,7 +210,7 @@ input.editor.inp_PunkteStand, select.editor.inp_PunkteWoche { pointer-events: no
 		initUser(function() {
 	        if (SBS.user.Role_ID > 3) {
 				SBTedit.reload=loadTableBenutzer;
-		        SBTedit.columns = ['Name','wplast_name','Depot_ID','Anteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','PunkteHistory','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpMit2ID','wpMit3ID','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpuser_email','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
+		        SBTedit.columns = ['Name','wplast_name','Depot_ID','Zugang','Anteile','AnteileStartWoche','PunkteStart','PunkteStand','PunkteWoche','PunkteHistory','Role_ID','_Beitrag','_IBAN','NOTES','wpID','wpMitID','wpMit2ID','wpMit3ID','wpBeruf_10','wpBeruf_10_11','wpStrasse','wpdescription','wpBeruf','wpMitarbeit-bei','wprole','wpuser_email','wpdisplay_name','wpMitMitgliedvon','wpMitName','MitName','AltName','wpDepot'];
 		        loadTableBenutzer();
 	        } else {
 	        	var sheet = (function() {

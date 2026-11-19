@@ -102,6 +102,12 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 		# BenutzerSitzung never, BenutzerZugang (mail addresses) below Role 4 only own rows (GET .../MY or .../OWN)
 		print encode_json({result => 0, reason => "no access right " . $q->path_info});
 
+	} elsif ( $user && $q->request_method() =~ /^(POST|DELETE)$/ && SolawiSitzung::zugang_pfad($q->path_info) ) {
+		# BenutzerZugang (mail addresses, Role 4 and 5): own checks instead of the generic code below - valid address, each address
+		# only once, no SQL errors or values in the answer, sessions end when an address is changed or removed
+		my $body = $q->request_method() eq 'POST' ? eval { decode_json($q->param( 'POSTDATA' ) || '{}') } : undef;
+		print encode_json(SolawiSitzung::zugang_schreiben($dbh, $user, $q->request_method(), $q->path_info, $body));
+
 	} elsif ( $user ) { # is logged in: sessionid cookie verified
 
 		if ( $q->request_method() =~ /^GET$/ ) {

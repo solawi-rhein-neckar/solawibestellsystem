@@ -5,7 +5,9 @@
 --
 -- BenutzerZugang:  Mailadressen je Anteil, gerne mehrere (Hauptmitglied, Mit-Mitglieder). Mit diesen Adressen meldet man sich
 --                  auf der Website an (/anmelden/); wp.pl ordnet die Anmeldung über diese Tabelle dem Anteil zu.
---                  Erst leer: Im Übergang ordnet wp.pl auch über wp_users (wpID, wpMitID, wpMit2ID, wpMit3ID) zu.
+--                  Solange die Tabelle leer ist, ordnet wp.pl über wp_users (wpID, wpMitID, wpMit2ID, wpMit3ID) zu (Übergang).
+--                  Befüllen: model/BenutzerZugangFuellen.pl. Sobald eine Adresse drinsteht, zählt nur noch diese Tabelle.
+--                  Pflege: members.htm (Orga und Admin), Knopf „Mailadressen“ im Editor eines Anteils.
 -- BenutzerSitzung: eine Zeile je angemeldetem Gerät - Handy, Computer und Mit-Mitglied bleiben gleichzeitig angemeldet.
 --                  Gespeichert wird nur SHA2(Sitzungs-ID, 256), nie die ID selbst. Abgelaufene Zeilen löscht wp.pl beim
 --                  nächsten Login.
