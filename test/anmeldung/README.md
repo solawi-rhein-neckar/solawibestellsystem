@@ -3,10 +3,12 @@
 Prüft `cgi-bin/SolawiSitzung.pm`, die neuen Wege `POST wp.php/login/web` und `POST wp.php/logout`, die Sitzungsprüfung in `wp.pl`
 und `resql.pl` und die Sperren für `BenutzerSitzung` und `BenutzerZugang`. Nur erfundene Mitglieder (`example.org`).
 
-Dazu (Teile 11 bis 13): der Übergang über WordPress, solange `BenutzerZugang` leer ist; das Pflegen der Mailadressen über
+Dazu (Teile 11 bis 14): der Übergang über WordPress, solange `BenutzerZugang` leer ist; das Pflegen der Mailadressen über
 `resql.pl` (Orga und Admin schreiben und bekommen genaue Meldungen, Rolle 1 bis 3 nicht und ohne Hinweis, ob es eine Adresse gibt); die
 Adressprüfung gegen die der Website (PHP, `FILTER_VALIDATE_EMAIL`) und das Einmal-Skript `model/BenutzerZugangFuellen.pl`
-(Trockenlauf, echter Lauf, zweiter Lauf, nur Zahlen in der Ausgabe).
+(Trockenlauf, echter Lauf, zweiter Lauf, nur Zahlen in der Ausgabe). Teil 14: ausgeschiedene Anteile (Depot „Geloescht“ oder
+alle Abos beendet) melden sich nicht mehr an, ihre Sitzungen gelten nicht mehr, nichts wird gelöscht; dazu die Zählung
+`model/BenutzerZugangAusgeschieden.sql`.
 
 Der Test startet eine eigene, leere MySQL in einem Temp-Ordner, spielt das Schema, `model/BenutzerZugangSitzung.sql` und die
 Testmitglieder ein, kopiert `cgi-bin/` daneben (nur die Verbindung zeigt auf die Test-MySQL) und ruft `wp.pl` und `resql.pl` als

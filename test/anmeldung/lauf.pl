@@ -710,9 +710,81 @@ like($f->{fehler}, qr/Keine Verbindung zu db208674_361/, '… mit Hinweis, welch
 is(scalar(@{ stand() }), 8, '… und nichts geändert');
 zugang_setzen(@ZUGANG_START);
 
+note('14 Ausgeschiedene Anteile: kein Zugang mehr, nichts gelöscht');
+# Erfundene Anteile mit Abos (Modul 1). Laufende Woche wie im Modul: ISO-Woche nach der Uhr der Datenbank.
+#   Mara   Depot 1, alle Abos 2020 beendet              → ausgeschieden
+#   Nils   Depot 1, ein Abo beendet, eins läuft          → drin
+#   Ole    Depot 1, letztes Abo endet in dieser Woche    → drin (bis zum Ende der Woche)
+#   Pia    Depot „Geloescht“, Abo läuft                  → ausgeschieden
+#   Rolf   Orga im Depot „Geloescht“, Abos beendet       → drin (Orga und Admin sperren sich nicht aus)
+#   Sven   Depot 1, Abo ohne Ende (EndWoche NULL)        → drin
+#   Anna   Depot 1, ganz ohne Abos                       → drin
+my $woche = $db->selectrow_array("SELECT CAST(DATE_FORMAT(UTC_TIMESTAMP(), '%x.%v') AS DECIMAL(6,2))");
+$db->do("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
+$db->do("INSERT INTO Modul (ID, Name) VALUES (1, 'Gemüse')");
+$db->do("INSERT INTO Benutzer (ID, Name, Passwort, Cookie, Role_ID, Depot_ID, wpID) VALUES (13,'Mara Ende','','',2,1,117),(14,'Nils Weiter','','',2,1,118),
+	(15,'Ole Letzte','','',2,1,NULL),(16,'Pia Geloescht','','',2,0,NULL),(17,'Rolf Orga','','',4,0,NULL),(18,'Sven Offen','','',2,1,NULL)");
+$db->do("INSERT INTO BenutzerModulAbo (Benutzer_ID, Modul_ID, StartWoche, EndWoche, Anzahl) VALUES (13,1,2020.01,2020.10,1),(14,1,2020.01,2020.10,1),
+	(14,1,2020.11,9999.99,1),(15,1,2020.01,?,1),(16,1,2020.01,9999.99,1),(17,1,2020.01,2020.10,1),(18,1,2020.01,NULL,1)", undef, $woche);
+$db->do("SET SESSION sql_mode = DEFAULT");
+$wp->do("INSERT INTO wp_users (ID, user_login, user_pass, user_email) VALUES (117,'Mara','x','mara-wp\@example.org'),(118,'Nils','x','nils-wp\@example.org')");
+my @ZUGANG_14 = (@ZUGANG_START, map { [100 + $_->[0], $_->[0], $_->[1], undef] }
+	([13, 'mara@example.org'], [14, 'nils@example.org'], [15, 'ole@example.org'], [16, 'pia@example.org'], [17, 'rolf@example.org'], [18, 'sven@example.org']));
+zugang_setzen(@ZUGANG_14);
+{
+	my %a = %{ JSON::PP->new->decode(do { open(my $fh, '<', $ANMELDUNGEN) or die; local $/; <$fh> }) };
+	foreach my $wer (qw(mara nils ole pia rolf sven marawp nilswp)) {
+		$WEB{$wer} = keks("aus$wer");
+		(my $mail = $wer) =~ s/wp$/-wp/;
+		$a{ $WEB{$wer} } = { email => "$mail\@example.org", bis => time() + 14 * 86400 };
+	}
+	open(my $fh, '>', $ANMELDUNGEN) or die;
+	print $fh encode_json(\%a);
+	close($fh);
+}
+
+# Zählung für die AG (model/BenutzerZugangAusgeschieden.sql), dieselbe Regel
+my $zaehl_sql = do { open(my $fh, '<', "$REPO/model/BenutzerZugangAusgeschieden.sql") or die; local $/; <$fh> };
+$zaehl_sql =~ s/^--.*$//mg;
+$zaehl_sql =~ s/;\s*$//;
+my $zahl = $db->selectrow_hashref($zaehl_sql);
+is_deeply({ map { $_ => $zahl->{$_} + 0 } keys %$zahl },
+	{ anteile => 18, im_depot_geloescht => 3, abos_alle_beendet => 1, ohne_abos_bleiben_drin => 11, orga_admin_bleiben_drin => 1, ausgeschieden_gesamt => 3 },
+	'Zählung: 18 Anteile, 3 im Depot „Geloescht“, 1 mit allen Abos beendet, 11 ohne Abos, 1 Orga ausgenommen, 3 ausgeschieden');
+ok(!(grep { !defined || !/^\d+(?:\.0+)?$/ } values %$zahl), 'Zählung: nur Zahlen, keine Namen oder Adressen');
+my $cli = `'$MYSQL' --no-defaults -uroot -S '$SOCK' db208674_361 < '$REPO/model/BenutzerZugangAusgeschieden.sql' 2>&1`;
+like($cli, qr/\Aanteile\tim_depot_geloescht\tabos_alle_beendet\tohne_abos_bleiben_drin\torga_admin_bleiben_drin\tausgeschieden_gesamt\n18\t3\t1\t11\t1\t3\n\z/,
+	'Zählung mit dem mysql-Client wie auf dem Server: eine Kopfzeile, eine Zeile Zahlen');
+
+foreach my $fall (['mara', undef, 'alle Abos beendet'], ['nils', 'Nils Weiter', 'ein Abo läuft noch'], ['ole', 'Ole Letzte', 'letztes Abo endet in dieser Woche'],
+	['pia', undef, 'Depot „Geloescht“, Abo läuft'], ['rolf', 'Rolf Orga', 'Orga im Depot „Geloescht“ mit beendeten Abos'],
+	['sven', 'Sven Offen', 'Abo ohne Ende (NULL)'], ['anna', 'Anna Test', 'ganz ohne Abos']) {
+	my ($wer, $name, $was) = @$fall;
+	$r = login_web($WEB{$wer});
+	if ($name) { is($r->{json}{user}, $name, "$was → meldet an"); }
+	else { is($r->{json}{result}, 'not logged in on website', "$was → ausgeschieden, keine Anmeldung"); }
+}
+is(zeilen("SELECT COUNT(*) FROM BenutzerZugang WHERE Email IN ('mara\@example.org', 'pia\@example.org')"), 2, '… die Adressen der Ausgeschiedenen stehen weiter in BenutzerZugang');
+my $nils = cookie_aus(login_web($WEB{nils}), 'sessionid');
+is(name_von(eigene($nils)), 'Nils Weiter', 'Nils angemeldet');
+$db->do("UPDATE BenutzerModulAbo SET EndWoche = 2020.10 WHERE Benutzer_ID = 14");
+like(eigene($nils)->{json}{reason} // '', qr/not authenticated/, 'alle Abos von Nils beendet → seine laufende Sitzung gilt nicht mehr');
+is(zeilen('SELECT COUNT(*) FROM BenutzerSitzung WHERE IDHash = SHA2(?, 256)', $nils), 1, '… die Sitzung ist nicht gelöscht');
+is(login_web($WEB{nils})->{json}{result}, 'not logged in on website', '… und eine neue Anmeldung geht nicht');
+$db->do("INSERT INTO BenutzerModulAbo (Benutzer_ID, Modul_ID, StartWoche, EndWoche, Anzahl) VALUES (14, 1, ?, 9999.99, 1)", undef, $woche);
+is(name_von(eigene($nils)), 'Nils Weiter', 'neues Abo (Wiedereintritt) → die Sitzung gilt wieder');
+$db->do("UPDATE Benutzer SET Depot_ID = 0 WHERE ID = 14");
+like(eigene($nils)->{json}{reason} // '', qr/not authenticated/, 'Nils ins Depot „Geloescht“ → Sitzung gilt nicht mehr');
+$db->do("UPDATE Benutzer SET Depot_ID = 1 WHERE ID = 14");
+is(name_von(eigene($nils)), 'Nils Weiter', '… zurück in Depot 1 → gilt wieder');
+zugang_setzen();
+is(login_web($WEB{marawp})->{json}{result}, 'not logged in on website', 'Übergang (BenutzerZugang leer): ausgeschiedener Anteil auch über WordPress nicht');
+is(login_web($WEB{nilswp})->{json}{user}, 'Nils Weiter', '… ein laufender Anteil über WordPress schon');
+zugang_setzen(@ZUGANG_START);
+
 # =====================================================================================================================
 if ($WEB) {
-	note("14 Gegen die echte Brücke der Website ($WEB)");
+	note("15 Gegen die echte Brücke der Website ($WEB)");
 	require Digest::SHA;
 	my $www = "$TMP/web/mitglieder/_intern";
 	system('mkdir', '-p', $www) == 0 or die;

@@ -43,3 +43,23 @@ CREATE TABLE `Benutzer` (
   CONSTRAINT `Benutzer_Depot` FOREIGN KEY (`Depot_ID`) REFERENCES `Depot` (`ID`),
   CONSTRAINT `Benutzer_Role` FOREIGN KEY (`Role_ID`) REFERENCES `Role` (`ID`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
+
+-- Abos: für die Regel „ausgeschieden“ (alle Abos vor der laufenden Woche beendet), Spalten wie auf dem Server
+CREATE TABLE `Modul` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) COLLATE utf8_german2_ci NOT NULL,
+  PRIMARY KEY (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;
+
+CREATE TABLE `BenutzerModulAbo` (
+  `ID` int(11) NOT NULL AUTO_INCREMENT,
+  `Benutzer_ID` int(11) NOT NULL,
+  `Modul_ID` int(11) NOT NULL,
+  `StartWoche` decimal(6,2) NOT NULL DEFAULT '2019.01',
+  `EndWoche` decimal(6,2) DEFAULT NULL,
+  `Anzahl` float NOT NULL DEFAULT '1',
+  PRIMARY KEY (`ID`),
+  KEY `BenutzerModulAboBenutzer` (`Benutzer_ID`),
+  CONSTRAINT `BenutzerKorbAboBenutzer` FOREIGN KEY (`Benutzer_ID`) REFERENCES `Benutzer` (`ID`) ON UPDATE CASCADE,
+  CONSTRAINT `BenutzerKorbAboKorb` FOREIGN KEY (`Modul_ID`) REFERENCES `Modul` (`ID`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_german2_ci;

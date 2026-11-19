@@ -16,6 +16,7 @@ use utf8; # Meldungen mit Umlauten (resql.pl gibt sie als JSON aus)
 # - Übergang: Sitzungen aus dem Passwort-Login (Benutzer.Cookie, rand()) gelten weiter, bis der Passwort-Login abgeschaltet wird.
 # - Mailadressen je Anteil stehen in BenutzerZugang. Orga und Admin pflegen sie in members.htm (resql.pl -> zugang_schreiben).
 #   WordPress zählt für die Anmeldung nur noch, solange BenutzerZugang leer ist (kandidaten).
+# - Ausgeschiedene Anteile ($AUSGESCHIEDEN) melden sich nicht mehr an, ihre Sitzungen gelten nicht mehr.
 #
 # Kein Modul außer Perl-Kern und DBI (Digest::SHA fehlt auf dem Server, deshalb rechnet MySQL die Prüfsummen).
 #
@@ -33,6 +34,17 @@ our $PW_TAGE    = 14;    # Lebensdauer einer Sitzung aus dem Passwort-Login (Mai
 # Tabellen, die resql.pl nicht frei herausgibt (siehe tabelle_erlaubt)
 our $T_SITZUNG = 'BenutzerSitzung';
 our $T_ZUGANG  = 'BenutzerZugang';
+
+# Ausgeschiedene Anteile: Ihre Adressen geben keinen Zugang mehr, und Sitzungen über BenutzerSitzung enden. Geprüft bei jeder
+# Anmeldung und jeder Anfrage; gelöscht wird nichts, beim Wiedereintritt (neues Abo) gilt der Zugang wieder.
+# Ausgeschieden ist ein Anteil (Alias b), der im Depot „Geloescht“ steht (Depot_ID 0) oder Abos hat, die alle vor der laufenden
+# Woche geendet haben („kündigen“ in members.htm setzt EndWoche aller Abos auf die letzte Lieferung). Anteile ohne Abos bleiben
+# drin, ebenso Orga und Admin (Rolle 4 und 5), damit sich niemand aussperrt, der Mitglieder pflegt. Laufende Woche als ISO-Woche
+# wie in resql.pl, z. B. 2026.47. Dieselbe Regel zum Zählen vor dem Einspielen: model/BenutzerZugangAusgeschieden.sql.
+our $AUSGESCHIEDEN = "(b.`Role_ID` < 4 AND (IFNULL(b.`Depot_ID`, -1) = 0"
+	. " OR (EXISTS (SELECT 1 FROM `BenutzerModulAbo` a WHERE a.`Benutzer_ID` = b.`ID`)"
+	. " AND NOT EXISTS (SELECT 1 FROM `BenutzerModulAbo` a WHERE a.`Benutzer_ID` = b.`ID`"
+	. " AND (a.`EndWoche` IS NULL OR a.`EndWoche` >= CAST(DATE_FORMAT(UTC_TIMESTAMP(), '%x.%v') AS DECIMAL(6,2)))))))";
 
 # 64 Hex-Zeichen aus /dev/urandom
 sub neue_id {
@@ -88,7 +100,8 @@ sub benutzer {
 			$dbh->prepare("UPDATE `$T_SITZUNG` SET `ZuletztGesehen` = NOW() WHERE `ID` = ?")->execute($s->{ID});
 			$dbh->commit();
 		}
-		my $sb = $dbh->prepare("SELECT * FROM `Benutzer` WHERE `ID` = ?");
+		# ausgeschiedener Anteil: Sitzung gilt nicht mehr (bleibt aber stehen, bis sie abläuft)
+		my $sb = $dbh->prepare("SELECT b.* FROM `Benutzer` b WHERE b.`ID` = ? AND NOT $AUSGESCHIEDEN");
 		$sb->execute($s->{Benutzer_ID});
 		my $user = $sb->fetchrow_hashref;
 		$sb->finish;
@@ -126,23 +139,25 @@ sub beenden {
 	$dbh->commit();
 }
 
-# Adressen, die das Bestellsystem kennt: [zugang_id, benutzer_id, email].
+# Adressen, die das Bestellsystem kennt: [zugang_id, benutzer_id, email], ohne die ausgeschiedener Anteile ($AUSGESCHIEDEN).
 # Regel: Steht in BenutzerZugang mindestens eine Adresse, zählt nur BenutzerZugang. Wer dort entfernt wird, kommt auch über
 # WordPress nicht mehr herein. Nur solange BenutzerZugang ganz leer ist (vor model/BenutzerZugangFuellen.pl), gilt der Übergang:
 # die Adressen aus wp_users, zugeordnet über wpID/wpMitID/wpMit2ID/wpMit3ID (zugang_id 0), wenn $dbh_wp gesetzt ist.
 sub kandidaten {
 	my ($dbh, $dbh_wp) = @_;
 	my @k;
-	my $st = $dbh->prepare("SELECT `ID`, `Benutzer_ID`, `Email` FROM `$T_ZUGANG`");
+	my ($eingetragen) = $dbh->selectrow_array("SELECT COUNT(*) FROM `$T_ZUGANG`");
+	my $st = $dbh->prepare("SELECT z.`ID`, z.`Benutzer_ID`, z.`Email` FROM `$T_ZUGANG` z JOIN `Benutzer` b ON b.`ID` = z.`Benutzer_ID` WHERE NOT $AUSGESCHIEDEN");
 	$st->execute();
 	while (my $r = $st->fetchrow_arrayref) {
 		push(@k, [$r->[0], $r->[1], $r->[2]]);
 	}
-	if ($dbh_wp && !@k) {
+	if ($dbh_wp && !$eingetragen) {
 		my %anteil;    # wp_users.ID -> [Benutzer.ID, ...]
-		my $sb = $dbh->prepare("SELECT * FROM `Benutzer`");
+		my $sb = $dbh->prepare("SELECT b.*, $AUSGESCHIEDEN AS `_ausgeschieden` FROM `Benutzer` b");
 		$sb->execute();
 		while (my $b = $sb->fetchrow_hashref) {
+			next if $b->{_ausgeschieden};
 			foreach my $spalte ('wpID', 'wpMitID', 'wpMit2ID', 'wpMit3ID') {
 				my $wp = $b->{$spalte};
 				push(@{ $anteil{$wp} }, $b->{ID}) if defined $wp && $wp =~ /^[1-9][0-9]*$/;
