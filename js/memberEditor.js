@@ -323,7 +323,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
 				return; /* inzwischen anderer Anteil oder anderer Knopf */
 			}
 			if (!zeilen || !zeilen.forEach) {
-				ausgabe.innerText = 'Die Adressen konnten nicht geladen werden.';
+				ausgabe.innerText = 'Die Adressen konnten nicht geladen werden' + (zeilen && zeilen.reason ? ': ' + zeilen.reason : '.');
 				return;
 			}
 			zeilen.forEach(function(z) { tabelle.appendChild(zugangZeile(z, ausgabe)); });
@@ -370,9 +370,9 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
 			}
 			postAjax('BenutzerZugang' + (z ? '/' + z.ID : ''), daten, function(r) {
 				if (r && r.result == 1) {
-					zeigeZugang(z ? 'Gespeichert.' : 'Hinzugefügt.');
+					zeigeZugang((z ? 'Gespeichert: ' : 'Hinzugefügt: ') + wert);
 				} else {
-					ausgabe.innerText = (r && r.reason) || 'Nicht gespeichert.'; /* Eingabe bleibt stehen */
+					ausgabe.innerText = (r && r.reason) || 'Nicht gespeichert: unbekannter Fehler.'; /* Eingabe bleibt stehen */
 				}
 			});
 		};
@@ -393,12 +393,12 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
 			var entfernen = document.createElement('BUTTON');
 			entfernen.innerText = 'Entfernen';
 			entfernen.onclick = function() {
-				if (confirm('Adresse entfernen? Mit ihr ist dann keine Anmeldung mehr möglich, Geräte, die mit ihr angemeldet sind, werden abgemeldet.')) {
+				if (confirm('Adresse ' + z.Email + ' entfernen? Danach ist mit ihr keine Anmeldung mehr möglich, und Geräte, die mit ihr angemeldet sind, werden abgemeldet.')) {
 					deleteAjax('BenutzerZugang/' + z.ID, function(r) {
 						if (r && r.result == 1) {
-							zeigeZugang('Entfernt.');
+							zeigeZugang('Entfernt: ' + z.Email);
 						} else {
-							ausgabe.innerText = (r && r.reason) || 'Nicht entfernt.';
+							ausgabe.innerText = (r && r.reason) || 'Nicht entfernt: unbekannter Fehler.';
 						}
 					});
 				}

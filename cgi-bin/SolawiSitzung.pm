@@ -260,19 +260,31 @@ sub email_normal {
 	return $e;
 }
 
-# Antwort, wenn eine Adresse nicht gespeichert wird, weil sie ungültig ist oder schon bei irgendeinem Anteil steht. Bewusst dieselbe:
-# Die Antwort verrät nicht, ob oder wo es eine Adresse schon gibt.
-our $ZUGANG_NICHT = 'Nicht gespeichert: Adresse ungültig oder schon vergeben.';
+# Meldungen für members.htm. Schreiben dürfen nur Orga und Admin, die alle Adressen ohnehin sehen; deshalb sagen die Meldungen
+# genau, was los ist (auch, bei welchem Anteil eine Adresse schon steht). Rolle 1 bis 3 bekommen vor jeder Prüfung nur
+# "no access right", gleich ob es die Adresse gibt oder nicht.
+our %ZUGANG_MELDUNG = (
+	ungueltig      => 'Bitte eine gültige Mailadresse eingeben.',
+	hier_schon     => 'Nicht gespeichert: Diese Adresse ist bei diesem Anteil schon eingetragen.',
+	kein_anteil    => 'Nicht gespeichert: Kein Anteil angegeben.',
+	nichts         => 'Nichts geändert.',
+	leer           => 'Nicht gespeichert: Die Anfrage enthielt keine Daten.',
+	weg_speichern  => 'Nicht gespeichert: Diese Adresse gibt es nicht mehr. Bitte „Mailadressen“ neu öffnen.',
+	weg_entfernen  => 'Nicht entfernt: Diese Adresse gibt es nicht mehr. Bitte „Mailadressen“ neu öffnen.',
+	db_speichern   => 'Nicht gespeichert: Fehler in der Datenbank. Bitte noch einmal versuchen.',
+	db_entfernen   => 'Nicht entfernt: Fehler in der Datenbank. Bitte noch einmal versuchen.',
+);
 
 # BenutzerZugang schreiben (resql.pl, nur Orga und Admin). Eigene Prüfung statt des allgemeinen Codes:
 #   POST   /BenutzerZugang        neue Adresse   {Benutzer_ID, Email, Bezeichnung}
 #   POST   /BenutzerZugang/<ID>   ändern         {Email, Bezeichnung, Benutzer_ID}, jedes Feld nur, wenn es sich ändern soll
 #   DELETE /BenutzerZugang/<ID>   entfernen
-# Eine Adresse gibt es nur einmal über alle Anteile. Die Antwort enthält keine SQL-Fehler, Abfragen oder Werte. Ändern sich Adresse
+# Eine Adresse gibt es nur einmal über alle Anteile. Die Antwort enthält keine SQL-Fehler und keine Abfragen. Ändern sich Adresse
 # oder Anteil, oder wird die Adresse entfernt, enden die Sitzungen, die über diese Adresse angemeldet sind.
 # Gibt den Hash für die JSON-Antwort zurück: {result => 1, type => insert|update|delete[, id]} oder {result => 0, reason => …}.
 sub zugang_schreiben {
 	my ($dbh, $user, $methode, $pfad, $body) = @_;
+	my %M = %ZUGANG_MELDUNG;
 	return { result => 0, reason => "no access right $pfad" } unless $user && $user->{Role_ID} >= 4;
 	return { result => 0, reason => "unknown path $pfad" } unless ($pfad || '') =~ m{^/[a-zA-Z]+(?:/([0-9]{1,10}))?/?$};
 	my $id = $1;
@@ -290,36 +302,38 @@ sub zugang_schreiben {
 		};
 		if (!defined $n) {
 			eval { $dbh->rollback() };
-			return { result => 0, type => 'delete', reason => 'Nicht entfernt.' };
+			return { result => 0, type => 'delete', reason => $M{db_entfernen} };
 		}
-		return $n > 0 ? { result => 1, type => 'delete' } : { result => 0, type => 'delete', reason => 'Adresse nicht gefunden.' };
+		return $n > 0 ? { result => 1, type => 'delete' } : { result => 0, type => 'delete', reason => $M{weg_entfernen} };
 	}
 
 	return { result => 0, reason => "supported request methods: POST, DELETE" } unless $methode eq 'POST';
-	return { result => 0, reason => $ZUGANG_NICHT } unless ref($body) eq 'HASH';
+	return { result => 0, reason => $M{leer} } unless ref($body) eq 'HASH';
 	my %neu;
 	if (exists $body->{Email} || !$id) {
 		my $e = email_normal($body->{Email});
-		return { result => 0, reason => $ZUGANG_NICHT } if $e eq '';
+		return { result => 0, reason => $M{ungueltig} } if $e eq '';
 		$neu{Email} = $e;
 	}
 	if (exists $body->{Bezeichnung}) {
 		my $b = defined $body->{Bezeichnung} && !ref($body->{Bezeichnung}) ? "$body->{Bezeichnung}" : '';
 		$b =~ s/[\x00-\x1f\x7f]+/ /g;
 		$b =~ s/^\s+|\s+$//g;
-		return { result => 0, reason => 'Nicht gespeichert: Bezeichnung zu lang (höchstens 100 Zeichen).' } if length($b) > 100;
+		return { result => 0, reason => 'Nicht gespeichert: Die Bezeichnung ist zu lang (' . length($b) . ' Zeichen, höchstens 100).' } if length($b) > 100;
 		$neu{Bezeichnung} = $b eq '' ? undef : $b;
 	}
 	if (exists $body->{Benutzer_ID} || !$id) {
 		my $b = $body->{Benutzer_ID};
-		my $gibt_es = defined $b && !ref($b) && "$b" =~ /^[1-9][0-9]{0,9}$/
-			&& $dbh->selectrow_array("SELECT COUNT(*) FROM `Benutzer` WHERE `ID` = ?", undef, "$b");
-		return { result => 0, reason => 'Nicht gespeichert: Anteil nicht gefunden.' } unless $gibt_es;
+		return { result => 0, reason => $M{kein_anteil} } unless defined $b && !ref($b) && "$b" =~ /^[1-9][0-9]{0,9}$/;
+		my ($gibt_es) = $dbh->selectrow_array("SELECT COUNT(*) FROM `Benutzer` WHERE `ID` = ?", undef, "$b");
+		return { result => 0, reason => "Nicht gespeichert: Den Anteil Nr. $b gibt es nicht." } unless $gibt_es;
 		$neu{Benutzer_ID} = "$b" + 0;
 	}
 
 	if (!$id) {
-		return { result => 0, reason => $ZUGANG_NICHT } if _zugang_vergeben($dbh, $neu{Email}, 0);
+		if (my $dublette = _zugang_dublette($dbh, $neu{Email}, 0, $neu{Benutzer_ID})) {
+			return { result => 0, type => 'insert', reason => $dublette };
+		}
 		my $neue_id = eval {
 			my $st = $dbh->prepare("INSERT INTO `$T_ZUGANG` (`Benutzer_ID`, `Email`, `Bezeichnung`, `AenderBenutzer_ID`) VALUES (?, ?, ?, ?)");
 			$st->execute($neu{Benutzer_ID}, $neu{Email}, $neu{Bezeichnung}, $user->{ID});
@@ -328,16 +342,20 @@ sub zugang_schreiben {
 			$i;
 		};
 		if (!$neue_id) {
-			eval { $dbh->rollback() };    # z. B. dieselbe Adresse gleichzeitig von zwei Seiten (eindeutiger Schlüssel)
-			return { result => 0, type => 'insert', reason => $ZUGANG_NICHT };
+			eval { $dbh->rollback() };
+			# z. B. dieselbe Adresse gleichzeitig von zwei Seiten eingetragen (eindeutiger Schlüssel)
+			return { result => 0, type => 'insert', reason => _zugang_dublette($dbh, $neu{Email}, 0, $neu{Benutzer_ID}) || $M{db_speichern} };
 		}
 		return { result => 1, type => 'insert', id => $neue_id + 0 };
 	}
 
 	my $alt = $dbh->selectrow_hashref("SELECT `Benutzer_ID`, `Email` FROM `$T_ZUGANG` WHERE `ID` = ?", undef, $id);
-	return { result => 0, type => 'update', reason => 'Adresse nicht gefunden.' } unless $alt;
-	return { result => 0, type => 'update', reason => 'Nichts geändert.' } unless %neu;
-	return { result => 0, type => 'update', reason => $ZUGANG_NICHT } if defined $neu{Email} && _zugang_vergeben($dbh, $neu{Email}, $id);
+	return { result => 0, type => 'update', reason => $M{weg_speichern} } unless $alt;
+	return { result => 0, type => 'update', reason => $M{nichts} } unless %neu;
+	if (defined $neu{Email}) {
+		my $dublette = _zugang_dublette($dbh, $neu{Email}, $id, $neu{Benutzer_ID} // $alt->{Benutzer_ID});
+		return { result => 0, type => 'update', reason => $dublette } if $dublette;
+	}
 	my @spalten = sort keys %neu;
 	my $ok = eval {
 		$dbh->prepare("UPDATE `$T_ZUGANG` SET " . join('', map { "`$_` = ?, " } @spalten) . "`AenderBenutzer_ID` = ?, `AenderZeitpunkt` = NOW() WHERE `ID` = ?")
@@ -351,16 +369,21 @@ sub zugang_schreiben {
 	};
 	if (!$ok) {
 		eval { $dbh->rollback() };
-		return { result => 0, type => 'update', reason => $ZUGANG_NICHT };
+		my $dublette = defined $neu{Email} ? _zugang_dublette($dbh, $neu{Email}, $id, $neu{Benutzer_ID} // $alt->{Benutzer_ID}) : undef;
+		return { result => 0, type => 'update', reason => $dublette || $M{db_speichern} };
 	}
 	return { result => 1, type => 'update' };
 }
 
-# Steht diese Adresse schon in BenutzerZugang (bei irgendeinem Anteil, außer in Zeile $ausser)?
-sub _zugang_vergeben {
-	my ($dbh, $email, $ausser) = @_;
-	my ($n) = $dbh->selectrow_array("SELECT COUNT(*) FROM `$T_ZUGANG` WHERE `Email` = ? AND `ID` <> ?", undef, $email, $ausser || 0);
-	return $n ? 1 : 0;
+# Steht diese Adresse schon in BenutzerZugang (außer in Zeile $ausser)? Dann die Meldung dazu: beim selben Anteil ($benutzer_id) oder
+# bei welchem anderen (Name und Nr.). Sonst undef.
+sub _zugang_dublette {
+	my ($dbh, $email, $ausser, $benutzer_id) = @_;
+	my $d = $dbh->selectrow_hashref("SELECT z.`Benutzer_ID` AS `Anteil`, b.`Name` AS `Name` FROM `$T_ZUGANG` z LEFT JOIN `Benutzer` b ON b.`ID` = z.`Benutzer_ID`"
+		. " WHERE z.`Email` = ? AND z.`ID` <> ? LIMIT 1", undef, $email, $ausser || 0);
+	return undef unless $d;
+	return $ZUGANG_MELDUNG{hier_schon} if defined $benutzer_id && $d->{Anteil} == $benutzer_id;
+	return 'Nicht gespeichert: Diese Adresse ist schon beim Anteil „' . ($d->{Name} // '?') . "“ (Nr. $d->{Anteil}) eingetragen.";
 }
 
 1;
