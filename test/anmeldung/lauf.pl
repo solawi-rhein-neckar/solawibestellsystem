@@ -1,6 +1,7 @@
 #!/usr/bin/perl
 #
-# Test: Anmeldung per Mail-Link über die Website und Sitzungen je Gerät (cgi-bin/SolawiSitzung.pm, wp.pl, resql.pl).
+# Test: Anmeldung per Mail-Link über die Website und Sitzungen je Gerät (cgi-bin/SolawiSitzung.pm, wp.pl, resql.pl), Pflege der
+# Mailadressen in BenutzerZugang (resql.pl, nur Orga und Admin) und das Einmal-Skript model/BenutzerZugangFuellen.pl.
 # Nur erfundene Mitglieder (example.org). Startet eine eigene, leere MySQL in einem Temp-Ordner und räumt sie danach weg;
 # wp.pl und resql.pl laufen als CGI wie auf dem Server, nur mit Verbindung zu dieser Test-MySQL.
 #
@@ -16,6 +17,7 @@ use strict;
 use warnings;
 use utf8;
 use Cwd qw(abs_path);
+use Encode ();
 use File::Basename qw(dirname);
 use File::Temp qw(tempdir);
 use Getopt::Long;
@@ -120,12 +122,15 @@ note('Trigger: ' . $root->selectrow_array("SELECT COUNT(*) FROM information_sche
 	. ', Views: ' . $root->selectrow_array("SELECT COUNT(*) FROM information_schema.VIEWS WHERE TABLE_SCHEMA = 'db208674_361'"));
 sql_datei('db208674_361', "$REPO/model/BenutzerZugangSitzung.sql");
 $root->do("CREATE TABLE db208674_220.wp_users (ID bigint(20) unsigned NOT NULL AUTO_INCREMENT, user_login varchar(60) NOT NULL, user_pass varchar(255) NOT NULL, user_email varchar(100) NOT NULL, PRIMARY KEY (ID)) ENGINE=InnoDB");
+$root->do("CREATE TABLE db208674_220.wp_usermeta (umeta_id bigint(20) unsigned NOT NULL AUTO_INCREMENT, user_id bigint(20) unsigned NOT NULL DEFAULT '0', meta_key varchar(255) DEFAULT NULL, meta_value longtext, PRIMARY KEY (umeta_id), KEY user_id (user_id)) ENGINE=InnoDB");
 
 # ---------- erfundene Mitglieder ----------
 #   Benutzer 1 Anna (Mitglied), Zugang: zwei Adressen; in WordPress wpID 101, wpMitID 102
 #   Benutzer 2 Bert (Mitglied), nur WordPress wpID 103, dazu wpMit2ID 104 (Dora) – dieselbe Person an zwei Anteilen
 #   Benutzer 3 Carla (Orga, Rolle 4), Zugang: eine Adresse
 #   Benutzer 4 Dora (Mitglied), WordPress wpID 104
+#   Benutzer 5 Erik (Depotverwaltung, Rolle 3), Benutzer 6 Fritz (Admin, Rolle 5): Passwort-Login über resql.pl, ohne WordPress
+#   (Teil 13 legt für das Einmal-Skript weitere an)
 my $db = DBI->connect("DBI:mysql:database=db208674_361;mysql_socket=$SOCK", 'root', '', { RaiseError => 1, AutoCommit => 1, mysql_enable_utf8mb4 => 1 });
 # Testdaten nur mit den Spalten, die der Test braucht. Weitere Pflichtfelder ohne Standardwert im echten Schema (z. B. Role.Nr,
 # Depot.KurzName) bekommen ohne strikten Modus ihren leeren Standardwert; danach gilt wieder der Modus des Servers.
@@ -133,13 +138,15 @@ $db->do("SET SESSION sql_mode = ''");
 $db->do("INSERT INTO Role (ID, Name) VALUES (1,'Packteam'),(2,'Mitglied'),(3,'Depotverwaltung'),(4,'Orga'),(5,'Admin')");
 $db->do("INSERT INTO Depot (ID, Name) VALUES (1,'Testdepot')");
 $db->do("INSERT INTO Benutzer (ID, Name, Passwort, Cookie, Role_ID, Depot_ID, wpID, wpMitID, wpMit2ID) VALUES
-	(1,'Anna Test','','',2,1,101,102,NULL),(2,'Bert Test','geheim-klartext','',2,1,103,NULL,104),(3,'Carla Orga','','',4,1,105,NULL,NULL),(4,'Dora Test','','',2,1,104,NULL,NULL)");
+	(1,'Anna Test','','',2,1,101,102,NULL),(2,'Bert Test','geheim-klartext','',2,1,103,NULL,104),(3,'Carla Orga','','',4,1,105,NULL,NULL),(4,'Dora Test','','',2,1,104,NULL,NULL),
+	(5,'Erik Depot','erik-klartext','',3,1,NULL,NULL,NULL),(6,'Fritz Admin','fritz-klartext','',5,1,NULL,NULL,NULL)");
 $db->do("INSERT INTO BenutzerZugang (ID, Benutzer_ID, Email, Bezeichnung) VALUES
 	(1,1,'anna.zugang\@example.org','Hauptmitglied'),(2,1,'anna.handy\@example.org','Mit-Mitglied'),(3,3,'carla\@example.org',NULL)");
 $db->do("SET SESSION sql_mode = DEFAULT");
 my $hash = Authen::Passphrase::PHPass->new(cost => 8, salt => 'Testsalz', passphrase => 'anna-passwort')->as_crypt;
 my $wp = DBI->connect("DBI:mysql:database=db208674_220;mysql_socket=$SOCK", 'root', '', { RaiseError => 1, AutoCommit => 1 });
 $wp->do("INSERT INTO wp_users (ID, user_login, user_pass, user_email) VALUES (101,'Anna_Test',?,'anna\@example.org'),(102,'Anna_Mit','x','mit-anna\@example.org'),(103,'Bert_Test','x','bert\@example.org'),(104,'Dora_Test','x','dora\@example.org'),(105,'Carla_Orga','x','carla-wp\@example.org')", undef, $hash);
+$wp->do("INSERT INTO wp_usermeta (user_id, meta_key, meta_value) VALUES (101,'account_status','approved'),(102,'account_status','approved'),(103,'account_status','approved'),(104,'account_status','approved'),(105,'account_status','approved')");
 
 # ---------- cgi-bin als Kopie, verbunden mit der Test-MySQL ----------
 my $CGI = "$TMP/cgi-bin";
@@ -167,7 +174,8 @@ ersetze("$CGI/SolawiSitzung.pm", qr/our \$BRUECKE\s*=\s*'[^']*';/, sub { "our \$
 my $ANMELDUNGEN = "$TMP/anmeldungen.json";
 sub keks { my ($p) = @_; return substr($p . ('x' x 43), 0, 43); }
 my %WEB = (anna => keks('annaZugang'), handy => keks('annaHandy'), annawp => keks('annaWordpress'), mitanna => keks('mitAnnaWp'),
-	dora => keks('doraDoppelt'), carla => keks('carlaOrga'), fremd => keks('niemand'), alt => keks('abgelaufen'));
+	dora => keks('doraDoppelt'), carla => keks('carlaOrga'), fremd => keks('niemand'), alt => keks('abgelaufen'),
+	bert => keks('bertZugang'), bertneu => keks('bertNeu'));
 sub anmeldungen_schreiben {
 	my $bis = time() + 14 * 86400;
 	my %a = (
@@ -177,6 +185,8 @@ sub anmeldungen_schreiben {
 		$WEB{mitanna} => { email => 'mit-anna@example.org',    bis => $bis },
 		$WEB{dora}    => { email => 'dora@example.org',        bis => $bis },
 		$WEB{carla}   => { email => 'carla@example.org',       bis => $bis },
+		$WEB{bert}    => { email => 'bert@example.org',        bis => $bis },
+		$WEB{bertneu} => { email => 'bert.neu@example.org',    bis => $bis },
 		$WEB{fremd}   => { email => 'niemand@example.org',     bis => $bis },
 		$WEB{alt}     => { email => 'anna.zugang@example.org', bis => time() - 60 },
 	);
@@ -286,16 +296,13 @@ is($r->{json}{user}, 'Anna Test', 'Mit-Mitglied (zweite Adresse im Zugang) lande
 is(zeilen('SELECT BenutzerZugang_ID FROM BenutzerSitzung WHERE IDHash = SHA2(?, 256)', $sid3), 2, 'Sitzung des Mit-Mitglieds hängt an Zugang 2');
 is(name_von(eigene($_)), 'Anna Test', 'Sitzung ' . substr($_, 0, 6) . '… gilt weiter') foreach ($sid1, $sid2, $sid3);
 
-note('4 Übergang: Zuordnung über WordPress');
-$r = login_web($WEB{annawp});
-my $sid4 = cookie_aus($r, 'sessionid');
-is($r->{json}{user}, 'Anna Test', 'Adresse nur in wp_users (wpID 101) → Anna');
-is(zeilen('SELECT BenutzerZugang_ID IS NULL FROM BenutzerSitzung WHERE IDHash = SHA2(?, 256)', $sid4), 1, 'Sitzung ohne Zugang (Übergang)');
-$r = login_web($WEB{mitanna});
-is($r->{json}{user}, 'Anna Test', 'Mit-Mitglied über wpMitID 102 → Anna');
-$r = login_web($WEB{dora});
-is($r->{json}{result}, 'mehrdeutig', 'wp-Konto an zwei Anteilen (wpID bei Dora, wpMit2ID bei Bert) → mehrdeutig');
-is(cookie_aus($r, 'sessionid'), undef, 'mehrdeutig: keine Sitzung');
+note('4 BenutzerZugang hat Einträge: WordPress zählt für die Anmeldung nicht mehr (Übergang: Teil 11)');
+foreach my $fall (['annawp', 'Adresse nur in wp_users (wpID 101)'], ['mitanna', 'Mit-Mitglied nur über wpMitID 102'],
+	['dora', 'wp-Konto an zwei Anteilen (wpID bei Dora, wpMit2ID bei Bert)']) {
+	$r = login_web($WEB{ $fall->[0] });
+	is($r->{json}{result}, 'not logged in on website', "$fall->[1] → keine Anmeldung");
+	is(cookie_aus($r, 'sessionid'), undef, '… und kein Cookie');
+}
 $r = login_web($WEB{fremd});
 is($r->{json}{result}, 'not logged in on website', 'angemeldet auf der Website, aber Adresse unbekannt im Bestellsystem → keine Sitzung');
 $r = login_web($WEB{alt});
@@ -323,7 +330,9 @@ like($r->{json}{reason} // '', qr/no access right/, 'Mitglied: GET BenutzerSitzu
 $r = cgi(skript => 'resql', pfad => '/BenutzerZugang', cookies => { sessionid => $sid1 });
 like($r->{json}{reason} // '', qr/no access right/, 'Mitglied: GET BenutzerZugang (alle) gesperrt');
 $r = cgi(skript => 'resql', pfad => '/BenutzerZugang/MY', cookies => { sessionid => $sid1 });
-is(join(',', sort map { $_->{Email} } @{ ref $r->{json} eq 'ARRAY' ? $r->{json} : [] }), 'anna.handy@example.org,anna.zugang@example.org', 'Mitglied: GET BenutzerZugang/MY → nur die eigenen Adressen');
+# Rolle 2 bekommt höchstens die eigenen Adressen (das Frontend fragt sie nicht ab)
+ok(ref $r->{json} eq 'ARRAY' ? adressen($r) eq 'anna.handy@example.org,anna.zugang@example.org' : ($r->{json}{reason} // '') =~ /no access right/,
+	'Mitglied: GET BenutzerZugang/MY → nur die eigenen Adressen oder keine');
 $r = cgi(skript => 'resql', methode => 'POST', pfad => '/BenutzerZugang', body => { Benutzer_ID => 1, Email => 'neu@example.org' }, cookies => { sessionid => $sid1 });
 like($r->{json}{reason} // '', qr/no access right/, 'Mitglied: POST BenutzerZugang gesperrt');
 is(zeilen("SELECT COUNT(*) FROM BenutzerZugang WHERE Email = 'neu\@example.org'"), 0, 'und nichts eingetragen');
@@ -416,9 +425,275 @@ is($r->{json}{result}, 'not logged in on website', 'ohne Brücke: keine Anmeldun
 (my $meldungen = $r->{stderr}) =~ s/^.*Issuing rollback\(\) due to DESTROY without explicit disconnect\(\).*\n?//mg;
 unlike($meldungen, qr/\S/, 'keine Fehlermeldung (außer der bekannten DESTROY-Warnung von $dbh2)');
 
+# BenutzerZugang auf einen festen Stand setzen (Sitzungen über gelöschte Adressen enden dabei, ON DELETE CASCADE)
+my @ZUGANG_START = @{ $db->selectall_arrayref('SELECT ID, Benutzer_ID, Email, Bezeichnung FROM BenutzerZugang ORDER BY ID') };
+sub zugang_setzen {
+	$db->do('DELETE FROM BenutzerZugang');
+	$db->do('INSERT INTO BenutzerZugang (ID, Benutzer_ID, Email, Bezeichnung) VALUES (?, ?, ?, ?)', undef, @$_) foreach @_;
+}
+
+note('11 Übergang: Solange BenutzerZugang leer ist, ordnet login/web über WordPress zu');
+zugang_setzen();
+$r = login_web($WEB{annawp});
+my $sid4 = cookie_aus($r, 'sessionid');
+is($r->{json}{user}, 'Anna Test', 'BenutzerZugang leer: Adresse nur in wp_users (wpID 101) → Anna');
+is(zeilen('SELECT BenutzerZugang_ID IS NULL FROM BenutzerSitzung WHERE IDHash = SHA2(?, 256)', $sid4), 1, 'Sitzung ohne Zugang (Übergang)');
+$r = login_web($WEB{mitanna});
+is($r->{json}{user}, 'Anna Test', 'Mit-Mitglied über wpMitID 102 → Anna');
+$r = login_web($WEB{dora});
+is($r->{json}{result}, 'mehrdeutig', 'wp-Konto an zwei Anteilen (wpID bei Dora, wpMit2ID bei Bert) → mehrdeutig');
+is(cookie_aus($r, 'sessionid'), undef, 'mehrdeutig: keine Sitzung');
+is(login_web($WEB{fremd})->{json}{result}, 'not logged in on website', 'Adresse weder hier noch in WordPress → keine Sitzung');
+$db->do("INSERT INTO BenutzerZugang (Benutzer_ID, Email) VALUES (3, 'carla\@example.org')");
+is(login_web($WEB{annawp})->{json}{result}, 'not logged in on website', 'erste Adresse in BenutzerZugang: WordPress zählt sofort nicht mehr');
+is(login_web($WEB{carla})->{json}{user}, 'Carla Orga', '… die eingetragene Adresse meldet an');
+is(name_von(eigene($sid4)), 'Anna Test', 'Sitzung aus dem Übergang läuft bis zu ihrem Ende weiter (höchstens so lange wie die Website-Anmeldung)');
+zugang_setzen(@ZUGANG_START);
+
+note('12 Mailadressen pflegen über resql.pl (nur Orga und Admin)');
+sub zpost { my ($sid, $pfad, $body) = @_; return cgi(skript => 'resql', methode => 'POST', pfad => $pfad, body => $body, cookies => { sessionid => $sid }); }
+sub zdel  { my ($sid, $pfad) = @_; return cgi(skript => 'resql', methode => 'DELETE', pfad => $pfad, cookies => { sessionid => $sid }); }
+sub zget  { my ($sid, $pfad) = @_; return cgi(skript => 'resql', pfad => $pfad, cookies => { sessionid => $sid }); }
+sub adressen { my ($r) = @_; return join(',', sort map { $_->{Email} } @{ ref $r->{json} eq 'ARRAY' ? $r->{json} : [] }); }
+sub anzahl_zugang { return zeilen('SELECT COUNT(*) FROM BenutzerZugang'); }
+sub kanonisch { return JSON::PP->new->canonical->encode($_[0] // {}); }
+my $orga = cookie_aus(login_web($WEB{carla}), 'sessionid');
+is(name_von(eigene($orga)), 'Carla Orga', 'Orga (Rolle 4) per Mail-Link angemeldet');
+
+$r = zpost($orga, '/BenutzerZugang', { Benutzer_ID => 2, Email => "  Bert\@Example.ORG \t", Bezeichnung => ' Hauptmitglied ' });
+is($r->{json}{result}, 1, 'Orga: neue Adresse für Bert');
+my $zb = $r->{json}{id} // 0;
+is(zeilen('SELECT Email FROM BenutzerZugang WHERE ID = ?', $zb), 'bert@example.org', '… getrimmt und in Kleinbuchstaben gespeichert');
+is(zeilen('SELECT CONCAT(Benutzer_ID, "/", Bezeichnung, "/", AenderBenutzer_ID) FROM BenutzerZugang WHERE ID = ?', $zb), '2/Hauptmitglied/3', '… am Anteil von Bert, Bezeichnung getrimmt, Carla als Änderin');
+ok(!exists $r->{json}{query} && !exists $r->{json}{params}, '… Antwort ohne Abfrage und ohne Werte');
+my $bert = cookie_aus(login_web($WEB{bert}), 'sessionid');
+is(name_von(eigene($bert)), 'Bert Test', 'Bert meldet sich jetzt per Mail-Link an');
+
+my $vorher = anzahl_zugang();
+my %antworten;
+foreach my $fall (
+	['bert@example.org', 4, 'Adresse, die schon bei Bert steht, für Dora'],
+	['BERT@example.org ', 2, 'dieselbe Adresse anders geschrieben, gleicher Anteil'],
+	['anna.zugang@example.org', 4, 'Adresse von Anna für Dora'],
+	['kein-at-zeichen', 4, 'ohne @'], ['a@b', 4, 'ohne Endung'], ['x y@example.org', 4, 'mit Leerzeichen'],
+	["o'brien\@example.org", 4, 'mit Apostroph'], ['<z@example.org>', 4, 'in spitzen Klammern'], ['a,b@example.org', 4, 'mit Komma'],
+	["m\x{fc}ller\@example.org", 4, 'mit Umlaut'], ['a..b@example.org', 4, 'zwei Punkte hintereinander'], ['', 4, 'leer'],
+	[('a' x 65) . '@example.org', 4, 'über 64 Zeichen vor dem @'], ['a@' . join('.', ('b' x 60) x 5) . '.org', 4, 'über 254 Zeichen'],
+) {
+	my ($mail, $bid, $was) = @$fall;
+	$r = zpost($orga, '/BenutzerZugang', { Benutzer_ID => $bid, Email => $mail });
+	is($r->{json}{result}, 0, "Orga: $was → nicht gespeichert");
+	$antworten{ kanonisch($r->{json}) }++;
+	unlike($r->{roh}, qr/\@|Duplicate|example|Bert|Dora|Anna/i, '… Antwort ohne Adresse, SQL-Fehler und Namen');
+}
+is(scalar(keys %antworten), 1, 'Dubletten und ungültige Adressen bekommen dieselbe Antwort (verrät nicht, ob es eine Adresse schon gibt)');
+is((keys %antworten)[0], kanonisch({ result => 0, reason => 'Nicht gespeichert: Adresse ungültig oder schon vergeben.' }), '… nämlich „Nicht gespeichert: Adresse ungültig oder schon vergeben.“');
+is(anzahl_zugang(), $vorher, '… und nichts eingetragen');
+$r = zpost($orga, '/BenutzerZugang', { Benutzer_ID => 999, Email => 'neu@example.org' });
+like($r->{json}{reason} // '', qr/Anteil nicht gefunden/, 'Orga: Anteil, den es nicht gibt → nicht gespeichert');
+$r = zpost($orga, '/BenutzerZugang', { Email => 'neu@example.org' });
+like($r->{json}{reason} // '', qr/Anteil nicht gefunden/, 'Orga: ohne Anteil → nicht gespeichert');
+$r = zpost($orga, '/benutzerzugang', { Benutzer_ID => 2, Email => 'kaputt' });
+is($r->{json}{result}, 0, 'Kleinschreibung im Pfad umgeht die Prüfung nicht');
+is(anzahl_zugang(), $vorher, '… nichts eingetragen');
+
+$r = zpost($orga, "/BenutzerZugang/$zb", { Bezeichnung => 'Mit-Mitglied' });
+is($r->{json}{result}, 1, 'Orga: nur die Bezeichnung geändert');
+is(name_von(eigene($bert)), 'Bert Test', '… die Sitzung von Bert läuft weiter');
+$r = zpost($orga, "/BenutzerZugang/$zb", { Bezeichnung => 'x' x 101 });
+like($r->{json}{reason} // '', qr/Bezeichnung zu lang/, 'Bezeichnung über 100 Zeichen → nicht gespeichert');
+$r = zpost($orga, "/BenutzerZugang/$zb", { Email => 'Anna.Handy@example.org' });
+is(kanonisch($r->{json}), kanonisch({ result => 0, type => 'update', reason => 'Nicht gespeichert: Adresse ungültig oder schon vergeben.' }), 'ändern auf eine Adresse, die bei Anna steht → dieselbe Antwort wie bei ungültig');
+is(zeilen('SELECT Email FROM BenutzerZugang WHERE ID = ?', $zb), 'bert@example.org', '… Adresse unverändert');
+$r = zpost($orga, "/BenutzerZugang/$zb", {});
+like($r->{json}{reason} // '', qr/Nichts geändert/, 'ändern ohne Felder → nichts geändert');
+$r = zpost($orga, '/BenutzerZugang/99999', { Bezeichnung => 'x' });
+like($r->{json}{reason} // '', qr/nicht gefunden/, 'ändern, was es nicht gibt → nicht gefunden');
+$r = zpost($orga, "/BenutzerZugang/$zb", { Email => 'Bert.Neu@example.org' });
+is($r->{json}{result}, 1, 'Orga: Adresse geändert');
+like(eigene($bert)->{json}{reason} // '', qr/not authenticated/, '… die Sitzung über die alte Adresse endet');
+is(login_web($WEB{bert})->{json}{result}, 'not logged in on website', '… die alte Adresse meldet nicht mehr an');
+my $bn = cookie_aus(login_web($WEB{bertneu}), 'sessionid');
+is(name_von(eigene($bn)), 'Bert Test', '… die neue schon');
+$r = zpost($orga, "/BenutzerZugang/$zb", { Benutzer_ID => 4 });
+is($r->{json}{result}, 1, 'Orga: Adresse zu einem anderen Anteil verschoben');
+like(eigene($bn)->{json}{reason} // '', qr/not authenticated/, '… die Sitzung am alten Anteil endet');
+my $dn = cookie_aus(login_web($WEB{bertneu}), 'sessionid');
+is(name_von(eigene($dn)), 'Dora Test', '… die Adresse meldet jetzt bei Dora an');
+$r = zdel($orga, "/BenutzerZugang/$zb");
+is($r->{json}{result}, 1, 'Orga: Adresse entfernt');
+is(zeilen('SELECT COUNT(*) FROM BenutzerZugang WHERE ID = ?', $zb), 0, '… die Zeile ist weg');
+like(eigene($dn)->{json}{reason} // '', qr/not authenticated/, '… Geräte, die mit ihr angemeldet sind, sind abgemeldet');
+is(login_web($WEB{bertneu})->{json}{result}, 'not logged in on website', '… und sie meldet nicht mehr an');
+like(zdel($orga, "/BenutzerZugang/$zb")->{json}{reason} // '', qr/nicht gefunden/, 'noch einmal entfernen → nicht gefunden');
+is(zdel($orga, '/BenutzerZugang/Benutzer_ID/1/Bezeichnung/Hauptmitglied')->{json}{result}, 0, 'entfernen über Spalten statt ID → abgelehnt');
+is(zeilen('SELECT COUNT(*) FROM BenutzerZugang WHERE Benutzer_ID = 1'), 2, '… die Adressen von Anna sind noch da');
+
+$r = cgi(skript => 'resql', methode => 'POST', pfad => '/login', body => { name => 'Fritz Admin', password => 'fritz-klartext' });
+my $admin = cookie_aus($r, 'sessionid');
+$r = zpost($admin, '/BenutzerZugang', { Benutzer_ID => 5, Email => 'erik@example.org' });
+is($r->{json}{result}, 1, 'Admin (Rolle 5): neue Adresse für Erik');
+my $ze = $r->{json}{id} // 0;
+$r = cgi(skript => 'resql', methode => 'POST', pfad => '/login', body => { name => 'Erik Depot', password => 'erik-klartext' });
+my $depot = cookie_aus($r, 'sessionid');
+is(name_von(eigene($depot)), 'Erik Depot', 'Depotverwaltung (Rolle 3) angemeldet');
+is(adressen(zget($depot, '/BenutzerZugang/MY')), 'erik@example.org', 'Depotverwaltung: GET BenutzerZugang/MY → nur die eigene Adresse');
+like(zget($depot, '/BenutzerZugang')->{json}{reason} // '', qr/no access right/, 'Depotverwaltung: GET BenutzerZugang (alle) gesperrt');
+like(zget($depot, '/BenutzerZugang/Benutzer_ID/1')->{json}{reason} // '', qr/no access right/, 'Depotverwaltung: Adressen eines anderen Anteils gesperrt');
+is(adressen(zget($orga, '/BenutzerZugang/Benutzer_ID/1')), 'anna.handy@example.org,anna.zugang@example.org', 'Orga: Adressen eines Anteils (so lädt sie members.htm)');
+$vorher = anzahl_zugang();
+my $mitglied = cookie_aus(login_web($WEB{anna}), 'sessionid');
+is(name_von(eigene($mitglied)), 'Anna Test', 'Mitglied (Rolle 2) per Mail-Link angemeldet');
+foreach my $wer ([$depot, 'Depotverwaltung'], [$mitglied, 'Mitglied']) {
+	my ($sid, $rolle) = @$wer;
+	my %a;
+	foreach my $mail ('anna.zugang@example.org', 'gibt-es-noch-nicht@example.org') {
+		$r = zpost($sid, '/BenutzerZugang', { Benutzer_ID => $sid eq $depot ? 5 : 1, Email => $mail });
+		$a{ kanonisch($r->{json}) }++;
+	}
+	is(scalar(keys %a), 1, "$rolle: POST BenutzerZugang mit vorhandener und neuer Adresse → dieselbe Antwort");
+	like((keys %a)[0], qr/no access right/, "… nämlich „no access right“");
+	like(zpost($sid, "/BenutzerZugang/$ze", { Email => 'umgebogen@example.org' })->{json}{reason} // '', qr/no access right/, "$rolle: ändern gesperrt");
+	like(zdel($sid, "/BenutzerZugang/$ze")->{json}{reason} // '', qr/no access right/, "$rolle: entfernen gesperrt");
+	like(zdel($sid, '/BenutzerZugang/1')->{json}{reason} // '', qr/no access right/, "$rolle: entfernen einer fremden Adresse gesperrt");
+}
+is(anzahl_zugang(), $vorher, 'nichts eingetragen oder entfernt');
+is(zeilen('SELECT Email FROM BenutzerZugang WHERE ID = ?', $ze), 'erik@example.org', '… und nichts geändert');
+
+note('13 Einmal-Skript model/BenutzerZugangFuellen.pl');
+# Adressprüfung: Was SolawiSitzung::email_normal (und damit members.htm und das Skript) annimmt, nimmt auch die Website an.
+# Dazu dieselbe Funktion wie mg_email_normal() in mitglieder/_intern/tuer.php der Website.
+require SolawiSitzung;
+my @proben = ('Anna.Zugang@Example.org', ' a.b-c+tag@sub.example.co.uk ', 'x_y@xn--mller-kva.de', "o'brien\@example.org",
+	'a..b@example.org', '.a@example.org', 'a.@example.org', 'a@b', 'a@b.c', 'a@-b.org', 'a@b-.org', 'a@b.123', 'a b@example.org',
+	"m\x{fc}ller\@example.org", 'a@example.org.', '"a"@example.org', 'a@[127.0.0.1]', 'a@localhost', ('a' x 64) . '@example.org',
+	('a' x 65) . '@example.org', 'a@' . ('b' x 63) . '.org', 'a@' . ('b' x 64) . '.org', 'a@' . join('.', ('b' x 60) x 4) . '.org',
+	'ä@example.org', 'a@exämple.org', 'A@EXAMPLE.ORG', "a\@example.org\n", 'a=b@example.org', 'a#b@example.org', 'a{b}@example.org');
+open(my $php_mg, '>', "$TMP/mg_email_normal.php") or die $!;
+print $php_mg <<'PHP';
+<?php
+function mg_email_normal(string $roh): string
+{
+    $e = strtolower(trim($roh));
+    if ($e === '' || strlen($e) > 254 || preg_match('/[\s<>"\'\\\\,;:()]/', $e) === 1) {
+        return '';
+    }
+    return filter_var($e, FILTER_VALIDATE_EMAIL) !== false ? $e : '';
+}
+while (($z = fgets(STDIN)) !== false) {
+    echo mg_email_normal(base64_decode(trim($z))), "\n";
+}
+PHP
+close($php_mg);
+require MIME::Base64;
+my $pid_php = open3(my $php_ein, my $php_aus, undef, $PHP, "$TMP/mg_email_normal.php");
+binmode($php_ein, ':raw');
+print $php_ein MIME::Base64::encode_base64(Encode::encode('UTF-8', $_), '') . "\n" foreach @proben;
+close($php_ein);
+my @php_ergebnis = map { chomp; $_ } <$php_aus>;
+waitpid($pid_php, 0);
+my (@abweichend, $angenommen);
+foreach my $i (0 .. $#proben) {
+	my $perl = SolawiSitzung::email_normal($proben[$i]);
+	$angenommen++ if $perl ne '';
+	push(@abweichend, "$i: perl='$perl' php='" . ($php_ergebnis[$i] // '?') . "'") if $perl ne '' && $perl ne ($php_ergebnis[$i] // '');
+}
+is(scalar(@php_ergebnis), scalar(@proben), 'PHP hat alle Proben geprüft');
+is(join('; ', @abweichend), '', "Jede Adresse, die das Bestellsystem annimmt, nimmt auch die Website an, gleich geschrieben ($angenommen von " . scalar(@proben) . ' Proben angenommen)');
+is(SolawiSitzung::email_normal(' Anna.Zugang@Example.org '), 'anna.zugang@example.org', 'email_normal: getrimmt, Kleinbuchstaben');
+is(SolawiSitzung::email_normal('a@' . join('.', ('b' x 60) x 4) . '.org'), 'a@' . join('.', ('b' x 60) x 4) . '.org', 'email_normal: 249 Zeichen gehen');
+
+# Anteile und WordPress-Konten für das Skript (erfunden):
+#   Gina  Depot „Geloescht“ (0), wpID 106                → übersprungen
+#   Hans  wpID 107, Konto nicht freigeschaltet           → keine Adresse
+#   Ida   wpID 108, Konto fehlt in WordPress             → keine Adresse
+#   Jo    wpID 109, Adresse ungültig                     → keine Adresse
+#   Kai   wpID 110 und wpMitID 111 mit derselben Adresse in anderer Schreibweise → eine Zeile, „Hauptmitglied“
+# Dazu von früher: Anna 101 (Hauptmitglied) und 102 (Mit-Mitglied), Bert 103, Dora 104 auch wpMit2ID bei Bert (mehrdeutig),
+# Carla 105, Erik und Fritz ohne WordPress. Schon in BenutzerZugang: Annas Adresse aus WordPress (schon da) und Carlas Adresse
+# aus WordPress, aber bei Dora (bleibt dort).
+$db->do("SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'");
+$db->do("INSERT INTO Depot (ID, Name) VALUES (0, 'Geloescht')");
+$db->do("INSERT INTO Benutzer (ID, Name, Passwort, Cookie, Role_ID, Depot_ID, wpID, wpMitID) VALUES
+	(7,'Gina Weg','','',2,0,106,NULL),(8,'Hans Inaktiv','','',2,1,107,NULL),(9,'Ida Ohne','','',2,1,108,NULL),(10,'Jo Kaputt','','',2,1,109,NULL),
+	(11,'Kai Doppelt','','',2,1,110,111)");
+$db->do("SET SESSION sql_mode = DEFAULT");
+$wp->do("INSERT INTO wp_users (ID, user_login, user_pass, user_email) VALUES (106,'Gina','x','gina\@example.org'),(107,'Hans','x','hans\@example.org'),
+	(109,'Jo','x','kaputt'),(110,'Kai','x','kai\@example.org'),(111,'Kai2','x','KAI\@Example.org ')");
+$wp->do("INSERT INTO wp_usermeta (user_id, meta_key, meta_value) VALUES (106,'account_status','approved'),(107,'account_status','inactive'),
+	(109,'account_status','approved'),(110,'account_status','approved'),(111,'account_status','approved'),(110,'first_name','Kai')");
+zugang_setzen([1, 1, 'anna@example.org', 'von Hand'], [2, 4, 'carla-wp@example.org', 'von Hand']);
+my $CNF = "$TMP/mysql-test.cnf";
+open(my $cnf, '>', $CNF) or die $!;
+print $cnf "[client]\nuser=root\nsocket=$SOCK\n";
+close($cnf);
+sub fuellen {
+	my (@arg) = @_;
+	my $fehler = gensym;
+	my $pid = open3(my $ein, my $aus, $fehler, $^X, "$REPO/model/BenutzerZugangFuellen.pl", @arg);
+	close($ein);
+	my $o = Encode::decode('UTF-8', do { local $/; <$aus> } // '');
+	my $e = Encode::decode('UTF-8', do { local $/; <$fehler> } // '');
+	waitpid($pid, 0);
+	my %z;
+	@z{qw(anteile geloescht)} = $o =~ /^Anteile:\s+(\d+)\s+\(dazu (\d+)/m;
+	@z{qw(konten nicht_frei fehlen ungueltig)} = $o =~ /^WordPress-Konten verknüpft:\s+(\d+)\s+\(nicht freigeschaltet (\d+), fehlen in WordPress (\d+), ohne gültige Adresse (\d+)/m;
+	($z{neu}) = $o =~ /^Adressen neu:\s+(\d+)/m;
+	($z{eingetragen}) = $o =~ /eingetragen: (\d+)\)/;
+	($z{schon_da}) = $o =~ /^Adressen schon da:\s+(\d+)/m;
+	($z{anderswo}) = $o =~ /^Adressen bei anderem Anteil:\s+(\d+)/m;
+	($z{mehrdeutig}) = $o =~ /^Adressen mehrdeutig:\s+(\d+)/m;
+	($z{ohne}) = $o =~ /^Anteile ohne Adresse danach:\s+(\d+)/m;
+	delete $z{eingetragen} unless defined $z{eingetragen};
+	return { code => $? >> 8, aus => $o, fehler => $e, zahlen => \%z };
+}
+my @namen = map { $_->[0] } @{ $db->selectall_arrayref('SELECT Name FROM Benutzer') };
+sub verraet { my ($t) = @_; return join(',', ($t =~ /(\S*\@\S*)/g), grep { index($t, $_) >= 0 || index($t, (split(/ /, $_))[0]) >= 0 } @namen); }
+sub stand { return $db->selectall_arrayref('SELECT Benutzer_ID, Email, Bezeichnung FROM BenutzerZugang ORDER BY Email'); }
+my %erwartet = (anteile => 10, geloescht => 1, konten => 10, nicht_frei => 1, fehlen => 1, ungueltig => 1, neu => 3, schon_da => 1,
+	anderswo => 1, mehrdeutig => 1, ohne => 6);
+
+my $vorher_stand = stand();
+my $f = fuellen('--bs-cnf', $CNF, '--wp-cnf', $CNF);
+is($f->{code}, 0, 'Trockenlauf: läuft durch') or diag($f->{fehler});
+note("  $_") foreach split(/\n/, $f->{aus});
+like($f->{aus}, qr/Trockenlauf, es wird nichts geändert/, '… und sagt, dass es ein Trockenlauf ist');
+is_deeply($f->{zahlen}, \%erwartet, '… Zahlen: 10 Anteile (1 gelöscht), 10 Konten (1 nicht frei, 1 fehlt, 1 ungültig), 3 neu, 1 schon da, 1 anderswo, 1 mehrdeutig, 6 ohne Adresse');
+is_deeply(stand(), $vorher_stand, '… BenutzerZugang unverändert');
+is(verraet($f->{aus} . $f->{fehler}), '', '… keine Adresse und kein Name in der Ausgabe');
+
+$f = fuellen('--bs-cnf', $CNF, '--wp-cnf', $CNF, '--echt');
+is($f->{code}, 0, 'echter Lauf: läuft durch') or diag($f->{fehler});
+is_deeply($f->{zahlen}, { %erwartet, eingetragen => 3 }, '… dieselben Zahlen, 3 eingetragen');
+is_deeply(stand(), [[1, 'anna@example.org', 'von Hand'], [2, 'bert@example.org', 'Hauptmitglied'], [4, 'carla-wp@example.org', 'von Hand'],
+	[11, 'kai@example.org', 'Hauptmitglied'], [1, 'mit-anna@example.org', 'Mit-Mitglied']],
+	'… eingetragen: Bert, Kai (einmal, Hauptmitglied), Annas Mit-Mitglied; Dora (mehrdeutig), Gina, Hans, Ida, Jo nicht; vorhandene Zeilen unverändert');
+is(verraet($f->{aus} . $f->{fehler}), '', '… keine Adresse und kein Name in der Ausgabe');
+
+$f = fuellen('--bs-cnf', $CNF, '--wp-cnf', $CNF, '--echt');
+is_deeply($f->{zahlen}, { %erwartet, neu => 0, schon_da => 4, eingetragen => 0 }, 'zweiter echter Lauf: nichts neu, 4 schon da (idempotent)');
+is(scalar(@{ stand() }), 5, '… keine Zeile doppelt, keine gelöscht');
+
+$r = login_web($WEB{annawp});
+is($r->{json}{user}, 'Anna Test', 'nach dem Füllen: Annas WordPress-Adresse meldet über BenutzerZugang an');
+ok(zeilen('SELECT BenutzerZugang_ID IS NOT NULL FROM BenutzerSitzung WHERE IDHash = SHA2(?, 256)', cookie_aus($r, 'sessionid')), '… Sitzung mit Zugang');
+is(login_web($WEB{mitanna})->{json}{user}, 'Anna Test', '… ebenso ihr Mit-Mitglied');
+is(login_web($WEB{dora})->{json}{result}, 'not logged in on website', '… die mehrdeutige Adresse nicht (die Mitgliederverwaltung trägt sie beim richtigen Anteil ein)');
+
+$f = fuellen('--bs-cnf', "$TMP/gibt-es-nicht.cnf", '--wp-cnf', $CNF);
+isnt($f->{code}, 0, 'Optionsdatei fehlt → Abbruch');
+open($cnf, '>', "$TMP/falsch.cnf") or die $!;
+print $cnf "[client]\nuser=niemand\npassword=falsch\nsocket=$SOCK\n";
+close($cnf);
+$f = fuellen('--bs-cnf', "$TMP/falsch.cnf", '--wp-cnf', $CNF, '--echt');
+isnt($f->{code}, 0, 'falsche Zugangsdaten → Abbruch');
+like($f->{fehler}, qr/Keine Verbindung zu db208674_361/, '… mit Hinweis, welche Datenbank');
+is(scalar(@{ stand() }), 5, '… und nichts geändert');
+zugang_setzen(@ZUGANG_START);
+
 # =====================================================================================================================
 if ($WEB) {
-	note("11 Gegen die echte Brücke der Website ($WEB)");
+	note("14 Gegen die echte Brücke der Website ($WEB)");
 	require Digest::SHA;
 	my $www = "$TMP/web/mitglieder/_intern";
 	system('mkdir', '-p', $www) == 0 or die;
@@ -455,7 +730,13 @@ if ($WEB) {
 	is($r->{json}{user}, 'Anna Test', 'echte Brücke: Anmeldung der Website → Anna');
 	my $sidE = cookie_aus($r, 'sessionid');
 	is(name_von(eigene($sidE)), 'Anna Test', 'echte Brücke: Sitzung gilt in resql.pl');
-	is(login_web($echt{dora}, bruecke => $B)->{json}{result}, 'mehrdeutig', 'echte Brücke: mehrdeutig');
+	is(login_web($echt{dora}, bruecke => $B)->{json}{result}, 'not logged in on website', 'echte Brücke: Adresse nur in WordPress, BenutzerZugang hat Einträge → keine Sitzung');
+	zugang_setzen();
+	is(login_web($echt{dora}, bruecke => $B)->{json}{result}, 'mehrdeutig', 'echte Brücke, BenutzerZugang leer (Übergang): mehrdeutig');
+	zugang_setzen(@ZUGANG_START);
+	$r = login_web($echt{anna}, bruecke => $B);
+	$sidE = cookie_aus($r, 'sessionid');
+	is(name_von(eigene($sidE)), 'Anna Test', 'echte Brücke: wieder angemeldet (Sitzungen über BenutzerZugang endeten beim Leeren)');
 	is(login_web($echt{raus}, bruecke => $B)->{json}{result}, 'not logged in on website', 'echte Brücke: Adresse nicht in der Mitgliederliste → keine Sitzung');
 	is(login_web(keks('unbekannt'), bruecke => $B)->{json}{result}, 'not logged in on website', 'echte Brücke: unbekanntes Cookie');
 	my $vorher = () = glob("$daten/mg-sitzungen/*.json");
