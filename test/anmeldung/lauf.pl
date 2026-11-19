@@ -175,7 +175,7 @@ my $ANMELDUNGEN = "$TMP/anmeldungen.json";
 sub keks { my ($p) = @_; return substr($p . ('x' x 43), 0, 43); }
 my %WEB = (anna => keks('annaZugang'), handy => keks('annaHandy'), annawp => keks('annaWordpress'), mitanna => keks('mitAnnaWp'),
 	dora => keks('doraDoppelt'), carla => keks('carlaOrga'), fremd => keks('niemand'), alt => keks('abgelaufen'),
-	bert => keks('bertZugang'), bertneu => keks('bertNeu'));
+	bert => keks('bertZugang'), bertneu => keks('bertNeu'), lenamit3 => keks('lenaMit3'));
 sub anmeldungen_schreiben {
 	my $bis = time() + 14 * 86400;
 	my %a = (
@@ -187,6 +187,7 @@ sub anmeldungen_schreiben {
 		$WEB{carla}   => { email => 'carla@example.org',       bis => $bis },
 		$WEB{bert}    => { email => 'bert@example.org',        bis => $bis },
 		$WEB{bertneu} => { email => 'bert.neu@example.org',    bis => $bis },
+		$WEB{lenamit3} => { email => 'lena-mit3@example.org',  bis => $bis },
 		$WEB{fremd}   => { email => 'niemand@example.org',     bis => $bis },
 		$WEB{alt}     => { email => 'anna.zugang@example.org', bis => time() - 60 },
 	);
@@ -470,11 +471,19 @@ my $bert = cookie_aus(login_web($WEB{bert}), 'sessionid');
 is(name_von(eigene($bert)), 'Bert Test', 'Bert meldet sich jetzt per Mail-Link an');
 
 my $vorher = anzahl_zugang();
+# Dubletten: Orga und Admin sehen alle Adressen ohnehin, die Meldung sagt deshalb genau, bei welchem Anteil die Adresse steht
+foreach my $fall (
+	['bert@example.org', 4, 'Adresse, die schon bei Bert steht, für Dora', 'Nicht gespeichert: Diese Adresse ist schon beim Anteil „Bert Test“ (Nr. 2) eingetragen.'],
+	['BERT@example.org ', 2, 'dieselbe Adresse anders geschrieben, gleicher Anteil', 'Nicht gespeichert: Diese Adresse ist bei diesem Anteil schon eingetragen.'],
+	['anna.zugang@example.org', 4, 'Adresse von Anna für Dora', 'Nicht gespeichert: Diese Adresse ist schon beim Anteil „Anna Test“ (Nr. 1) eingetragen.'],
+) {
+	my ($mail, $bid, $was, $meldung) = @$fall;
+	$r = zpost($orga, '/BenutzerZugang', { Benutzer_ID => $bid, Email => $mail });
+	is($r->{json}{reason} // '', $meldung, "Orga: $was → „$meldung“");
+	unlike($r->{roh}, qr/\@|Duplicate|query|params/i, '… ohne Adresse, SQL-Fehler und Abfrage');
+}
 my %antworten;
 foreach my $fall (
-	['bert@example.org', 4, 'Adresse, die schon bei Bert steht, für Dora'],
-	['BERT@example.org ', 2, 'dieselbe Adresse anders geschrieben, gleicher Anteil'],
-	['anna.zugang@example.org', 4, 'Adresse von Anna für Dora'],
 	['kein-at-zeichen', 4, 'ohne @'], ['a@b', 4, 'ohne Endung'], ['x y@example.org', 4, 'mit Leerzeichen'],
 	["o'brien\@example.org", 4, 'mit Apostroph'], ['<z@example.org>', 4, 'in spitzen Klammern'], ['a,b@example.org', 4, 'mit Komma'],
 	["m\x{fc}ller\@example.org", 4, 'mit Umlaut'], ['a..b@example.org', 4, 'zwei Punkte hintereinander'], ['', 4, 'leer'],
@@ -484,15 +493,15 @@ foreach my $fall (
 	$r = zpost($orga, '/BenutzerZugang', { Benutzer_ID => $bid, Email => $mail });
 	is($r->{json}{result}, 0, "Orga: $was → nicht gespeichert");
 	$antworten{ kanonisch($r->{json}) }++;
-	unlike($r->{roh}, qr/\@|Duplicate|example|Bert|Dora|Anna/i, '… Antwort ohne Adresse, SQL-Fehler und Namen');
+	unlike($r->{roh}, qr/\@|Duplicate|example/i, '… Antwort ohne Adresse und SQL-Fehler');
 }
-is(scalar(keys %antworten), 1, 'Dubletten und ungültige Adressen bekommen dieselbe Antwort (verrät nicht, ob es eine Adresse schon gibt)');
-is((keys %antworten)[0], kanonisch({ result => 0, reason => 'Nicht gespeichert: Adresse ungültig oder schon vergeben.' }), '… nämlich „Nicht gespeichert: Adresse ungültig oder schon vergeben.“');
-is(anzahl_zugang(), $vorher, '… und nichts eingetragen');
+is(scalar(keys %antworten), 1, 'ungültige Adressen bekommen alle dieselbe Meldung');
+is((keys %antworten)[0], kanonisch({ result => 0, reason => 'Bitte eine gültige Mailadresse eingeben.' }), '… nämlich „Bitte eine gültige Mailadresse eingeben.“ (wie im Browser)');
+is(anzahl_zugang(), $vorher, 'Dubletten und ungültige Adressen: nichts eingetragen');
 $r = zpost($orga, '/BenutzerZugang', { Benutzer_ID => 999, Email => 'neu@example.org' });
-like($r->{json}{reason} // '', qr/Anteil nicht gefunden/, 'Orga: Anteil, den es nicht gibt → nicht gespeichert');
+is($r->{json}{reason} // '', 'Nicht gespeichert: Den Anteil Nr. 999 gibt es nicht.', 'Orga: Anteil, den es nicht gibt → „Den Anteil Nr. 999 gibt es nicht.“');
 $r = zpost($orga, '/BenutzerZugang', { Email => 'neu@example.org' });
-like($r->{json}{reason} // '', qr/Anteil nicht gefunden/, 'Orga: ohne Anteil → nicht gespeichert');
+is($r->{json}{reason} // '', 'Nicht gespeichert: Kein Anteil angegeben.', 'Orga: ohne Anteil → „Kein Anteil angegeben.“');
 $r = zpost($orga, '/benutzerzugang', { Benutzer_ID => 2, Email => 'kaputt' });
 is($r->{json}{result}, 0, 'Kleinschreibung im Pfad umgeht die Prüfung nicht');
 is(anzahl_zugang(), $vorher, '… nichts eingetragen');
@@ -501,14 +510,14 @@ $r = zpost($orga, "/BenutzerZugang/$zb", { Bezeichnung => 'Mit-Mitglied' });
 is($r->{json}{result}, 1, 'Orga: nur die Bezeichnung geändert');
 is(name_von(eigene($bert)), 'Bert Test', '… die Sitzung von Bert läuft weiter');
 $r = zpost($orga, "/BenutzerZugang/$zb", { Bezeichnung => 'x' x 101 });
-like($r->{json}{reason} // '', qr/Bezeichnung zu lang/, 'Bezeichnung über 100 Zeichen → nicht gespeichert');
+is($r->{json}{reason} // '', 'Nicht gespeichert: Die Bezeichnung ist zu lang (101 Zeichen, höchstens 100).', 'Bezeichnung über 100 Zeichen → Meldung mit Länge');
 $r = zpost($orga, "/BenutzerZugang/$zb", { Email => 'Anna.Handy@example.org' });
-is(kanonisch($r->{json}), kanonisch({ result => 0, type => 'update', reason => 'Nicht gespeichert: Adresse ungültig oder schon vergeben.' }), 'ändern auf eine Adresse, die bei Anna steht → dieselbe Antwort wie bei ungültig');
+is(kanonisch($r->{json}), kanonisch({ result => 0, type => 'update', reason => 'Nicht gespeichert: Diese Adresse ist schon beim Anteil „Anna Test“ (Nr. 1) eingetragen.' }), 'ändern auf eine Adresse, die bei Anna steht → Meldung nennt Annas Anteil');
 is(zeilen('SELECT Email FROM BenutzerZugang WHERE ID = ?', $zb), 'bert@example.org', '… Adresse unverändert');
 $r = zpost($orga, "/BenutzerZugang/$zb", {});
 like($r->{json}{reason} // '', qr/Nichts geändert/, 'ändern ohne Felder → nichts geändert');
 $r = zpost($orga, '/BenutzerZugang/99999', { Bezeichnung => 'x' });
-like($r->{json}{reason} // '', qr/nicht gefunden/, 'ändern, was es nicht gibt → nicht gefunden');
+is($r->{json}{reason} // '', 'Nicht gespeichert: Diese Adresse gibt es nicht mehr. Bitte „Mailadressen“ neu öffnen.', 'ändern, was es nicht gibt → „gibt es nicht mehr“');
 $r = zpost($orga, "/BenutzerZugang/$zb", { Email => 'Bert.Neu@example.org' });
 is($r->{json}{result}, 1, 'Orga: Adresse geändert');
 like(eigene($bert)->{json}{reason} // '', qr/not authenticated/, '… die Sitzung über die alte Adresse endet');
@@ -525,7 +534,7 @@ is($r->{json}{result}, 1, 'Orga: Adresse entfernt');
 is(zeilen('SELECT COUNT(*) FROM BenutzerZugang WHERE ID = ?', $zb), 0, '… die Zeile ist weg');
 like(eigene($dn)->{json}{reason} // '', qr/not authenticated/, '… Geräte, die mit ihr angemeldet sind, sind abgemeldet');
 is(login_web($WEB{bertneu})->{json}{result}, 'not logged in on website', '… und sie meldet nicht mehr an');
-like(zdel($orga, "/BenutzerZugang/$zb")->{json}{reason} // '', qr/nicht gefunden/, 'noch einmal entfernen → nicht gefunden');
+is(zdel($orga, "/BenutzerZugang/$zb")->{json}{reason} // '', 'Nicht entfernt: Diese Adresse gibt es nicht mehr. Bitte „Mailadressen“ neu öffnen.', 'noch einmal entfernen → „gibt es nicht mehr“');
 is(zdel($orga, '/BenutzerZugang/Benutzer_ID/1/Bezeichnung/Hauptmitglied')->{json}{result}, 0, 'entfernen über Spalten statt ID → abgelehnt');
 is(zeilen('SELECT COUNT(*) FROM BenutzerZugang WHERE Benutzer_ID = 1'), 2, '… die Adressen von Anna sind noch da');
 
@@ -609,6 +618,9 @@ is(SolawiSitzung::email_normal('a@' . join('.', ('b' x 60) x 4) . '.org'), 'a@' 
 #   Ida   wpID 108, Konto fehlt in WordPress             → keine Adresse
 #   Jo    wpID 109, Adresse ungültig                     → keine Adresse
 #   Kai   wpID 110 und wpMitID 111 mit derselben Adresse in anderer Schreibweise → eine Zeile, „Hauptmitglied“
+#   Lena  wpID 112, wpMit2ID 113, wpMit3ID 114           → drei Zeilen, Mit-Mitglieder als „Mit-Mitglied“
+#   WordPress 115 (Olaf) freigeschaltet, an keinem Anteil → gezählt („onlyWP“); 116 (Paul) an keinem Anteil, nicht freigeschaltet
+#   → nicht gezählt (steht auch heute nicht in der Mitgliederliste der Website); Gina 106 freigeschaltet, nur am gelöschten Anteil
 # Dazu von früher: Anna 101 (Hauptmitglied) und 102 (Mit-Mitglied), Bert 103, Dora 104 auch wpMit2ID bei Bert (mehrdeutig),
 # Carla 105, Erik und Fritz ohne WordPress. Schon in BenutzerZugang: Annas Adresse aus WordPress (schon da) und Carlas Adresse
 # aus WordPress, aber bei Dora (bleibt dort).
@@ -617,11 +629,15 @@ $db->do("INSERT INTO Depot (ID, Name) VALUES (0, 'Geloescht')");
 $db->do("INSERT INTO Benutzer (ID, Name, Passwort, Cookie, Role_ID, Depot_ID, wpID, wpMitID) VALUES
 	(7,'Gina Weg','','',2,0,106,NULL),(8,'Hans Inaktiv','','',2,1,107,NULL),(9,'Ida Ohne','','',2,1,108,NULL),(10,'Jo Kaputt','','',2,1,109,NULL),
 	(11,'Kai Doppelt','','',2,1,110,111)");
+$db->do("INSERT INTO Benutzer (ID, Name, Passwort, Cookie, Role_ID, Depot_ID, wpID, wpMitID, wpMit2ID, wpMit3ID) VALUES (12,'Lena Drei','','',2,1,112,NULL,113,114)");
 $db->do("SET SESSION sql_mode = DEFAULT");
 $wp->do("INSERT INTO wp_users (ID, user_login, user_pass, user_email) VALUES (106,'Gina','x','gina\@example.org'),(107,'Hans','x','hans\@example.org'),
-	(109,'Jo','x','kaputt'),(110,'Kai','x','kai\@example.org'),(111,'Kai2','x','KAI\@Example.org ')");
+	(109,'Jo','x','kaputt'),(110,'Kai','x','kai\@example.org'),(111,'Kai2','x','KAI\@Example.org '),(112,'Lena','x','lena\@example.org'),
+	(113,'Lena2','x','lena-mit2\@example.org'),(114,'Lena3','x','lena-mit3\@example.org'),(115,'Olaf','x','olaf\@example.org'),(116,'Paul','x','paul\@example.org')");
 $wp->do("INSERT INTO wp_usermeta (user_id, meta_key, meta_value) VALUES (106,'account_status','approved'),(107,'account_status','inactive'),
-	(109,'account_status','approved'),(110,'account_status','approved'),(111,'account_status','approved'),(110,'first_name','Kai')");
+	(109,'account_status','approved'),(110,'account_status','approved'),(111,'account_status','approved'),(110,'first_name','Kai'),
+	(112,'account_status','approved'),(113,'account_status','approved'),(114,'account_status','approved'),(115,'account_status','approved'),
+	(116,'account_status','awaiting_admin_review')");
 zugang_setzen([1, 1, 'anna@example.org', 'von Hand'], [2, 4, 'carla-wp@example.org', 'von Hand']);
 my $CNF = "$TMP/mysql-test.cnf";
 open(my $cnf, '>', $CNF) or die $!;
@@ -644,40 +660,43 @@ sub fuellen {
 	($z{anderswo}) = $o =~ /^Adressen bei anderem Anteil:\s+(\d+)/m;
 	($z{mehrdeutig}) = $o =~ /^Adressen mehrdeutig:\s+(\d+)/m;
 	($z{ohne}) = $o =~ /^Anteile ohne Adresse danach:\s+(\d+)/m;
+	@z{qw(frei_ohne frei_ohne_anteil frei_nur_geloescht)} = $o =~ /^Freigeschaltet, ohne Anteil:\s+(\d+)\s+\(an keinem Anteil (\d+), in members.htm „onlyWP“; nur an Anteilen im Depot „Geloescht“ (\d+)\)/m;
 	delete $z{eingetragen} unless defined $z{eingetragen};
 	return { code => $? >> 8, aus => $o, fehler => $e, zahlen => \%z };
 }
 my @namen = map { $_->[0] } @{ $db->selectall_arrayref('SELECT Name FROM Benutzer') };
 sub verraet { my ($t) = @_; return join(',', ($t =~ /(\S*\@\S*)/g), grep { index($t, $_) >= 0 || index($t, (split(/ /, $_))[0]) >= 0 } @namen); }
-sub stand { return $db->selectall_arrayref('SELECT Benutzer_ID, Email, Bezeichnung FROM BenutzerZugang ORDER BY Email'); }
-my %erwartet = (anteile => 10, geloescht => 1, konten => 10, nicht_frei => 1, fehlen => 1, ungueltig => 1, neu => 3, schon_da => 1,
-	anderswo => 1, mehrdeutig => 1, ohne => 6);
+sub stand { return [sort { $a->[1] cmp $b->[1] } @{ $db->selectall_arrayref('SELECT Benutzer_ID, Email, Bezeichnung FROM BenutzerZugang') }]; }
+my %erwartet = (anteile => 11, geloescht => 1, konten => 13, nicht_frei => 1, fehlen => 1, ungueltig => 1, neu => 6, schon_da => 1,
+	anderswo => 1, mehrdeutig => 1, ohne => 6, frei_ohne => 2, frei_ohne_anteil => 1, frei_nur_geloescht => 1);
 
 my $vorher_stand = stand();
 my $f = fuellen('--bs-cnf', $CNF, '--wp-cnf', $CNF);
 is($f->{code}, 0, 'Trockenlauf: läuft durch') or diag($f->{fehler});
 note("  $_") foreach split(/\n/, $f->{aus});
 like($f->{aus}, qr/Trockenlauf, es wird nichts geändert/, '… und sagt, dass es ein Trockenlauf ist');
-is_deeply($f->{zahlen}, \%erwartet, '… Zahlen: 10 Anteile (1 gelöscht), 10 Konten (1 nicht frei, 1 fehlt, 1 ungültig), 3 neu, 1 schon da, 1 anderswo, 1 mehrdeutig, 6 ohne Adresse');
+is_deeply($f->{zahlen}, \%erwartet, '… Zahlen: 11 Anteile (1 gelöscht), 13 Konten (1 nicht frei, 1 fehlt, 1 ungültig), 6 neu, 1 schon da, 1 anderswo, 1 mehrdeutig, 6 Anteile ohne Adresse, 2 freigeschaltete Konten ohne Anteil (1 keiner, 1 nur gelöscht)');
 is_deeply(stand(), $vorher_stand, '… BenutzerZugang unverändert');
 is(verraet($f->{aus} . $f->{fehler}), '', '… keine Adresse und kein Name in der Ausgabe');
 
 $f = fuellen('--bs-cnf', $CNF, '--wp-cnf', $CNF, '--echt');
 is($f->{code}, 0, 'echter Lauf: läuft durch') or diag($f->{fehler});
-is_deeply($f->{zahlen}, { %erwartet, eingetragen => 3 }, '… dieselben Zahlen, 3 eingetragen');
+is_deeply($f->{zahlen}, { %erwartet, eingetragen => 6 }, '… dieselben Zahlen, 6 eingetragen');
 is_deeply(stand(), [[1, 'anna@example.org', 'von Hand'], [2, 'bert@example.org', 'Hauptmitglied'], [4, 'carla-wp@example.org', 'von Hand'],
-	[11, 'kai@example.org', 'Hauptmitglied'], [1, 'mit-anna@example.org', 'Mit-Mitglied']],
-	'… eingetragen: Bert, Kai (einmal, Hauptmitglied), Annas Mit-Mitglied; Dora (mehrdeutig), Gina, Hans, Ida, Jo nicht; vorhandene Zeilen unverändert');
+	[11, 'kai@example.org', 'Hauptmitglied'], [12, 'lena-mit2@example.org', 'Mit-Mitglied'], [12, 'lena-mit3@example.org', 'Mit-Mitglied'],
+	[12, 'lena@example.org', 'Hauptmitglied'], [1, 'mit-anna@example.org', 'Mit-Mitglied']],
+	'… eingetragen: Bert, Kai (einmal, Hauptmitglied), Lena mit Mit-Mitgliedern aus wpMit2ID und wpMit3ID, Annas Mit-Mitglied (wpMitID); Dora (mehrdeutig), Gina, Hans, Ida, Jo, Olaf, Paul nicht; vorhandene Zeilen unverändert');
 is(verraet($f->{aus} . $f->{fehler}), '', '… keine Adresse und kein Name in der Ausgabe');
 
 $f = fuellen('--bs-cnf', $CNF, '--wp-cnf', $CNF, '--echt');
-is_deeply($f->{zahlen}, { %erwartet, neu => 0, schon_da => 4, eingetragen => 0 }, 'zweiter echter Lauf: nichts neu, 4 schon da (idempotent)');
-is(scalar(@{ stand() }), 5, '… keine Zeile doppelt, keine gelöscht');
+is_deeply($f->{zahlen}, { %erwartet, neu => 0, schon_da => 7, eingetragen => 0 }, 'zweiter echter Lauf: nichts neu, 7 schon da (idempotent)');
+is(scalar(@{ stand() }), 8, '… keine Zeile doppelt, keine gelöscht');
 
 $r = login_web($WEB{annawp});
 is($r->{json}{user}, 'Anna Test', 'nach dem Füllen: Annas WordPress-Adresse meldet über BenutzerZugang an');
 ok(zeilen('SELECT BenutzerZugang_ID IS NOT NULL FROM BenutzerSitzung WHERE IDHash = SHA2(?, 256)', cookie_aus($r, 'sessionid')), '… Sitzung mit Zugang');
-is(login_web($WEB{mitanna})->{json}{user}, 'Anna Test', '… ebenso ihr Mit-Mitglied');
+is(login_web($WEB{mitanna})->{json}{user}, 'Anna Test', '… ebenso ihr Mit-Mitglied (wpMitID)');
+is(login_web($WEB{lenamit3})->{json}{user}, 'Lena Drei', '… und Lenas Mit-Mitglied (wpMit3ID)');
 is(login_web($WEB{dora})->{json}{result}, 'not logged in on website', '… die mehrdeutige Adresse nicht (die Mitgliederverwaltung trägt sie beim richtigen Anteil ein)');
 
 $f = fuellen('--bs-cnf', "$TMP/gibt-es-nicht.cnf", '--wp-cnf', $CNF);
@@ -688,7 +707,7 @@ close($cnf);
 $f = fuellen('--bs-cnf', "$TMP/falsch.cnf", '--wp-cnf', $CNF, '--echt');
 isnt($f->{code}, 0, 'falsche Zugangsdaten → Abbruch');
 like($f->{fehler}, qr/Keine Verbindung zu db208674_361/, '… mit Hinweis, welche Datenbank');
-is(scalar(@{ stand() }), 5, '… und nichts geändert');
+is(scalar(@{ stand() }), 8, '… und nichts geändert');
 zugang_setzen(@ZUGANG_START);
 
 # =====================================================================================================================

@@ -20,6 +20,11 @@
 #   - Gehört eine Adresse zu genau einem Anteil und steht sie noch nicht in BenutzerZugang, wird sie eingetragen, mit der
 #     Bezeichnung „Hauptmitglied“ (wpID) oder „Mit-Mitglied“ (wpMitID, wpMit2ID, wpMit3ID).
 #   - Gehört sie zu mehreren Anteilen, wird sie nicht eingetragen, nur gezählt. Steht sie schon bei einem Anteil, bleibt sie dort.
+#   - Mit-Mitglieder (wpMitID, wpMit2ID, wpMit3ID) werden genauso übernommen wie Hauptmitglieder (wpID).
+#   - Zählt außerdem die freigeschalteten WordPress-Konten, die an keinem Anteil hängen (oder nur an Anteilen im Depot
+#     „Geloescht“). Sie stehen heute in der Mitgliederliste der Website, aber nicht in BenutzerZugang. Die ohne Anteil stehen in
+#     members.htm als Zeilen „onlyWP“, die Mitgliederverwaltung trägt die Adresse beim richtigen Anteil ein. Die an gelöschten
+#     Anteilen sind meist ehemalige Mitglieder.
 #   - Löscht nichts, ändert keine vorhandene Zeile. Ein zweiter Lauf trägt nichts doppelt ein.
 #   - Gibt nur Zahlen aus, keine Adressen und keine Namen (auch nicht in Fehlermeldungen).
 #
@@ -83,8 +88,10 @@ if (!$bs || !$wp) {
 	exit(1);
 }
 
-my %z = map { $_ => 0 } qw(anteile geloescht konten fehlen nicht_frei ungueltig neu schon_da anderswo mehrdeutig ohne eingetragen);
+my %z = map { $_ => 0 } qw(anteile geloescht konten fehlen nicht_frei ungueltig neu schon_da anderswo mehrdeutig ohne eingetragen
+	frei_ohne_anteil frei_nur_geloescht);
 my %verweise;    # wp_users.ID -> [[Benutzer.ID, Bezeichnung], ...]
+my %verweise_geloescht;    # wp_users.ID -> 1, für Anteile im Depot „Geloescht“
 my @aktiv;
 my $ok = eval {
 	# Anteile und ihre WordPress-Konten
@@ -93,6 +100,9 @@ my $ok = eval {
 	while (my $b = $sb->fetchrow_hashref) {
 		if (defined $b->{Depot_ID} && $b->{Depot_ID} == 0) {
 			$z{geloescht}++;
+			foreach my $spalte (qw(wpID wpMitID wpMit2ID wpMit3ID)) {
+				$verweise_geloescht{ $b->{$spalte} } = 1 if defined $b->{$spalte} && $b->{$spalte} =~ /^[1-9][0-9]*$/;
+			}
 			next;
 		}
 		push(@aktiv, $b->{ID});
@@ -114,7 +124,11 @@ my $ok = eval {
 	my $sw = $wp->prepare("SELECT `ID`, `user_email` FROM `wp_users`");
 	$sw->execute();
 	while (my ($wid, $mail) = $sw->fetchrow_array) {
-		next unless $verweise{$wid};
+		if (!$verweise{$wid}) {
+			# freigeschaltet, aber an keinem aktiven Anteil: steht heute in der Mitgliederliste der Website
+			$z{ $verweise_geloescht{$wid} ? 'frei_nur_geloescht' : 'frei_ohne_anteil' }++ if $frei{$wid};
+			next;
+		}
 		$gefunden{$wid} = 1;
 		if (!$frei{$wid}) {
 			$z{nicht_frei}++;
@@ -188,5 +202,7 @@ printf("Adressen schon da:            %5d\n", $z{schon_da});
 printf("Adressen bei anderem Anteil:  %5d  (stehen schon bei einem anderen Anteil, bleiben dort)\n", $z{anderswo});
 printf("Adressen mehrdeutig:          %5d  (gehören zu mehreren Anteilen, nicht eingetragen)\n", $z{mehrdeutig});
 printf("Anteile ohne Adresse danach:  %5d  (in members.htm „!KEIN_ZUGANG!“)\n", $z{ohne});
+printf("Freigeschaltet, ohne Anteil:  %5d  (an keinem Anteil %d, in members.htm „onlyWP“; nur an Anteilen im Depot „Geloescht“ %d)\n",
+	$z{frei_ohne_anteil} + $z{frei_nur_geloescht}, $z{frei_ohne_anteil}, $z{frei_nur_geloescht});
 print "Für den echten Lauf: --echt\n" unless $echt;
 exit(0);

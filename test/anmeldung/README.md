@@ -4,7 +4,7 @@ Prüft `cgi-bin/SolawiSitzung.pm`, die neuen Wege `POST wp.php/login/web` und `P
 und `resql.pl` und die Sperren für `BenutzerSitzung` und `BenutzerZugang`. Nur erfundene Mitglieder (`example.org`).
 
 Dazu (Teile 11 bis 13): der Übergang über WordPress, solange `BenutzerZugang` leer ist; das Pflegen der Mailadressen über
-`resql.pl` (Orga und Admin schreiben, Rolle 1 bis 3 nicht; ungültige Adressen und Dubletten bekommen dieselbe Antwort); die
+`resql.pl` (Orga und Admin schreiben und bekommen genaue Meldungen, Rolle 1 bis 3 nicht und ohne Hinweis, ob es eine Adresse gibt); die
 Adressprüfung gegen die der Website (PHP, `FILTER_VALIDATE_EMAIL`) und das Einmal-Skript `model/BenutzerZugangFuellen.pl`
 (Trockenlauf, echter Lauf, zweiter Lauf, nur Zahlen in der Ausgabe).
 
