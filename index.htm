@@ -4,9 +4,7 @@
 <meta charset="UTF-8" />
 <title>Solawi Bestellsystem</title>
 <link rel="stylesheet" type="text/css" href="css/style.css" />
-<link rel="stylesheet"
-	href="https://fonts.googleapis.com/css?family=Special+Elite%3Aregular%7COpen+Sans%3A300%2C300italic%2Cregular%2Citalic%2C600%2C600italic%2C700%2C700italic%2C800%2C800italic&amp;ver=4.9.11#038;subset=latin,latin-ext"
-	type="text/css" media="all" />
+<link rel="stylesheet" type="text/css" href="css/schriften.css" />
 
 <script src="js/util.js"></script>
 <script src="js/weekSelect.js"></script>
@@ -16,9 +14,9 @@
 <script src="js/solawiTableEditor.js"></script>
 <script src="js/solawiTable.js"></script>
 <script src="js/solawiTableOnClick.js"></script>
+<script src="js/anmeldung.js"></script>
 
-<script
-	src="https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js"></script>
+<script src="lib/exceljs.min.js"></script>
 <script type="text/javascript" src="lib/FileSaver.min.js"></script>
 
 <meta name="viewport"
@@ -184,9 +182,11 @@
 								.addTo(document.getElementById('tableUrlaub'));
 
 					} else {
-						show('loginform');
-						hide('logoutbtn');
-						hide('content');
+						solawiAnmeldung.versuchen(function() { // erst die Anmeldung der Website übernehmen (Mail-Link)
+							show('loginform');
+							hide('logoutbtn');
+							hide('content');
+						});
 					}
 				});
 
@@ -302,7 +302,7 @@
 	<div id="logoutfrombg"></div>
 	<div id="logoutform">
 		<button id="logoutbtn"
-			onclick="document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';show('loginform'); hide('logoutbtn');hide('content');">Abmelden</button>
+			onclick="solawiAnmeldung.abmelden(function(){show('loginform'); hide('logoutbtn');hide('content');});">Abmelden</button>
 		<div id="messages"></div>
 	</div>
 
@@ -310,8 +310,13 @@
 		<form class="register-form" method='post'
 			action='/cgi-bin/wp.php/login'>
 			<img style="width: 200px; margin-bottom: 2em;"
-				src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png"
-				alt="Logo Solawi"> <input type='text' id='inpName' name='name'
+				src="img/solawi-logo.png"
+				alt="Logo Solawi">
+				<a class="loginbutton maillink" href="/anmelden/?ziel=bestellung/index.htm"
+					onclick="this.href = solawiAnmeldung.link();">Anmelden mit Mail-Link</a>
+				<p class="message hinweis">Mailadresse eingeben, Link aus der Mail anklicken, fertig. Oder wie bisher mit Benutzername und Passwort:</p>
+				<div class="message" id="anmeldungMehrdeutig">Deine Mailadresse gehört zu mehr als einem Anteil. Bitte schreib kurz an die AG Bestellsystem, dann ordnen wir sie richtig zu.</div>
+				<input type='text' id='inpName' name='name'
 				placeholder='Name' /> <br /> <input type='password' id='inpPass'
 				name='password' placeholder='Passwort' /> <br /> <input
 				class="loginbutton" type='submit' value='Anmelden'
@@ -336,7 +341,7 @@
 	<div id="content">
 		<header> <nav id="page-nav"> <img id="logo"
 			alt="Logo Solawi"
-			src="https://www.solawi-rhein-neckar.org/public/wp-content/uploads/2016/06/Solawi-Logo-e1475176176128-2.png"></img>
+			src="img/solawi-logo.png"></img>
 		<label for="hamburger">&#9776;</label> <input type="checkbox"
 			id="hamburger" />
 		<div class="desktopmenu">

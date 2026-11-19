@@ -29,6 +29,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
     var stornoCtnr;
     var weekSelector;
     var dataIdGetter;
+    var zugangCtnr;
     var onEntitySaved = pOnEntitySaved;
 
 	/*public*/
@@ -116,6 +117,13 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             var btn3 = document.createElement("BUTTON");
             btn3.innerText="Urlaub u. Punkte";
             tabPane.appendChild(btn3);
+            /* Mailadressen für die Anmeldung (BenutzerZugang): nur Orga und Admin, die dürfen sie in resql.pl auch schreiben */
+            var btn4 = null;
+            if (sbs.user && sbs.user.Role_ID >= 4) {
+                btn4 = document.createElement("BUTTON");
+                btn4.innerText="Mailadressen";
+                tabPane.appendChild(btn4);
+            }
 
             tabTitle = document.createElement("DIV");
             tabTitle.innerText = 'Lieferung';
@@ -133,6 +141,11 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             weekSelect.postData = {Benutzer_ID: dataIdGetter(), Woche: sbs.selectedWeek},
             weekSelect.allowMulti = false;
             weekSelect.setElem(holiday);
+
+            zugangCtnr = document.createElement("DIV");
+            zugangCtnr.id = 'benutzerZugang' + editorSuffix;
+            zugangCtnr.style.display = 'none';
+            info.appendChild(zugangCtnr);
 
             var table = document.createElement("TABLE");
             info.appendChild(table);
@@ -204,6 +217,13 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
                 weekSelect.postData = {Benutzer_ID: dataIdGetter(), Woche: sbs.selectedWeek};
                 weekSelect.refresh();
             };
+            if (btn4) {
+                btn4.onclick=function() {
+                    solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';tabTitle.innerText='Mailadressen für die Anmeldung';lieferTitle.innerText='';seriesBtn.style.display='none';
+                    zeigeZugang('');
+                };
+            }
+            [btn, btn1, btn2, btn3].forEach(function(b) { b.addEventListener('click', versteckeZugang); });
 
             stornoCtnr = document.createElement("SPAN");
             stornoCtnr.id= "stornoCtnr"+editorSuffix;
@@ -239,6 +259,7 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             btnCtnr.style.textAlign = 'center';
 		} else {
             info.style.display='inline-block';
+	        versteckeZugang();
 	        solawiTableEdit.reset();solawiTableValid.reset();solawiTableView.reset();solawiTableLiefer.reset();holiday.innerHTML = '';
 	        solawiTableValid.editorDefault['Benutzer_ID'] = dataIdGetter();
 	        solawiTableEdit.editorDefault['Benutzer_ID'] = dataIdGetter();
@@ -253,6 +274,139 @@ function MemberEditor(pSbs, pEditorSuffix, pOnEntitySaved) {
             btnCtnr.style.textAlign = 'left';
         }
     }
+
+	/*private*/
+	function versteckeZugang() {
+		if (zugangCtnr) {
+			zugangCtnr.style.display = 'none';
+			zugangCtnr.innerHTML = '';
+		}
+	}
+
+	/*private: wie SolawiSitzung::email_normal in cgi-bin (der Server prüft noch einmal), hier nur für eine schnelle Rückmeldung */
+	function emailNormal(roh) {
+		var e = String(roh || '').trim().toLowerCase();
+		var atom = "[a-z0-9!#$%&*+/=?^_`{|}~-]+";
+		var muster = new RegExp('^(' + atom + '(?:\\.' + atom + ')*)@(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$');
+		var treffer = e.length <= 254 ? e.match(muster) : null;
+		return treffer && treffer[1].length <= 64 ? e : '';
+	}
+
+	/*private: Mailadressen des Anteils (BenutzerZugang) zeigen und pflegen; meldung steht unter der Liste */
+	function zeigeZugang(meldung) {
+		var benutzerId = dataIdGetter();
+		zugangCtnr.style.display = 'block';
+		zugangCtnr.innerHTML = '';
+		var hinweis = document.createElement('P');
+		hinweis.innerText = 'Mit diesen Adressen meldet sich das Mitglied per Mail-Link an (Website und Bestellsystem). '
+			+ 'Eine Adresse gehört immer zu genau einem Anteil.';
+		zugangCtnr.appendChild(hinweis);
+		var tabelle = document.createElement('TABLE');
+		tabelle.style.width = '100%';
+		var kopf = document.createElement('TR');
+		['Mailadresse', 'Bezeichnung', ''].forEach(function(text) {
+			var th = document.createElement('TH');
+			th.innerText = text;
+			th.style.textAlign = 'left';
+			kopf.appendChild(th);
+		});
+		tabelle.appendChild(kopf);
+		zugangCtnr.appendChild(tabelle);
+		var ausgabe = document.createElement('DIV');
+		ausgabe.className = 'zugangMeldung';
+		ausgabe.style.marginTop = '8px';
+		ausgabe.style.fontWeight = 'bold';
+		ausgabe.innerText = meldung || '';
+		zugangCtnr.appendChild(ausgabe);
+		getAjax('BenutzerZugang/Benutzer_ID/' + benutzerId, function(zeilen) {
+			if (benutzerId != dataIdGetter() || zugangCtnr.style.display == 'none') {
+				return; /* inzwischen anderer Anteil oder anderer Knopf */
+			}
+			if (!zeilen || !zeilen.forEach) {
+				ausgabe.innerText = 'Die Adressen konnten nicht geladen werden' + (zeilen && zeilen.reason ? ': ' + zeilen.reason : '.');
+				return;
+			}
+			zeilen.forEach(function(z) { tabelle.appendChild(zugangZeile(z, ausgabe)); });
+			tabelle.appendChild(zugangZeile(null, ausgabe));
+		});
+	}
+
+	/*private: eine Zeile mit Adresse und Bezeichnung; z == null: leere Zeile zum Hinzufügen */
+	function zugangZeile(z, ausgabe) {
+		var tr = document.createElement('TR');
+		var email = document.createElement('INPUT');
+		email.type = 'email';
+		email.maxLength = 254;
+		email.placeholder = 'neue Mailadresse';
+		email.className = 'inp_ZugangEmail';
+		email.value = z ? z.Email : '';
+		var bez = document.createElement('INPUT');
+		bez.maxLength = 100;
+		bez.placeholder = 'z. B. Mit-Mitglied';
+		bez.className = 'inp_ZugangBezeichnung';
+		bez.value = z && z.Bezeichnung ? z.Bezeichnung : '';
+		[email, bez].forEach(function(inp) {
+			inp.style.width = '100%';
+			inp.style.boxSizing = 'border-box';
+		});
+		var speichern = document.createElement('BUTTON');
+		speichern.innerText = z ? 'Speichern' : 'Hinzufügen';
+		speichern.onclick = function() {
+			var wert = emailNormal(email.value);
+			if (!wert) {
+				ausgabe.innerText = 'Bitte eine gültige Mailadresse eingeben.';
+				return;
+			}
+			var daten = z ? {} : {Benutzer_ID: dataIdGetter()};
+			if (!z || wert != z.Email) {
+				daten.Email = wert;
+			}
+			if (!z || bez.value.trim() != (z.Bezeichnung || '')) {
+				daten.Bezeichnung = bez.value.trim();
+			}
+			if (Object.keys(daten).length == 0) {
+				ausgabe.innerText = 'Nichts geändert.';
+				return;
+			}
+			postAjax('BenutzerZugang' + (z ? '/' + z.ID : ''), daten, function(r) {
+				if (r && r.result == 1) {
+					zeigeZugang((z ? 'Gespeichert: ' : 'Hinzugefügt: ') + wert);
+				} else {
+					ausgabe.innerText = (r && r.reason) || 'Nicht gespeichert: unbekannter Fehler.'; /* Eingabe bleibt stehen */
+				}
+			});
+		};
+		var weiter = function(evt) { if (evt.keyCode == 13) { speichern.click(); } };
+		email.addEventListener('keypress', weiter);
+		bez.addEventListener('keypress', weiter);
+		[[email, '50%'], [bez, '28%']].forEach(function(feld) {
+			var td = document.createElement('TD');
+			td.style.width = feld[1];
+			td.appendChild(feld[0]);
+			tr.appendChild(td);
+		});
+		var td = document.createElement('TD');
+		td.style.whiteSpace = 'nowrap';
+		td.appendChild(speichern);
+		tr.appendChild(td);
+		if (z) {
+			var entfernen = document.createElement('BUTTON');
+			entfernen.innerText = 'Entfernen';
+			entfernen.onclick = function() {
+				if (confirm('Adresse ' + z.Email + ' entfernen? Danach ist mit ihr keine Anmeldung mehr möglich, und Geräte, die mit ihr angemeldet sind, werden abgemeldet.')) {
+					deleteAjax('BenutzerZugang/' + z.ID, function(r) {
+						if (r && r.result == 1) {
+							zeigeZugang('Entfernt: ' + z.Email);
+						} else {
+							ausgabe.innerText = (r && r.reason) || 'Nicht entfernt: unbekannter Fehler.';
+						}
+					});
+				}
+			};
+			td.appendChild(entfernen);
+		}
+		return tr;
+	}
 
 	/*private*/
 	function changeWeekEditor(evt) {

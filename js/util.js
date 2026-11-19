@@ -186,7 +186,7 @@ function downloadWithSheetJs() { if (false) {
 	req.send();
 }
 
-/* this function (using excelJS - https://cdn.jsdelivr.net/npm/exceljs@1.13.0/dist/exceljs.min.js) is currenlty used to fill in xlsx templates */
+/* this function (using excelJS 1.13.0 - lib/exceljs.min.js) is currenlty used to fill in xlsx templates */
 function downloadDepotbestellungen(response, path) {
 	console.log('downloading...');
 	var responseCache = response;

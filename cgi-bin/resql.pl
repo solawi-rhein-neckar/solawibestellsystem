@@ -52,6 +52,8 @@ use POSIX qw(strftime);
 
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!!: displays (non-syntax) errors and warning in html
 
+use SolawiSitzung; # Sitzungen je Gerät, Anmeldung über die Website (Mail-Link)
+
 use constant {
     R_PROD   => 1,
     R_USER   => 2,
@@ -66,7 +68,7 @@ my $q = CGI::Simple->new;
 my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=mysql", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8mb4 => 1 });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
-	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json"});
 }
 
 
@@ -75,26 +77,38 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 
 	my $sessionid = rand();
 	my $body = decode_json($q->param( 'POSTDATA' ));
-	my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE `Name` = ? and `Passwort` = ?");
-	$stl->execute($sessionid, $body->{name}, $body->{password});
-	my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
+	# Passwort exakt vergleichen (BINARY) und nie leer: ein leeres Passwort traf sonst jedes leere Benutzer.Passwort,
+	# und ohne BINARY galten "abc" und "ABC " als gleich (Sortierung _ci, Leerzeichen am Ende zählen nicht)
+	my $pw = (defined $body->{password} && !ref($body->{password})) ? "$body->{password}" : '';
+	my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE `Name` = ? AND BINARY `Passwort` = BINARY ? AND TRIM(`Passwort`) <> ''");
+	$stl->execute($sessionid, $body->{name}, $pw) if $pw =~ /\S/;
+	my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid, -path=>'/', -secure=>1, -httponly=>1, -samesite=>'Lax' ); # wie die neuen Sitzungen; Abmelden geht über wp.php/logout
 
 	# print http header with cookies
-	print $q->header( {'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',cookie => [$cookie], "content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"} );
-	print encode_json({result => $stl->rows()});
+	print $q->header( {'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',cookie => [$cookie], "content-type" => "application/json"} );
+	print encode_json({result => ($pw =~ /\S/ ? $stl->rows() : 0)});
 	$dbh->commit();
 
 } elsif ( $q->path_info =~  /^[a-zA-Z0-9\/._ -]*$/) {
 	# print http header
-	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json"});
 
 	# user does not want to login -> check if logged in (sessionid cookie)
 	my %cookies = CGI::Simple::Cookie->fetch;
 	my $bc = $cookies{'sessionid'} ? $cookies{'sessionid'}->value : undef;
-	my $stbc = $dbh->prepare("SELECT * FROM `Benutzer` WHERE `Cookie` = ?");
-	$stbc->execute($bc);
+	my $user = SolawiSitzung::benutzer($dbh, $bc); # BenutzerSitzung (one row per device) or, old login, Benutzer.Cookie
         $dbh->prepare("SET NAMES utf8mb4")->execute();
-	if ( my $user = $stbc->fetchrow_hashref ) { # is logged in: sessionid cookie verified
+	if ( $user && !SolawiSitzung::tabelle_erlaubt($user, $q->request_method(), $q->path_info) ) {
+		# BenutzerSitzung never, BenutzerZugang (mail addresses) below Role 4 only own rows (GET .../MY or .../OWN)
+		print encode_json({result => 0, reason => "no access right " . $q->path_info});
+
+	} elsif ( $user && $q->request_method() =~ /^(POST|DELETE)$/ && SolawiSitzung::zugang_pfad($q->path_info) ) {
+		# BenutzerZugang (mail addresses, Role 4 and 5): own checks instead of the generic code below - valid address, each address
+		# only once, no SQL errors or values in the answer, sessions end when an address is changed or removed
+		my $body = $q->request_method() eq 'POST' ? eval { decode_json($q->param( 'POSTDATA' ) || '{}') } : undef;
+		print encode_json(SolawiSitzung::zugang_schreiben($dbh, $user, $q->request_method(), $q->path_info, $body));
+
+	} elsif ( $user ) { # is logged in: sessionid cookie verified
 
 		if ( $q->request_method() =~ /^GET$/ ) {
 
@@ -609,7 +623,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	}
 
 } else {
-	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({"content-type" => "application/json"});
 	print encode_json({result => 0, reason => "path contains forbidden characters"});
 }
 

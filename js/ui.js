@@ -20,9 +20,13 @@ function initUser(initTablesFunction) {
 	                }
 	                initTablesFunction();
 	            } else {
-	                show('loginform');
-	                hide('logoutbtn');
-	                hide('tableContainer');
+	                var formular = function() {
+	                    show('loginform');
+	                    hide('logoutbtn');
+	                    hide('tableContainer');
+	                };
+	                // erst die Anmeldung der Website übernehmen (Mail-Link), sonst das Formular
+	                if (window.solawiAnmeldung) solawiAnmeldung.versuchen(formular); else formular();
 	            }
 	        });
 
@@ -62,10 +66,17 @@ function onClickLoginBtn() {
 }
 
 function onClickLogoutBtn() {
-	document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-	show('loginform');
-	hide('logoutbtn');
-	hide('tableContainer');
+	var danach = function() {
+		show('loginform');
+		hide('logoutbtn');
+		hide('tableContainer');
+	};
+	if (window.solawiAnmeldung) {
+		solawiAnmeldung.abmelden(danach); // dieses Gerät, Bestellsystem und Website
+	} else {
+		document.cookie = 'sessionid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+		danach();
+	}
 }
 
 document.write('<div id="blockui_post" \
@@ -115,6 +126,11 @@ document.write('<div id="blockui_post" \
  \
 	<div id="loginform" style="display: none"> \
 		LOGIN: \
+		<p><a href="/anmelden/" onclick="this.href = solawiAnmeldung.link();">Anmelden mit Mail-Link</a> \
+			- oder wie bisher mit Benutzername und Passwort:</p> \
+		<div id="anmeldungMehrdeutig" style="display: none; color: red; font-weight: bold;"> \
+			Deine Mailadresse gehört zu mehr als einem Anteil. Bitte schreib kurz an die AG Bestellsystem. \
+		</div> \
 		<form method="post" action="/cgi-bin/wp.php/login"> \
 			Name: <input type="text" id="inpName" name="name" placeholder="name" /> \
 			Password: <input type="password" id="inpPass" name="password" /> \

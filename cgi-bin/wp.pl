@@ -19,6 +19,7 @@ use Encode;
 use CGI::Carp qw(warningsToBrowser fatalsToBrowser); # use only while debugging!!: displays (non-syntax) errors and warning in html
 
 use Authen::Passphrase::PHPass;
+use SolawiSitzung; # Sitzungen je Gerät, Anmeldung über die Website (Mail-Link)
 
 my $q = CGI::Simple->new;
 
@@ -27,12 +28,52 @@ my $dbh2 = DBI->connect("DBI:mysql:database=db208674_220;host=mysql", "db208674_
 my $dbh = DBI->connect("DBI:mysql:database=db208674_361;host=mysql", "db208674_361", "",  { RaiseError => 1, AutoCommit => 0, mysql_enable_utf8mb4 => 1 });#($q->request_method() =~ /^POST$/) });
 
 if ( $q->request_method() =~ /^OPTIONS/ ) {
-	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Methods" => "POST, GET, OPTIONS, DELETE", "Access-Control-Allow-Headers" => "content-type,x-requested-with", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json"});
 }
 
 
+# user is logged in on the website (mail link, cookie mg_s) -> take over that login, no password, no second mail
+if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/web\/?$/ ) {
+
+	my %kopf = ('Cache-Control' => 'no-store', "content-type" => "application/json");
+	if (!SolawiSitzung::herkunft_ok()) {
+		print $q->header({%kopf, status => '403 Forbidden'});
+		print encode_json({result => "forbidden", match => -1});
+	} else {
+		my $login = SolawiSitzung::login_web($dbh, $dbh2);
+		if ($login && $login->{benutzer}) {
+			print $q->header({%kopf, cookie => [SolawiSitzung::cookie_kopf($SolawiSitzung::COOKIE, $login->{id}, $login->{sekunden})]});
+			print encode_json({result => "success", match => 1, user => $login->{benutzer}->{Name}});
+		} elsif ($login && $login->{fehler}) {
+			print $q->header(\%kopf);
+			print encode_json({result => $login->{fehler}, match => -1});
+		} else {
+			print $q->header(\%kopf);
+			print encode_json({result => "not logged in on website", match => -1});
+		}
+	}
+
+# logout: this device only (other devices stay logged in), and on the website too (else login/web would log in again)
+} elsif ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/logout\/?$/ ) {
+
+	my %kopf = ('Cache-Control' => 'no-store', "content-type" => "application/json");
+	if (!SolawiSitzung::herkunft_ok()) {
+		print $q->header({%kopf, status => '403 Forbidden'});
+		print encode_json({result => "forbidden"});
+	} else {
+		my %cookies = CGI::Simple::Cookie->fetch;
+		SolawiSitzung::beenden($dbh, $cookies{'sessionid'} ? $cookies{'sessionid'}->value : undef);
+		SolawiSitzung::logout_web();
+		print $q->header({%kopf, cookie => [
+			SolawiSitzung::cookie_kopf($SolawiSitzung::COOKIE, '', -1),
+			SolawiSitzung::cookie_kopf($SolawiSitzung::WEB_COOKIE, '', -1),
+			SolawiSitzung::cookie_kopf($SolawiSitzung::WEB_COOKIE, '', -1, '/mitglieder/'),
+		]});
+		print encode_json({result => "success"});
+	}
+
 # user wants to login?
-if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
+} elsif ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 
 	my $sessionid = rand();
 	my $body = decode_json($q->param( 'POSTDATA' ));
@@ -48,33 +89,31 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 		if ($ppr->match(Encode::encode("utf-8",$body->{password}))) {
 			my $stl = $dbh->prepare("UPDATE `Benutzer` SET `Cookie` = ? WHERE `wpID` = ? or `wpMitID` = ?");
 			my $rows = $stl->execute($sessionid, $row2->{ID}, $row2->{ID});
-			my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid );
+			my $cookie = CGI::Simple::Cookie->new( -name=>'sessionid', -value=>$sessionid, -path=>'/', -secure=>1, -httponly=>1, -samesite=>'Lax' ); # wie die neuen Sitzungen; Abmelden geht über /logout
 
 			# print http header with cookies
-			print $q->header( {cookie => [$cookie], "content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"} );
+			print $q->header( {cookie => [$cookie], "content-type" => "application/json"} );
 			print encode_json({result => "success", match => $rows, user => $row2->{user_login}});
 			$dbh->commit();
 		} else {
 			# print http header
-			print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+			print $q->header({"content-type" => "application/json"});
 			print encode_json({result => "wrong pw", match => -1});
 		}
 	} else {
 		# print http header
-		print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+		print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json"});
 		print encode_json({result => "wrong pw", match => -1});
 	}
 
 } elsif ($q->path_info =~  /^[a-zA-Z0-9\/._ -]*$/) {
 	# print http header
-	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({'Cache-Control'=> 'no-store, no-cache, must-revalidate, s-maxage=0',"content-type" => "application/json"});
 
 	# user does not want to login -> check if logged in (sessionid cookie)
 	my %cookies = CGI::Simple::Cookie->fetch;
 	my $bc = $cookies{'sessionid'} ? $cookies{'sessionid'}->value : undef;
-	my $stbc = $dbh->prepare("SELECT * FROM `Benutzer` WHERE `Cookie` = ?");
-	$stbc->execute($bc);
-	if ( my $user = $stbc->fetchrow_hashref ) { # is logged in: sessionid cookie verified
+	if ( my $user = SolawiSitzung::benutzer($dbh, $bc) ) { # is logged in: sessionid cookie verified (BenutzerSitzung or, old login, Benutzer.Cookie)
 		if ($user->{Role_ID} >= 4 && $q->request_method() =~ /^GET$/ ) {
 
 			if ( $q->path_info =~ /^\/syncUsers$/ ) {
@@ -235,7 +274,7 @@ if ( $q->request_method() =~ /^POST$/ && $q->path_info =~ /^\/login\/?/ ) {
 	}
 
 } else {
-	print $q->header({"content-type" => "application/json", "access_control_allow_origin" => $q->referer() ? "http://solawi.fairtrademap.de" : "null", "Access-Control-Allow-Credentials" => "true"});
+	print $q->header({"content-type" => "application/json"});
 	print encode_json({result => 0, reason => "path contains forbidden characters"});
 }
 
